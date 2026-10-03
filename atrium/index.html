@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0e12" id="metaTheme">
+<title>Atrium — o átrio do Memento, Volumen e Cognitio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Atrium">
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+</script>
+
+<script>
+(function(){try{var t=localStorage.getItem('atrium.theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}catch(e){}})();
+</script>
+<style>
+/* =============================================================
+   1. TOKENS
+   ============================================================= */
+:root{
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"EB Garamond",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --cog:#f59e0b; --vol:#10b981; --mem:#ff453a;
+  --r-xl:22px; --r-lg:16px; --r-md:12px; --pill:999px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+html[data-theme="dark"]{
+  --bg:#0d0e12; --card:#161821; --card-2:#1b1e28; --card-3:#232734;
+  --line:#242835; --line-2:#333949;
+  --text:#ece6d8; --muted:#a3a19a; --faint:#6b6f78;
+  --cog-soft:rgba(245,158,11,.13); --vol-soft:rgba(16,185,129,.13); --mem-soft:rgba(255,69,58,.12);
+  --shadow:none; --backdrop:rgba(4,5,7,.72);
+}
+html[data-theme="light"]{
+  --bg:#f5f0e6; --card:#ffffff; --card-2:#faf7f1; --card-3:#efe9dd;
+  --line:#e7e0d2; --line-2:#d6ccba;
+  --text:#1f1b14; --muted:#5e584d; --faint:#958d7f;
+  --cog:#b8720a; --vol:#0a8f63; --mem:#d93a30;
+  --cog-soft:rgba(217,142,11,.12); --vol-soft:rgba(10,143,99,.10); --mem-soft:rgba(217,58,48,.09);
+  --shadow:0 1px 2px rgba(60,45,20,.05),0 10px 24px -16px rgba(60,45,20,.22); --backdrop:rgba(40,32,20,.35);
+}
+
+/* =============================================================
+   2. BASE
+   ============================================================= */
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--muted);font-family:var(--sans);font-size:15px;line-height:1.5;min-height:100vh;
+  padding:env(safe-area-inset-top,0) 0 calc(78px + env(safe-area-inset-bottom,0));transition:background-color .3s}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:6px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 18px 40px}
+.card{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r-xl)}
+.serif{font-family:var(--serif)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:var(--pill);border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--muted);white-space:nowrap;text-decoration:none;transition:border-color .15s,color .15s}
+.btn:hover{border-color:var(--line-2);color:var(--text)}
+.btn.primary{background:var(--text);border-color:var(--text);color:var(--bg);font-weight:700}
+.btn.sm{padding:6px 11px;font-size:12.5px}
+.btn.danger{color:var(--mem)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.eyebrow{font-size:12px;font-weight:700;color:var(--faint)}
+.empty-note{font-family:var(--serif);font-style:italic;color:var(--faint);font-size:15px}
+
+/* =============================================================
+   3. CABEÇALHO
+   ============================================================= */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:22px}
+.brand h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,10vw,56px);line-height:.95;color:var(--text);letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px}
+.dots{display:inline-flex;gap:5px;transform:translateY(-6px)}
+.dots i{width:9px;height:9px;border-radius:50%}
+.dots i:nth-child(1){background:var(--mem)} .dots i:nth-child(2){background:var(--vol)} .dots i:nth-child(3){background:var(--cog)}
+.brand p{font-family:var(--serif);font-style:italic;font-size:16px;margin-top:8px}
+.icon-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);color:var(--text);flex-shrink:0}
+.icon-btn svg{width:19px;height:19px}
+.demo-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:18px;font-size:13.5px}
+.demo-banner b{color:var(--text)}
+
+/* =============================================================
+   4. NAVEGAÇÃO INFERIOR
+   ============================================================= */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0));
+  background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.nav-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:12px;font-size:11.5px;font-weight:600;color:var(--faint)}
+.nav button svg{width:21px;height:21px}
+.nav button[aria-selected="true"]{color:var(--text);background:var(--card)}
+
+/* =============================================================
+   5. HOJE
+   ============================================================= */
+.life{font-size:12.5px;color:var(--faint);margin-bottom:6px}
+.life b{color:var(--text);font-weight:700}
+.greet{font-family:var(--serif);font-weight:500;font-size:clamp(26px,6.5vw,34px);line-height:1.15;color:var(--text)}
+.provoke{margin:18px 0 22px;padding:18px 18px 16px;border-radius:var(--r-xl);background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden}
+.provoke::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,var(--mem),var(--vol),var(--cog))}
+.provoke p.main{font-family:var(--serif);font-size:clamp(19px,5vw,23px);line-height:1.3;color:var(--text)}
+.provoke .prov-src{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);white-space:nowrap}
+.chip.cog{color:var(--cog);background:var(--cog-soft)} .chip.vol{color:var(--vol);background:var(--vol-soft)} .chip.mem{color:var(--mem);background:var(--mem-soft)}
+.provoke .more{margin-top:12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.provoke .more p{font-size:13.5px;line-height:1.45}
+.cards3{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:820px){.cards3{grid-template-columns:repeat(3,1fr)}}
+.appcard{padding:16px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.appcard::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--acc)}
+.appcard.cog{--acc:var(--cog);--acc-soft:var(--cog-soft)} .appcard.vol{--acc:var(--vol);--acc-soft:var(--vol-soft)} .appcard.mem{--acc:var(--mem);--acc-soft:var(--mem-soft)}
+.ac-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ac-name{font-size:12.5px;font-weight:800;color:var(--acc);letter-spacing:.02em}
+.ac-title{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.25;color:var(--text)}
+.ac-sub{font-size:13px;color:var(--faint)}
+.ac-row{display:flex;gap:12px;align-items:flex-start}
+.ac-cover{width:54px;height:78px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--card-3);border:1px solid var(--line)}
+.ac-cover.ph{display:grid;place-items:center;font-size:22px}
+.bar{height:6px;border-radius:var(--pill);background:var(--card-3);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:inherit}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.1;color:var(--text)}
+.stat small{font-size:11px}
+.quote{font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.45;color:var(--text)}
+.quote cite{display:block;font-style:normal;font-family:var(--sans);font-size:12px;color:var(--faint);margin-top:4px}
+.memo{border-left:2px solid var(--acc);padding-left:10px;font-size:13.5px;line-height:1.5;color:var(--muted);white-space:pre-line;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.ac-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ac-open{color:var(--acc);border-color:var(--acc-soft)}
+.no-src{font-size:13px;color:var(--faint)}
+
+/* =============================================================
+   6. TEMPO
+   ============================================================= */
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sec-head h2{font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.1;color:var(--text)}
+.sec-head p{font-size:13.5px}
+.seg{display:inline-flex;gap:3px;padding:3px;border-radius:var(--pill);border:1px solid var(--line);background:var(--card)}
+.seg button{padding:6px 12px;border-radius:var(--pill);font-size:12.5px;font-weight:700;color:var(--faint)}
+.seg button[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.heat{padding:16px;margin-bottom:12px}
+.heat-grid{display:grid;gap:4px;align-items:center}
+.heat-label{font-size:11.5px;font-weight:700;padding-right:6px;white-space:nowrap}
+.heat-label.cog{color:var(--cog)} .heat-label.vol{color:var(--vol)} .heat-label.mem{color:var(--mem)}
+.cell{aspect-ratio:1;border-radius:4px;background:var(--card-3);position:relative}
+.cell[data-v]{background:color-mix(in srgb,var(--acc) calc(var(--p) * 1%),var(--card-3))}
+.cell.cog{--acc:var(--cog)} .cell.vol{--acc:var(--vol)} .cell.mem{--acc:var(--mem)}
+.cell.today{box-shadow:0 0 0 1.5px var(--text)}
+.dlabel{font-size:10px;color:var(--faint);text-align:center;white-space:nowrap;overflow:visible}
+.heat-note{font-size:12px;color:var(--faint);margin-top:10px}
+.where{padding:16px;margin-bottom:12px}
+.where h3,.tot h3{font-family:var(--serif);font-weight:500;font-size:19px;color:var(--text);margin-bottom:4px}
+.where > p{font-size:13px;margin-bottom:12px}
+.hbar{display:grid;grid-template-columns:130px 1fr auto;gap:10px;align-items:center;margin-top:8px;font-size:13px}
+.hbar span:first-child{color:var(--text);font-weight:600}
+.hbar .t{height:10px;border-radius:var(--pill);background:var(--card-3);overflow:hidden}
+.hbar .t i{display:block;height:100%;border-radius:inherit}
+.hbar em{font-style:normal;font-size:12.5px;white-space:nowrap}
+@media (max-width:420px){.hbar{grid-template-columns:100px 1fr auto}}
+.tots{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:760px){.tots{grid-template-columns:repeat(3,1fr)}}
+.tot{padding:16px;display:flex;flex-direction:column;gap:10px}
+.tot .kv{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;border-top:1px solid var(--line);padding-top:8px}
+.tot .kv b{color:var(--text);font-weight:700;text-align:right}
+
+/* =============================================================
+   7. LIGAÇÕES
+   ============================================================= */
+.linksum{padding:12px;margin-bottom:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.linksum div{min-width:0;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.linksum b{display:block;font-family:var(--serif);font-weight:500;font-size:24px;line-height:1.1;color:var(--text)}
+.linksum small{font-size:11px;line-height:1.25;display:block}
+.filters{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters button{font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:var(--pill);border:1px solid var(--line);background:var(--card);white-space:nowrap;color:var(--faint)}
+.filters button[aria-pressed="true"]{color:var(--text);border-color:var(--line-2)}
+.litems{display:flex;flex-direction:column;gap:8px}
+.litem{padding:12px;display:grid;grid-template-columns:44px 1fr;gap:12px;border-radius:var(--r-lg)}
+.litem img,.litem .ph{width:44px;height:62px;border-radius:5px;object-fit:cover;background:var(--card-3);border:1px solid var(--line)}
+.litem .ph{display:grid;place-items:center;font-size:18px}
+.li-main{min-width:0;display:flex;flex-direction:column;gap:6px}
+.li-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.li-title{font-family:var(--serif);font-size:16.5px;line-height:1.25;color:var(--text)}
+.li-sub{font-size:12px;color:var(--faint)}
+.verdict{font-size:11px;font-weight:800;padding:3px 9px;border-radius:var(--pill);white-space:nowrap}
+.verdict.v2{color:var(--vol);background:var(--vol-soft)} .verdict.v1{color:var(--cog);background:var(--cog-soft)} .verdict.v0{color:var(--mem);background:var(--mem-soft)} .verdict.vn{color:var(--faint);border:1px dashed var(--line-2)}
+.li-link{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.li-link select{flex:1;min-width:150px;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:13px;color:var(--text)}
+.suggest{font-size:12px;font-weight:700;color:var(--cog);padding:4px 0}
+.li-proof{font-size:12px;color:var(--muted)}
+
+/* =============================================================
+   8. FONTES
+   ============================================================= */
+.srcs{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+@media (min-width:760px){.srcs{grid-template-columns:repeat(3,1fr)}}
+.src{padding:16px;display:flex;flex-direction:column;gap:10px;border-top:3px solid var(--acc)}
+.src.cog{--acc:var(--cog)} .src.vol{--acc:var(--vol)} .src.mem{--acc:var(--mem)}
+.src h3{font-family:var(--serif);font-weight:500;font-size:21px;color:var(--text)}
+.src .state{font-size:12.5px}
+.src .state b{color:var(--text)}
+.src ul{list-style:none;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.src .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.src input{width:100%;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--text)}
+.src label{font-size:11.5px;font-weight:700;color:var(--faint)}
+.panel{padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.panel h3{font-family:var(--serif);font-weight:500;font-size:19px;color:var(--text)}
+.panel p{font-size:13.5px;line-height:1.5}
+.panel .row{display:flex;gap:8px;flex-wrap:wrap}
+.meter{height:6px;border-radius:var(--pill);background:var(--card-3);overflow:hidden}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--vol),var(--cog),var(--mem))}
+
+/* =============================================================
+   9. DIÁLOGO E TOAST
+   ============================================================= */
+dialog{border:none;background:transparent;padding:0;max-width:none;max-height:none;width:100%;height:100%;color:var(--muted)}
+dialog::backdrop{background:var(--backdrop);backdrop-filter:blur(4px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));display:flex;flex-direction:column;gap:12px;animation:rise .24s var(--ease)}
+@keyframes rise{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+@media (min-width:760px){.sheet{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(480px,92vw);border-radius:var(--r-xl);animation:none}}
+.sheet h2{font-family:var(--serif);font-weight:500;font-size:24px;color:var(--text)}
+.sheet ul{list-style:none;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.sheet ul b{color:var(--text)}
+.sheet .note{font-size:12.5px;color:var(--faint)}
+.sheet .row{display:flex;justify-content:flex-end;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0));transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;padding:10px 16px;border-radius:var(--pill);pointer-events:none;transition:opacity .2s,transform .2s;z-index:100;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--mem);color:#fff}
+.view{animation:fadeUp .25s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* =============================================================
+   10. v2: FRESCOR, AÇÃO DO DIA, SEMANA, LIGAÇÕES POR CATEGORIA
+   ============================================================= */
+:root{--atr:#a78bfa}
+html[data-theme="light"]{--atr:#7c3aed}
+.muted{color:var(--faint);font-size:13.5px}
+.stale-t{color:var(--mem);font-weight:700}
+.freshbar{margin:14px 0 14px}
+.freshbar.warn p{font-size:13px;color:var(--mem);background:var(--mem-soft);border-radius:12px;padding:9px 12px;margin-bottom:8px;line-height:1.45}
+.freshchips{display:flex;gap:6px;flex-wrap:wrap}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:var(--pill);border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.fresh i{width:7px;height:7px;border-radius:50%}
+.fresh i.mem{background:var(--mem)} .fresh i.vol{background:var(--vol)} .fresh i.cog{background:var(--cog)}
+.fresh.stale{border-color:var(--mem);color:var(--mem);background:var(--mem-soft)}
+.fresh.missing{border-style:dashed;color:var(--faint)}
+.action{padding:20px;margin:6px 0 10px;position:relative;overflow:hidden;border-color:var(--line-2)}
+.action::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,var(--mem),var(--vol),var(--cog))}
+.act-parts{list-style:none;display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.act-parts li{display:flex;flex-direction:column;align-items:flex-start;gap:5px;font-family:var(--serif);font-size:clamp(20px,5.4vw,25px);line-height:1.25;color:var(--text)}
+.act-parts .chip{font-family:var(--sans);font-size:11px}
+.act-parts li + li{border-top:1px solid var(--line);padding-top:10px}
+.chip.atr{color:var(--atr);background:color-mix(in srgb,var(--atr) 14%,transparent)}
+.act-text{font-family:var(--serif);font-size:clamp(20px,5.4vw,24px);line-height:1.3;color:var(--text);margin:10px 0}
+.act-why{font-size:13px;line-height:1.5;color:var(--muted)}
+.act-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn.big{padding:13px 26px;font-size:15px}
+.action.done{border-color:color-mix(in srgb,var(--vol) 45%,var(--line))}
+.checkmark{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:800;color:#04170f;background:var(--vol);margin-bottom:10px;animation:pop .45s var(--ease)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.spark{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:200;animation:spark .7s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
+.weekline{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:13px 16px;margin-bottom:10px;border-radius:var(--r-lg)}
+.weekline span{font-size:12px;font-weight:700;color:var(--faint);white-space:nowrap}
+.weekline b{flex:1;font-size:13.5px;font-weight:600;color:var(--text)}
+.weekline em{font-style:normal;font-size:20px;color:var(--faint)}
+.ctx{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ctx-c{padding:12px;border-radius:var(--r-lg);display:flex;flex-direction:column;gap:3px;min-width:0;border-top:3px solid var(--acc)}
+.ctx-c.mem{--acc:var(--mem);--acc-soft:var(--mem-soft)} .ctx-c.vol{--acc:var(--vol);--acc-soft:var(--vol-soft)} .ctx-c.cog{--acc:var(--cog);--acc-soft:var(--cog-soft)}
+.ctx-c .ac-name{font-size:10.5px;display:flex;flex-direction:column;gap:1px}
+.ctx-c .ac-name small{font-size:10.5px;font-weight:600;color:var(--faint);letter-spacing:0}
+.ctx-v{font-family:var(--serif);font-size:26px;line-height:1.1;color:var(--text);margin-top:4px}
+.ctx-l{font-size:11.5px;line-height:1.35;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ctx-c .btn{margin-top:6px;align-self:flex-start;padding:4px 10px;font-size:11.5px}
+.ritual,.goals,.trends{padding:16px;margin-bottom:12px}
+.ritual h3,.goals h3,.trends h3,.heat h3{font-family:var(--serif);font-weight:500;font-size:20px;color:var(--text)}
+.vs{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media (min-width:640px){.vs{grid-template-columns:1fr 1fr}}
+.vs > div{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.vs small{font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.03em}
+.vs-l{border-left:3px solid var(--mem)!important}
+.promise{font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.35;color:var(--text);margin:6px 0}
+.promise.muted{font-style:normal;font-family:var(--sans);font-size:13.5px;color:var(--faint)}
+.vs .src{font-size:12px;color:var(--faint);margin-top:4px}
+.vs ul{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.vs ul b{color:var(--text)}
+.g-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.g-head span{font-size:12px;font-weight:700;color:var(--faint)}
+.goals ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.goal{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card-2)}
+.g-top{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--text)}
+.g-top em{font-style:normal;font-size:11.5px;font-weight:800;white-space:nowrap;padding:2px 8px;border-radius:var(--pill)}
+.goal.ok .g-top em{color:var(--vol);background:var(--vol-soft)} .goal.track .g-top em{color:var(--cog);background:var(--cog-soft)}
+.goal.risk .g-top em,.goal.fail .g-top em{color:var(--mem);background:var(--mem-soft)}
+.g-bar{height:6px;border-radius:var(--pill);background:var(--card-3);overflow:hidden;margin:8px 0 6px}
+.g-bar i{display:block;height:100%;border-radius:inherit;background:var(--cog)}
+.goal.ok .g-bar i{background:var(--vol)} .goal.risk .g-bar i,.goal.fail .g-bar i{background:var(--mem)}
+.g-foot{display:flex;justify-content:space-between;font-size:12.5px}
+.g-foot b{color:var(--text)}
+.link{font-size:12.5px;font-weight:600;color:var(--faint)} .link:hover{color:var(--text)}
+.g-add{display:grid;grid-template-columns:72px 1fr auto;gap:6px}
+.g-add input,.g-add select{background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;color:var(--text);min-width:0}
+.prevgoals{font-size:12.5px;margin-top:10px;color:var(--faint)} .prevgoals b{color:var(--text)}
+.trend{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.trends .muted{margin-bottom:6px}
+.trend .tl{font-size:13.5px;color:var(--text)}
+.trend b{font-family:var(--serif);font-weight:500;font-size:18px;color:var(--text);text-align:right}
+.trend em{grid-column:1/-1;font-style:normal;font-size:12.5px;font-weight:600}
+.trend em.good{color:var(--vol)} .trend em.bad{color:var(--mem)} .trend em.flat{color:var(--faint)}
+.streaks{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.streaks div{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px}
+.streaks b{display:block;font-family:var(--serif);font-weight:500;font-size:24px;color:var(--text)}
+.streaks small{font-size:11.5px;line-height:1.3;display:block}
+.heat-label.atr{color:var(--atr)} .cell.atr{--acc:var(--atr)}
+.lgroup{margin-bottom:18px}
+.lg-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 2px 8px}
+.lg-head h3{font-family:var(--serif);font-weight:500;font-size:19px;color:var(--text)}
+.lg-head h3 small{font-family:var(--sans);font-size:12px;color:var(--faint);margin-left:4px}
+.lg-head select{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12.5px;color:var(--text);max-width:230px}
+.lg-hint{font-size:12px;color:var(--faint)}
+.li-act{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--text);background:var(--card-2);border:1px dashed var(--line-2);border-radius:10px;padding:7px 8px 7px 10px}
+.li-act span{min-width:0}
+.suggest small{font-weight:600;color:var(--faint)}
+.dupnote{font-size:12.5px;color:var(--cog);background:var(--cog-soft);border-radius:12px;padding:9px 12px;margin-bottom:12px;line-height:1.45}
+code{font-size:12px;background:var(--card-3);padding:1px 5px;border-radius:4px}
+@media (max-width:380px){.ctx-v{font-size:22px}.g-add{grid-template-columns:60px 1fr}.g-add .btn{grid-column:1/-1}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Atrium <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></h1>
+      <p>O átrio do Memento, Volumen e Cognitio</p>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="Alternar tema"></button>
+  </header>
+  <div id="demoBanner"></div>
+  <main id="view"></main>
+</div>
+
+<nav class="nav" role="tablist" aria-label="Seções">
+  <div class="nav-in">
+    <button role="tab" data-tab="hoje" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Hoje</button>
+    <button role="tab" data-tab="semana" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Semana</button>
+    <button role="tab" data-tab="ligacoes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>Ligações</button>
+    <button role="tab" data-tab="fontes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Fontes</button>
+  </div>
+</nav>
+
+<dialog id="dlg"><div class="sheet" id="dlgBody"></div></dialog>
+<input type="file" id="fileIn" accept=".json,application/json" multiple hidden>
+<input type="file" id="atriumIn" accept=".json,application/json" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+/* =============================================================
+   MÓDULO 1 — UTILITÁRIOS
+   ============================================================= */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pl = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+const DAY = 864e5, HOUR = 36e5;
+const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const today = () => dayKey(Date.now());
+const keyToDate = k => new Date(k + 'T12:00:00');
+const addDays = (k, n) => dayKey(keyToDate(k).getTime() + n * DAY);
+const fmtDate = d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+const fmtDT = d => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const fmtTime = d => new Date(d).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const fmtMin = m => { m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${m} min`; };
+const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const num = v => Number.isFinite(+v) ? +v : 0;
+const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const clip = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; };
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+/* Semana ISO, igual à do Memento (ex.: 2026-S40), começando na segunda-feira */
+function weekKey(d = new Date()) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), dn = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - dn);
+  const y = x.getUTCFullYear(), w = Math.ceil((((x - Date.UTC(y, 0, 1)) / DAY) + 1) / 7);
+  return `${y}-S${w}`;
+}
+const mondayOf = k => { const d = keyToDate(k), wd = (d.getDay() + 6) % 7; return addDays(k, -wd); };
+let toastT;
+function toast(msg, err = false) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('err', err); el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600); }
+
+/* =============================================================
+   MÓDULO 2 — SOURCE MANAGER
+   Fase 1: resumos importados de backups (localStorage do Atrium).
+   Fase 2: com os quatro apps no mesmo endereço (GitHub Pages), troque
+   USE_GITHUB_PAGES_ORIGIN para true e o Atrium lê os dados direto,
+   ao abrir e sempre que você voltar para a aba.
+   ============================================================= */
+const USE_GITHUB_PAGES_ORIGIN = false;
+const STALE_HOURS = 12;
+const KEY = 'atrium.v1', HISTORY_KEY = 'atrium_history', THEME_KEY = 'atrium.theme';
+const NATIVE = {
+  cognitio: { ls: 'cognitio.v2' },
+  volumen: { idb: 'volumen', idbKey: 'state', ls: 'my_mediatheca_v2' },
+  memento: { idb: 'memento', lsPrefix: 'memento_' }
+};
+const blank = () => ({ version: 2, sources: { cognitio: null, volumen: null, memento: null }, links: [], catMap: {}, goals: {}, today: null, appUrls: { cognitio: '', volumen: '', memento: '' } });
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.sources) return Object.assign(blank(), d); } catch {}
+  return blank();
+}
+let store = load();
+let history = (() => { try { const h = JSON.parse(localStorage.getItem(HISTORY_KEY)); return Array.isArray(h) ? h : []; } catch { return []; } })();
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(store)); return true; }
+  catch { toast('Sem espaço no navegador para guardar este resumo.', true); return false; }
+}
+function persistHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-1000))); } catch {} }
+
+/* Idade dos dados: vale a hora em que o backup foi gerado; na leitura direta, a hora da leitura */
+function freshness(app) {
+  const s = store.sources[app]; if (!s) return null;
+  const t = Date.parse((s.origin === 'backup' && s.data.exportedAt) || s.importedAt);
+  const h = (Date.now() - t) / HOUR;
+  const label = h < 1 ? 'há menos de 1 h' : h < 24 ? `há ${Math.floor(h)} h` : `há ${Math.floor(h / 24)} ${Math.floor(h / 24) === 1 ? 'dia' : 'dias'}`;
+  return { hours: h, label, stale: h > STALE_HOURS };
+}
+
+/* =============================================================
+   MÓDULO 3 — LEITORES (formatos reais dos três apps)
+   ============================================================= */
+function detect(d) {
+  if (!d || typeof d !== 'object') return null;
+  if (Array.isArray(d.memento_memories) || 'memento_birth' in d) return 'memento';
+  if (d.app === 'Volumen' || (Array.isArray(d.items) && d.items.some(i => i && i.progress && i.type))) return 'volumen';
+  if (Array.isArray(d.fields) && Array.isArray(d.areas) && Array.isArray(d.notes)) return 'cognitio';
+  return null;
+}
+function readCognitio(d) {
+  return {
+    exportedAt: d.exportedAt || null,
+    fields: d.fields.map(f => ({ id: f.id, title: f.title, icon: f.icon || '📚', posture: f.posture || 'ultra' })),
+    areas: d.areas.map(a => ({ id: a.id, fieldId: a.fieldId, title: a.title, status: [0, 1, 2].includes(+a.status) ? +a.status : 0 })),
+    notes: d.notes.map(n => ({ id: n.id, areaId: n.areaId, title: clip(n.title, 120), tags: Array.isArray(n.tags) ? n.tags.slice(0, 8) : [], createdAt: n.createdAt })),
+    decks: (d.decks || []).map(k => ({ id: k.id, title: k.title, fieldId: k.fieldId, areaId: k.areaId || null,
+      items: (k.items || []).map(i => ({ id: i.id, last: i.lastAt || null, t: clip(i.text, 160), due: i.due || null, g: typeof i.lastGrade === 'number' ? i.lastGrade : -1, seen: !!i.seen, done: !!i.done })) })),
+    pillLog: (d.pillLog || []).slice(-500).map(l => ({ deckId: l.deckId, t: clip(l.text, 120), minutes: num(l.minutes), grade: l.grade, at: l.at })),
+    pillOfDay: d.pillOfDay || null
+  };
+}
+function sumCognitio(c) {
+  return [`${pl(c.fields.length, 'campo', 'campos')} e ${pl(c.areas.length, 'área', 'áreas')}`, `${pl(c.notes.length, 'ficha', 'fichas')}`,
+    `${pl(c.decks.length, 'banco de pílulas', 'bancos de pílulas')}, ${pl(c.pillLog.length, 'pílula registrada', 'pílulas registradas')}`];
+}
+/* Itens repetidos (mesmo título e tipo) viram um só: fica o de maior progresso e as sessões somam */
+const dupKey = i => norm(i.title).replace(/[^a-z0-9]/g, '') + '|' + i.type;
+function dedupe(items) {
+  const map = new Map(), dups = [];
+  items.forEach(i => {
+    const k = dupKey(i), cur = map.get(k);
+    if (!cur) { map.set(k, { ...i, aliases: [i.id] }); return; }
+    dups.push(i.title);
+    const keep = (i.current > cur.current || (i.current === cur.current && i.updatedAt > cur.updatedAt)) ? { ...i, aliases: cur.aliases } : cur;
+    const seen = new Set(), sessions = [...cur.sessions, ...i.sessions].filter(s => { const kk = s.date + ':' + s.delta; if (seen.has(kk)) return false; seen.add(kk); return true; });
+    keep.sessions = sessions; keep.aliases = [...new Set([...cur.aliases, i.id])];
+    keep.notes = Math.max(cur.notes, i.notes); keep.thumb = keep.thumb || cur.thumb || i.thumb;
+    map.set(k, keep);
+  });
+  return { items: [...map.values()], dups };
+}
+async function readVolumen(d) {
+  const raw = Array.isArray(d) ? d : d.items, items = [];
+  for (const r of raw) {
+    if (!r || !r.title) continue;
+    items.push({ id: String(r.id), type: r.type || 'book', title: clip(r.title, 200), author: clip(r.author, 120), category: String(r.category || '').trim(),
+      status: r.status || 'not_started', current: num(r.progress?.current ?? r.current), total: num(r.progress?.total ?? r.total),
+      notes: Array.isArray(r.notes) ? r.notes.length : 0,
+      sessions: (r.sessions || []).filter(s => /^\d{4}-\d{2}-\d{2}$/.test(s.date)).map(s => ({ date: s.date, delta: num(s.delta) })),
+      updatedAt: num(r.updatedAt) || Date.now(), thumb: await thumb(r.cover) });
+  }
+  const dd = dedupe(items);
+  return { exportedAt: d.exportedAt || null, items: dd.items, dups: dd.dups };
+}
+function sumVolumen(v) {
+  const by = s => v.items.filter(i => i.status === s).length;
+  const out = [`${pl(v.items.length, 'item', 'itens')} no acervo`, `${by('in_progress')} em andamento, ${by('done')} ${by('done') === 1 ? 'concluído' : 'concluídos'}`,
+    `${pl(v.items.reduce((t, i) => t + i.sessions.length, 0), 'sessão de progresso', 'sessões de progresso')}`];
+  if (v.dups && v.dups.length) out.push(`${pl(v.dups.length, 'item repetido juntado', 'itens repetidos juntados')}: ${v.dups.slice(0, 3).map(t => `“${clip(t, 40)}”`).join(', ')}`);
+  return out;
+}
+function thumb(src) {
+  if (!src) return Promise.resolve('');
+  if (safeUrl(src)) return Promise.resolve(src.length < 600 ? src : '');
+  if (!/^data:image\//.test(src)) return Promise.resolve('');
+  return new Promise(res => {
+    const img = new Image(), done = v => { clearTimeout(t); res(v); };
+    const t = setTimeout(() => done(''), 4000);
+    img.onload = () => {
+      try {
+        const w = 96, h = Math.round(w * (img.height / img.width || 1.45));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = Math.min(h, 160);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        done(cv.toDataURL('image/jpeg', 0.72));
+      } catch { done(''); }
+    };
+    img.onerror = () => done('');
+    img.src = src;
+  });
+}
+function readMemento(d) {
+  const memories = (d.memento_memories || []).map(m => ({ ts: num(m.timestamp) || num(m.id), scope: m.scope || 'Dia', wk: m.weekKey || '', title: clip(m.title, 120),
+    text: clip(String(m.text || '').replace(/^#+\s*/gm, '').replace(/\*\*/g, ''), 500), mood: m.mood || '', hasImage: !!m.image }))
+    .filter(m => m.ts).sort((a, b) => b.ts - a.ts);
+  const cats = Array.isArray(d.memento_activity_cats) ? d.memento_activity_cats : [];
+  const kindOf = name => {
+    const c = cats.find(x => norm(x.name) === norm(name)); if (c) return c.kind === 'producao' ? 'prod' : c.kind === 'desvio' ? 'desvio' : 'outro';
+    if (/tv|filme|serie|rede|insta|youtube|tiktok|jogo|game|transi/i.test(norm(name))) return 'desvio';
+    if (/dev|projet|estud|leitura|trabalho|curso|memento|volumen|cognitio/i.test(norm(name))) return 'prod';
+    return 'outro';
+  };
+  const mins = b => { if (num(b.minutes)) return num(b.minutes); const f = /^(\d\d):(\d\d)$/.exec(b.from || ''), t = /^(\d\d):(\d\d)$/.exec(b.to || ''); if (!f || !t) return 0; let m = (+t[1] * 60 + +t[2]) - (+f[1] * 60 + +f[2]); if (m < 0) m += 1440; return m; };
+  const daylog = (d.memento_pecunia_daylog || []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date)).map(x => {
+    const ck = x.checklist && typeof x.checklist === 'object' ? Object.values(x.checklist) : [];
+    return { date: x.date, score: typeof x.executionScore === 'number' ? x.executionScore : null, drift: num(x.driftMinutes),
+      checkDone: ck.filter(v => v === 'done').length, checkTotal: ck.length,
+      blocks: (x.blocks || []).map(b => ({ cat: b.category || 'Sem categoria', min: mins(b), kind: kindOf(b.category) })).filter(b => b.min > 0) };
+  }).sort((a, b) => a.date < b.date ? 1 : -1);
+  const distractions = [];
+  Object.entries(d.memento_pecunia_distractions || {}).forEach(([date, o]) => Object.entries(o || {}).forEach(([cat, m]) => distractions.push({ date, cat, min: num(m) })));
+  return {
+    exportedAt: d.exportDate || null, name: d.memento_user_name || '', birth: d.memento_birth || '',
+    quotes: (d.memento_quotes || []).filter(q => q && q.text).map(q => ({ text: q.text, author: q.author || '' })),
+    memories, daylog, distractions,
+    expenses: (d.memento_pecunia_expenses || []).map(e => ({ date: e.date, cat: e.category || 'Outros', value: num(e.value) })).filter(e => e.value),
+    weekReviews: d.memento_week_reviews && typeof d.memento_week_reviews === 'object' ? d.memento_week_reviews : {}
+  };
+}
+function sumMemento(m) {
+  return [`${pl(m.memories.length, 'memória', 'memórias')} (as imagens não são copiadas)`, `${pl(m.daylog.length, 'dia registrado', 'dias registrados')} no Confronto`,
+    `${pl(m.expenses.length, 'gasto', 'gastos')} e ${pl(Object.keys(m.weekReviews).length, 'revisão semanal', 'revisões semanais')}`];
+}
+const READERS = { cognitio: readCognitio, volumen: readVolumen, memento: readMemento };
+const SUMS = { cognitio: sumCognitio, volumen: sumVolumen, memento: sumMemento };
+const NAMES = { cognitio: 'Cognitio', volumen: 'Volumen', memento: 'Memento' };
+
+/* ---------- Fase 1: importação de backups ---------- */
+async function importFiles(files) {
+  for (const file of files) {
+    let data;
+    try { data = JSON.parse(await file.text()); } catch { toast(`${file.name} não é um JSON válido.`, true); continue; }
+    const app = detect(data);
+    if (!app) { toast(`${file.name}: não reconheci o app deste backup.`, true); continue; }
+    let res;
+    try { res = await READERS[app](data); } catch (e) { console.error(e); toast(`Não consegui ler o backup do ${NAMES[app]}.`, true); continue; }
+    if (!(await confirmImport(app, res, file.name))) continue;
+    store.sources[app] = { importedAt: new Date().toISOString(), origin: 'backup', data: res };
+    if (persist()) toast(`${NAMES[app]} atualizado no Atrium`);
+  }
+  render();
+}
+function confirmImport(app, res, fname) {
+  return new Promise(resolve => {
+    const prev = store.sources[app];
+    $('#dlgBody').innerHTML = `<p class="eyebrow">${esc(fname)}</p><h2>Importar ${NAMES[app]}?</h2>
+      <ul>${SUMS[app](res).map(s => `<li>• ${esc(s)}</li>`).join('')}</ul>
+      <p class="note">${res.exportedAt ? `Backup gerado em ${fmtDT(res.exportedAt)}. ` : ''}${prev ? `Substitui o resumo importado em ${fmtDT(prev.importedAt)}. ` : ''}O Atrium só guarda um resumo e nunca altera o ${NAMES[app]}.</p>
+      <div class="row"><button class="btn" data-a="no">Cancelar</button><button class="btn primary" data-a="yes">Importar</button></div>`;
+    const d = $('#dlg');
+    const onClick = e => { const b = e.target.closest('[data-a]'); if (!b && e.target !== d) return; d.removeEventListener('click', onClick); d.close(); resolve(!!b && b.dataset.a === 'yes'); };
+    d.addEventListener('click', onClick);
+    d.addEventListener('cancel', () => { d.removeEventListener('click', onClick); resolve(false); }, { once: true });
+    d.showModal();
+  });
+}
+
+/* ---------- Fase 2: leitura direta na mesma origem ----------
+   Memento e Volumen guardam os dados no IndexedDB ('memento' e 'volumen',
+   store 'kv'). O Atrium abre esses bancos só para ler e nunca os cria:
+   se não existirem, a abertura é cancelada antes de qualquer alteração. */
+function idbOpenExisting(name) {
+  return new Promise(async res => {
+    if (!('indexedDB' in window)) return res(null);
+    try { if (indexedDB.databases) { const list = await indexedDB.databases(); if (!list.some(x => x.name === name)) return res(null); } } catch {}
+    let req; try { req = indexedDB.open(name); } catch { return res(null); }
+    const t = setTimeout(() => res(null), 3000);
+    req.onupgradeneeded = () => { try { req.transaction.abort(); } catch {} };
+    req.onsuccess = () => { clearTimeout(t); const db = req.result; if (!db.objectStoreNames.contains('kv')) { db.close(); return res(null); } res(db); };
+    req.onerror = () => { clearTimeout(t); res(null); };
+    req.onblocked = () => { clearTimeout(t); res(null); };
+  });
+}
+const idbReq = r => new Promise((ok, no) => { r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+async function nativeVolumen() {
+  const db = await idbOpenExisting(NATIVE.volumen.idb);
+  if (db) {
+    try {
+      const tx = db.transaction(['kv', 'blobs'], 'readonly'), data = await idbReq(tx.objectStore('kv').get(NATIVE.volumen.idbKey));
+      if (data && Array.isArray(data.items)) {
+        const bs = tx.objectStore('blobs');
+        await Promise.all(data.items.map(async i => { if (typeof i.cover === 'string' && i.cover.startsWith('idb:')) { try { i.cover = await idbReq(bs.get(i.cover.slice(4))) || ''; } catch { i.cover = ''; } } }));
+        db.close(); return data;
+      }
+    } catch (e) { console.error(e); }
+    db.close();
+  }
+  try { const v = JSON.parse(localStorage.getItem(NATIVE.volumen.ls) || 'null'); if (v && Array.isArray(v.items)) return v; } catch {}
+  return null;
+}
+async function nativeMemento() {
+  const out = {}, db = await idbOpenExisting(NATIVE.memento.idb);
+  if (db) {
+    try {
+      const kv = db.transaction('kv', 'readonly').objectStore('kv');
+      const [keys, vals] = await Promise.all([idbReq(kv.getAllKeys()), idbReq(kv.getAll())]);
+      keys.forEach((k, i) => { if (typeof k !== 'string' || !k.startsWith(NATIVE.memento.lsPrefix)) return; const v = vals[i]; try { out[k] = typeof v === 'string' ? JSON.parse(v) : v; } catch { out[k] = v; } });
+    } catch (e) { console.error(e); }
+    db.close();
+  }
+  if (!out.memento_memories) Object.keys(localStorage).filter(k => k.startsWith(NATIVE.memento.lsPrefix)).forEach(k => { const raw = localStorage.getItem(k); try { out[k] = JSON.parse(raw); } catch { out[k] = raw; } });
+  return out.memento_memories ? out : null;
+}
+async function readNative({ silent = false } = {}) {
+  const found = [], at = new Date().toISOString();
+  try {
+    const c = JSON.parse(localStorage.getItem(NATIVE.cognitio.ls) || 'null');
+    if (c && detect(c) === 'cognitio') { store.sources.cognitio = { importedAt: at, origin: 'direto', data: readCognitio(c) }; found.push('Cognitio'); }
+    const v = await nativeVolumen(); if (v) { store.sources.volumen = { importedAt: at, origin: 'direto', data: await readVolumen(v) }; found.push('Volumen'); }
+    const m = await nativeMemento(); if (m) { store.sources.memento = { importedAt: at, origin: 'direto', data: readMemento(m) }; found.push('Memento'); }
+  } catch (e) { console.error(e); }
+  if (!found.length) { if (!silent) toast('Nada encontrado neste endereço. A leitura direta só funciona com os apps publicados junto do Atrium.', true); return; }
+  persist(); render(); if (!silent) toast(`Lido direto: ${found.join(', ')}`);
+}
+
+/* =============================================================
+   MÓDULO 4 — DADOS DE EXEMPLO (só sem nenhuma fonte)
+   ============================================================= */
+function demo() {
+  const now = Date.now(), iso = d => new Date(now - d * DAY).toISOString(), dk = d => dayKey(now - d * DAY);
+  return {
+    cognitio: { fields: [{ id: 'f1', title: 'Filosofia', icon: '🏛️', posture: 'ultra' }, { id: 'f2', title: 'Gestão de Projetos', icon: '🗂️', posture: 'ultra' }],
+      areas: [{ id: 'a1', fieldId: 'f1', title: 'Ética', status: 1 }, { id: 'a2', fieldId: 'f1', title: 'Clássicos', status: 0 }, { id: 'a3', fieldId: 'f2', title: 'Fundamentos (PMBOK 7)', status: 2 }],
+      notes: [{ id: 'n1', areaId: 'a3', title: 'Os 8 domínios de desempenho', tags: [], createdAt: iso(3) }],
+      decks: [{ id: 'k1', title: 'Simulado CAPM', fieldId: 'f2', areaId: 'a3', items: [{ id: 'i1', t: 'Qual documento autoriza formalmente um projeto?', due: iso(1), g: 1, seen: true, done: true }, { id: 'i2', t: 'Quem ordena o Product Backlog?', due: null, g: -1, seen: false, done: false }] }],
+      pillLog: [0, 1, 3, 8, 9].map((d, i) => ({ deckId: 'k1', t: 'Exemplo', minutes: [8, 12, 6, 10, 15][i], grade: 2, at: iso(d) })), pillOfDay: null },
+    volumen: { items: [{ id: 'v1', type: 'book', title: 'Ética a Nicômaco', author: 'Aristóteles', category: 'Filosofia', status: 'in_progress', current: 120, total: 320, notes: 0, sessions: [{ date: dk(1), delta: 20 }, { date: dk(9), delta: 15 }], updatedAt: now, thumb: '' },
+      { id: 'v2', type: 'book', title: 'Guia PMBOK', author: 'PMI', category: 'Projetos', status: 'in_progress', current: 60, total: 540, notes: 2, sessions: [{ date: dk(3), delta: 12 }], updatedAt: now - DAY, thumb: '' }], dups: [] },
+    memento: { name: '', birth: '2000-01-01', quotes: [], memories: [], distractions: [], expenses: [{ date: dk(1), cat: 'Mercado', value: 45 }],
+      daylog: [1, 2, 8, 9].map((d, i) => ({ date: dk(d), score: [40, 55, 70, 60][i], drift: 30, checkDone: 3, checkTotal: 5, blocks: [{ cat: 'Projetos', min: 120, kind: 'prod' }, { cat: 'TV', min: [90, 60, 30, 40][i], kind: 'desvio' }] })),
+      weekReviews: { [weekKey()]: { commit: 'Dormir antes da meia-noite e ler todo dia.', savedAt: iso(1) } } }
+  };
+}
+function sources() {
+  const s = store.sources;
+  if (!(s.cognitio || s.volumen || s.memento)) { const d = demo(); return { ...d, demo: true }; }
+  const vol = s.volumen?.data ? { ...s.volumen.data, ...dedupe(s.volumen.data.items) } : null;
+  return { cognitio: s.cognitio?.data || null, volumen: vol, memento: s.memento?.data || null, demo: false };
+}
+
+/* =============================================================
+   MÓDULO 5 — MÉTRICAS POR JANELA DE DIAS (base de metas e tendências)
+   ============================================================= */
+function metrics(S, from, to) {
+  const inR = k => k >= from && k <= to, r = {};
+  if (S.cognitio) {
+    const logs = S.cognitio.pillLog.filter(l => inR(dayKey(l.at)));
+    r.pills = logs.length; r.pillMin = logs.reduce((t, l) => t + l.minutes, 0);
+    r.notes = S.cognitio.notes.filter(n => inR(dayKey(n.createdAt))).length;
+  }
+  if (S.volumen) {
+    let pages = 0, units = 0;
+    S.volumen.items.forEach(i => i.sessions.forEach(s => { if (inR(s.date) && s.delta > 0) { units += s.delta; if (i.type === 'book') pages += s.delta; } }));
+    r.pages = pages; r.volUnits = units;
+  }
+  if (S.memento) {
+    const days = S.memento.daylog.filter(x => inR(x.date)), sc = days.filter(x => x.score !== null);
+    r.memDays = days.length; r.exec = sc.length ? Math.round(sc.reduce((t, x) => t + x.score, 0) / sc.length) : null;
+    let prod = 0, desvio = 0;
+    days.forEach(x => x.blocks.forEach(b => { if (b.kind === 'prod') prod += b.min; else if (b.kind === 'desvio') desvio += b.min; }));
+    S.memento.distractions.filter(x => inR(x.date)).forEach(x => { desvio += x.min; });
+    r.prod = prod; r.desvio = desvio;
+    r.spent = S.memento.expenses.filter(e => inR(e.date)).reduce((t, e) => t + e.value, 0);
+  }
+  return r;
+}
+function cogQueue(c) {
+  if (!c) return { due: 0, weak: 0 };
+  const now = Date.now(); let due = 0, weak = 0;
+  c.decks.forEach(k => k.items.forEach(i => { if (i.seen && i.due && Date.parse(i.due) <= now) { due++; if (i.g >= 0 && i.g <= 1) weak++; } }));
+  return { due, weak };
+}
+function cogPill(c) {
+  if (!c) return null;
+  const p = c.pillOfDay;
+  if (p && p.date === new Date().toDateString()) {
+    const k = c.decks.find(x => x.id === p.deckId), it = k && k.items.find(i => i.id === p.itemId);
+    if (it) return { text: it.t, deck: k.title, areaId: k.areaId, weak: it.seen && it.g >= 0 && it.g <= 1, done: !!it.last && dayKey(it.last) === today() };
+  }
+  const now = Date.now(), cands = [];
+  c.decks.forEach(k => k.items.forEach(i => {
+    if (i.seen && i.due && Date.parse(i.due) <= now) cands.push({ k, i, s: (i.g <= 1 ? 0 : 10) + Date.parse(i.due) / 1e15 });
+    else if (!i.seen) cands.push({ k, i, s: 20 });
+  }));
+  cands.sort((a, b) => a.s - b.s);
+  const x = cands[0];
+  return x ? { text: x.i.t, deck: x.k.title, areaId: x.k.areaId, weak: x.i.seen && x.i.g >= 0 && x.i.g <= 1, done: false } : null;
+}
+const lastSession = i => i.sessions.reduce((m, s) => s.date > m ? s.date : m, '');
+function volCurrent(v) {
+  if (!v) return null;
+  return v.items.filter(i => i.status === 'in_progress').sort((a, b) => (lastSession(b) > lastSession(a) ? 1 : lastSession(b) < lastSession(a) ? -1 : 0) || (b.updatedAt - a.updatedAt))[0] || null;
+}
+/* Sequência de dias seguidos (hoje ainda não conta como quebra) */
+function streak(dates) {
+  const set = new Set(dates); let d = today(), n = 0;
+  if (!set.has(d)) d = addDays(d, -1);
+  while (set.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+const UNIT = { book: 'páginas', course: 'módulos', video: 'minutos', article: 'artigos' };
+const TYPE_ICON = { book: '📖', course: '🎓', video: '🎬', article: '📰' };
+
+/* =============================================================
+   MÓDULO 6 — PRÓXIMA AÇÃO DO DIA
+   Cruza os três apps e monta UMA ação de 1 a 3 partes, na ordem:
+   gargalo do Cognitio > revisões vencidas > leitura ativa do Volumen >
+   ficha que falta sobre essa leitura; à noite, o registro no Memento.
+   ============================================================= */
+function linkOf(itemId) { return store.links.find(l => l.volumenId === itemId); }
+function actionParts(S) {
+  const P = {};
+  const pill = cogPill(S.cognitio), q = cogQueue(S.cognitio);
+  if (pill && !pill.done && pill.weak) P.gargalo = { app: 'cog', kind: 'gargalo', min: 10, label: `1 pílula gargalo: “${clip(pill.text, 90)}”`, why: `${pl(q.weak, 'gargalo vencido', 'gargalos vencidos')} no Cognitio` };
+  else if (q.due) P.revisao = { app: 'cog', kind: 'revisao', min: 10, label: `${Math.min(q.due, 3)} ${Math.min(q.due, 3) === 1 ? 'revisão vencida' : 'revisões vencidas'} no Cognitio`, why: `${pl(q.due, 'revisão vencida', 'revisões vencidas')}` };
+  else if (pill && !pill.done) P.pilula = { app: 'cog', kind: 'pilula', min: 10, label: `1 pílula nova: “${clip(pill.text, 90)}”`, why: 'fila de pílulas em dia' };
+  const cur = volCurrent(S.volumen);
+  if (cur) {
+    const ls = lastSession(cur), idle = ls ? Math.floor((Date.now() - keyToDate(ls)) / DAY) : null;
+    const amount = { book: '30 min', course: '1 módulo', video: '20 min', article: '1 artigo' }[cur.type] || '30 min';
+    P.leitura = { app: 'vol', kind: 'leitura', min: 30, label: `${amount} de ${cur.title}`, why: idle === null ? `${cur.title} sem sessão registrada` : idle >= 2 ? `${cur.title} parado há ${idle} dias` : `${cur.title} em andamento` };
+    const lk = linkOf(cur.id), area = lk && S.cognitio && S.cognitio.areas.find(a => a.id === lk.areaId);
+    if (area && !S.cognitio.notes.some(n => n.areaId === area.id)) P.ficha = { app: 'cog', kind: 'ficha', min: 15, label: `1 ficha sobre ${cur.title} no caderno ${area.title}`, why: `leitura ligada sem nenhuma ficha` };
+  }
+  const h = new Date().getHours();
+  if (S.memento && h >= 19 && !S.memento.daylog.some(x => x.date === today())) P.registro = { app: 'mem', kind: 'registro', min: 5, label: 'Registrar o dia no Confronto do Memento', why: 'o dia de hoje ainda não foi registrado' };
+  return P;
+}
+function actionVariants(S) {
+  const P = actionParts(S), cog = P.gargalo || P.revisao || P.pilula, V = [];
+  const ov = store.today && store.today.date === today() && store.today.override;
+  if (ov) V.push([ov]);
+  if (cog && P.leitura) V.push([cog, P.leitura]);
+  if (P.leitura && P.ficha) V.push([P.leitura, P.ficha]);
+  if (cog) V.push([cog]);
+  if (P.leitura) V.push([P.leitura]);
+  if (!V.length && P.ficha) V.push([P.ficha]);
+  if (P.registro) V.forEach(v => { if (v.length < 3) v.push(P.registro); });
+  if (!V.length && P.registro) V.push([P.registro]);
+  return V;
+}
+function todayState() {
+  if (!store.today || store.today.date !== today()) store.today = { date: today(), variant: 0, override: null };
+  return store.today;
+}
+function currentAction(S) {
+  const V = actionVariants(S); if (!V.length) return null;
+  const st = todayState(), parts = V[st.variant % V.length];
+  return { parts, text: parts.map(p => p.label).join(' + '), min: parts.reduce((t, p) => t + p.min, 0), why: parts.map(p => p.why).filter(Boolean), total: V.length };
+}
+const doneToday = () => history.filter(h => h.date === today());
+
+/* =============================================================
+   MÓDULO 7 — METAS DA SEMANA (1 a 3, medidas pelos próprios dados)
+   ============================================================= */
+const GOALS = {
+  pills:   { label: 'pílulas no Cognitio', app: 'cog', dir: 1, get: r => r.pills },
+  pillMin: { label: 'min de prática no Cognitio', app: 'cog', dir: 1, get: r => r.pillMin },
+  notes:   { label: 'fichas escritas', app: 'cog', dir: 1, get: r => r.notes },
+  pages:   { label: 'páginas lidas no Volumen', app: 'vol', dir: 1, get: r => r.pages },
+  memDays: { label: 'dias registrados no Memento', app: 'mem', dir: 1, get: r => r.memDays, max: 7 },
+  exec:    { label: '% de execução média no Memento', app: 'mem', dir: 1, get: r => r.exec ?? 0, max: 100 },
+  prodH:   { label: 'h de projetos no Memento', app: 'mem', dir: 1, get: r => Math.round((r.prod || 0) / 6) / 10 },
+  desvioH: { label: 'h de desvio, no máximo', app: 'mem', dir: -1, get: r => Math.round((r.desvio || 0) / 6) / 10 },
+  actions: { label: 'próximas ações feitas no Atrium', app: 'atr', dir: 1, get: (r, from, to) => new Set(history.filter(h => h.date >= from && h.date <= to).map(h => h.date)).size, max: 7 }
+};
+const APP_OK = (S, app) => app === 'atr' || (app === 'cog' && S.cognitio) || (app === 'vol' && S.volumen) || (app === 'mem' && S.memento);
+function goalStatus(S, g, from, to, elapsed) {
+  const def = GOALS[g.metric]; if (!def) return null;
+  const val = def.get(metrics(S, from, to), from, to), frac = elapsed / 7;
+  let st;
+  if (def.dir > 0) st = val >= g.target ? 'ok' : (val >= g.target * frac * 0.9 ? 'track' : 'risk');
+  else st = val > g.target ? 'fail' : (val > g.target * frac * 1.1 ? 'risk' : 'track');
+  if (elapsed >= 7 && def.dir > 0 && st !== 'ok') st = 'fail';
+  if (elapsed >= 7 && def.dir < 0 && st !== 'fail') st = 'ok';
+  const pct = def.dir > 0 ? Math.min(100, g.target ? val / g.target * 100 : 0) : Math.min(100, g.target ? val / g.target * 100 : 0);
+  return { def, val, pct, st };
+}
+const ST_LABEL = { ok: 'Cumprida', track: 'No caminho', risk: 'Em risco', fail: 'Não cumprida' };
+
+/* =============================================================
+   MÓDULO 8 — LIGAÇÕES
+   ============================================================= */
+const STOP = new Set('curso completo gratis gratuito gratuita livro guia como para sobre video modulo iniciantes voce pessoas comuns nunca assim completa nova novo historia parte volume'.split(' '));
+const words = t => norm(t).split(/[^a-z0-9]+/).filter(w => w.length >= 5 && !STOP.has(w));
+function linkRows(S) {
+  const c = S.cognitio, v = S.volumen; if (!c || !v) return [];
+  return v.items.map(item => {
+    const link = store.links.find(l => (item.aliases || [item.id]).includes(l.volumenId));
+    const area = link && c.areas.find(a => a.id === link.areaId);
+    let verdict = null, notes = 0, pills = 0;
+    if (area) {
+      notes = c.notes.filter(x => x.areaId === area.id).length;
+      const decks = new Set(c.decks.filter(k => k.areaId === area.id).map(k => k.id));
+      pills = c.pillLog.filter(l => decks.has(l.deckId)).length;
+      verdict = notes && pills ? 2 : notes || pills ? 1 : 0;
+    }
+    return { item, link: area ? link : null, area, verdict, notes, pills };
+  });
+}
+/* Sugestão por categoria: 1) a área que você já escolheu para essa categoria;
+   2) área cujo nome coincide com a categoria; 3) área com palavra forte em comum */
+function suggestArea(c, item) {
+  const cat = norm(item.category);
+  if (cat && store.catMap[cat]) { const a = c.areas.find(x => x.id === store.catMap[cat]); if (a) return { a, why: 'mesma categoria' }; }
+  if (cat) {
+    const a = c.areas.find(x => norm(x.title) === cat || norm(x.title).startsWith(cat) || cat.startsWith(norm(x.title)));
+    if (a) return { a, why: 'categoria' };
+  }
+  const iw = new Set(words(item.title + ' ' + item.category));
+  let best = null;
+  c.areas.forEach(a => { const s = words(a.title).filter(w => iw.has(w)).length; if (s && (!best || s > best.s)) best = { a, s }; });
+  return best ? { a: best.a, why: 'título' } : null;
+}
+function proposeAction(r) {
+  const it = r.item, t = clip(it.title, 60);
+  if (r.link) {
+    if (r.verdict === 2) return null;
+    if (r.verdict === 1) return { label: `Criar 3 pílulas sobre ${t} no Cognitio`, app: 'cog', min: 15 };
+    return { label: `Escrever a 1ª ficha sobre ${t} no caderno ${r.area.title}`, app: 'cog', min: 15 };
+  }
+  if (it.status === 'not_started') return null;
+  if (it.type === 'course') return { label: `1 ficha para cada módulo concluído de ${t}`, app: 'cog', min: 20 };
+  if (it.type === 'video') return { label: `1 ficha com a ideia central de ${t}`, app: 'cog', min: 10 };
+  if (it.type === 'article') return { label: `1 ficha-resumo de ${t}`, app: 'cog', min: 10 };
+  return { label: `Criar 3 fichas sobre ${t}`, app: 'cog', min: 20 };
+}
+function setLink(item, areaId) {
+  const ids = item.aliases || [item.id];
+  store.links = store.links.filter(l => !ids.includes(l.volumenId));
+  if (areaId) store.links.push({ volumenId: item.id, areaId, createdAt: new Date().toISOString() });
+  persist();
+}
+
+/* =============================================================
+   MÓDULO 9 — TELAS
+   ============================================================= */
+let tab = 'hoje', range = 7, linkFilter = 'andamento';
+const view = () => $('#view');
+function render() {
+  const S = sources();
+  $('#demoBanner').innerHTML = S.demo ? `<div class="demo-banner"><span><b>Dados de exemplo.</b> Importe os backups dos seus apps para ver os seus.</span><button class="btn sm primary" data-go="fontes">Ir para Fontes</button></div>` : '';
+  document.querySelectorAll('[role="tab"]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  ({ hoje: renderHoje, semana: renderSemana, ligacoes: renderLigacoes, fontes: renderFontes })[tab](S);
+}
+const openBtn = (app, label) => { const u = store.appUrls[app]; return u ? `<a class="btn sm ac-open" href="${esc(u)}" target="_blank" rel="noopener">${label}</a>` : ''; };
+const APPN = { cog: 'Cognitio', vol: 'Volumen', mem: 'Memento', atr: 'Atrium' };
+function freshStrip(S) {
+  if (S.demo) return '';
+  const chips = ['memento', 'volumen', 'cognitio'].map(app => {
+    const f = freshness(app);
+    if (!f) return `<button class="fresh missing" data-go="fontes"><i class="${app.slice(0, 3)}"></i>${NAMES[app]}: sem dados</button>`;
+    return `<button class="fresh${f.stale ? ' stale' : ''}" data-go="fontes" title="Dados de ${fmtDT(Date.now() - f.hours * HOUR)}"><i class="${app.slice(0, 3)}"></i>${NAMES[app]} ${f.label}</button>`;
+  }).join('');
+  const stale = ['memento', 'volumen', 'cognitio'].filter(a => freshness(a)?.stale);
+  return `<div class="freshbar${stale.length ? ' warn' : ''}">${stale.length ? `<p>⚠ ${stale.map(a => NAMES[a]).join(', ')} ${stale.length === 1 ? 'está' : 'estão'} há mais de ${STALE_HOURS} h sem atualizar. A ação do dia pode estar errada.</p>` : ''}<div class="freshchips">${chips}</div></div>`;
+}
+
+/* ---------- Hoje ---------- */
+function renderHoje(S) {
+  const m = S.memento, name = m && m.name ? m.name.split(' ')[0] : '';
+  const h = new Date().getHours(), sal = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  let life = '';
+  if (m && /^\d{4}-\d{2}-\d{2}$/.test(m.birth)) {
+    const days = Math.floor((Date.now() - Date.parse(m.birth + 'T00:00:00')) / DAY);
+    life = `<p class="life">Dia <b>${days.toLocaleString('pt-BR')}</b> da sua vida.</p>`;
+  }
+  const act = currentAction(S), done = doneToday(), atrStreak = streak(history.map(x => x.date));
+  const st = todayState();
+  let actHtml;
+  if (!act) actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia</p><p class="act-text">Nada pendente nos três apps.</p><p class="act-why">Sem gargalos, sem revisões vencidas e sem leitura em andamento. Escolha um território novo no Cognitio.</p></section>`;
+  else if (st.doneAt && !st.more) actHtml = `<section class="card action done"><div class="checkmark" aria-hidden="true">✓</div><p class="eyebrow">Ação do dia feita às ${fmtTime(st.doneAt)}</p><p class="act-text">${esc(st.doneText)}</p>
+      <p class="act-why">${atrStreak > 1 ? `🔥 ${atrStreak} dias seguidos cumprindo a ação do dia.` : 'Primeiro dia da sequência. Amanhã tem outra.'}</p>
+      <div class="act-row"><button class="btn" data-more>Mais uma ação</button></div></section>`;
+  else actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia${done.length ? ` · ${done.length} feita${done.length > 1 ? 's' : ''} hoje` : ''}</p>
+      <ul class="act-parts">${act.parts.map(p => `<li><span class="chip ${p.app}">${APPN[p.app]}</span><span>${esc(p.label)}</span></li>`).join('')}</ul>
+      <p class="act-why">Por quê: ${esc(act.why.join('; '))}. Cerca de ${fmtMin(act.min)}.</p>
+      <div class="act-row"><button class="btn primary big" data-did>✓ Fiz</button>${act.total > 1 ? '<button class="btn" data-swap>Trocar</button>' : ''}</div></section>`;
+
+  // Contexto compacto: um número por app
+  const q = cogQueue(S.cognitio), cur = volCurrent(S.volumen), d = m && m.daylog[0];
+  const f = app => { const x = freshness(app); return x ? `<small class="${x.stale ? 'stale-t' : ''}">${x.label}</small>` : ''; };
+  const ctx = `<div class="ctx">
+    <article class="card ctx-c mem"><p class="ac-name">MEMENTO ${f('memento')}</p>${m ? d ? `<p class="ctx-v">${d.score === null ? '–' : d.score + '%'}</p><p class="ctx-l">execução em ${fmtDate(keyToDate(d.date))}${d.checkTotal ? `, checklist ${d.checkDone}/${d.checkTotal}` : ''}</p>` : '<p class="ctx-l">Nenhum dia registrado.</p>' : '<p class="ctx-l">Sem dados.</p>'}${openBtn('memento', 'Abrir')}</article>
+    <article class="card ctx-c vol"><p class="ac-name">VOLUMEN ${f('volumen')}</p>${cur ? `<p class="ctx-v">${cur.total ? Math.round(cur.current / cur.total * 100) + '%' : '–'}</p><p class="ctx-l">${esc(clip(cur.title, 40))}</p>` : `<p class="ctx-l">${S.volumen ? 'Nada em andamento.' : 'Sem dados.'}</p>`}${openBtn('volumen', 'Abrir')}</article>
+    <article class="card ctx-c cog"><p class="ac-name">COGNITIO ${f('cognitio')}</p>${S.cognitio ? `<p class="ctx-v">${q.due}</p><p class="ctx-l">${q.due === 1 ? 'revisão vencida' : 'revisões vencidas'}${q.weak ? `, ${q.weak} 🎯` : ''}</p>` : '<p class="ctx-l">Sem dados.</p>'}${openBtn('cognitio', 'Abrir')}</article>
+  </div>`;
+
+  // Semana em uma linha
+  const wk = weekKey(), from = mondayOf(today()), elapsed = Math.round((keyToDate(today()) - keyToDate(from)) / DAY) + 1;
+  const goals = (store.goals[wk] || []).map(g => goalStatus(S, g, from, today(), elapsed)).filter(Boolean);
+  const wkLine = goals.length
+    ? `<button class="card weekline" data-go="semana"><span>Metas da semana</span><b>${goals.filter(g => g.st === 'ok').length} cumpridas, ${goals.filter(g => g.st === 'track').length} no caminho, ${goals.filter(g => g.st === 'risk' || g.st === 'fail').length} em risco</b><em>›</em></button>`
+    : `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Nenhuma meta definida. Defina de 1 a 3 metas.</b><em>›</em></button>`;
+
+  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${actHtml}${wkLine}${ctx}</div>`;
+}
+
+/* ---------- Semana: ritual, metas, tendências, sequências, ritmo ---------- */
+function trendRow(label, now, prev, { unit = '', pp = false, lowerBetter = false, fmt = v => v } = {}) {
+  if (now === null || now === undefined) return '';
+  let delta = '', cls = 'flat';
+  if (prev === null || prev === undefined) delta = 'sem base anterior';
+  else {
+    const d = now - prev;
+    if (d === 0) delta = '→ igual à semana anterior';
+    else {
+      const up = d > 0; cls = (up !== lowerBetter) ? 'good' : 'bad';
+      const pct = !pp && prev ? ` (${up ? '+' : ''}${Math.round(d / prev * 100)}%)` : '';
+      delta = `${up ? '↑' : '↓'} ${pp ? Math.abs(d) + ' p.p.' : (up ? '+' : '−') + fmt(Math.abs(d)) + unit}${pct}${!prev && !pp ? ' (antes: 0)' : ''}`;
+    }
+  }
+  return `<div class="trend"><span class="tl">${label}</span><b>${fmt(now)}${unit}</b><em class="${cls}">${delta}</em></div>`;
+}
+function renderSemana(S) {
+  const t = today(), wk = weekKey(), from = mondayOf(t), elapsed = Math.round((keyToDate(t) - keyToDate(from)) / DAY) + 1;
+  const W = metrics(S, from, t);
+  // --- Ritual: compromisso do Memento x realidade
+  const m = S.memento;
+  let commit = null, intent = null;
+  if (m) {
+    const keys = Object.keys(m.weekReviews).filter(k => /^\d{4}-S\d+$/.test(k)).sort((a, b) => { const [ya, wa] = a.split('-S').map(Number), [yb, wb] = b.split('-S').map(Number); return ya - yb || wa - wb; });
+    const k = keys.includes(wk) ? wk : keys.filter(x => x <= wk).pop();
+    if (k && m.weekReviews[k] && m.weekReviews[k].commit) commit = { text: m.weekReviews[k].commit, key: k };
+    const im = m.memories.find(x => x.scope === 'Semana' && x.wk === wk); if (im) intent = im.title || clip(im.text, 140);
+  }
+  const reality = [];
+  if (W.desvio !== undefined) reality.push(`<li><b style="color:var(--mem)">${fmtMin(W.desvio)}</b> de desvio</li><li><b style="color:var(--vol)">${fmtMin(W.prod)}</b> de projetos</li>`);
+  if (W.pillMin !== undefined) reality.push(`<li><b style="color:var(--cog)">${fmtMin(W.pillMin)}</b> de prática, ${pl(W.notes, 'ficha', 'fichas')}</li>`);
+  if (W.pages !== undefined) reality.push(`<li><b style="color:var(--vol)">${W.pages}</b> páginas lidas</li>`);
+  if (W.exec !== undefined && W.exec !== null) reality.push(`<li><b>${W.exec}%</b> de execução em ${pl(W.memDays, 'dia registrado', 'dias registrados')}</li>`);
+  const ritual = `<section class="card ritual"><p class="eyebrow">Semana ${wk.split('-S')[1]}, dia ${elapsed} de 7</p><h3>Estou cumprindo o que prometi?</h3>
+    <div class="vs"><div class="vs-l"><small>Promessa</small>${commit ? `<p class="promise">“${esc(commit.text)}”</p><p class="src">Memento, revisão ${esc(commit.key.split('-S')[1] ? 'da semana ' + commit.key.split('-S')[1] : '')}</p>` : '<p class="promise muted">Sem compromisso registrado no Memento para esta semana.</p>'}
+      ${intent ? `<p class="src">Intenção da semana: ${esc(intent)}</p>` : ''}</div>
+      <div class="vs-r"><small>Realidade desde segunda</small>${reality.length ? `<ul>${reality.join('')}</ul>` : '<p class="muted">Sem dados desta semana.</p>'}</div></div></section>`;
+
+  // --- Metas
+  const list = store.goals[wk] || [];
+  const goalsHtml = list.map(g => { const s = goalStatus(S, g, from, t, elapsed); if (!s) return ''; const u = s.def.dir < 0 ? '' : '';
+    return `<li class="goal ${s.st}"><div class="g-top"><span>${s.def.dir < 0 ? 'Até' : ''} <b>${g.target}</b> ${esc(s.def.label)}</span><em>${ST_LABEL[s.st]}</em></div>
+      <div class="g-bar"><i style="width:${s.pct}%"></i></div><div class="g-foot"><span>Agora: <b>${s.val}${u}</b></span><button class="link" data-goal-rm="${g.id}">Remover</button></div></li>`; }).join('');
+  const avail = Object.entries(GOALS).filter(([k, d]) => APP_OK(S, d.app));
+  const PREV_WK = (() => { const pm = addDays(from, -7), pe = addDays(from, -1), pk = weekKey(keyToDate(pm)); const pg = (store.goals[pk] || []).map(g => goalStatus(S, g, pm, pe, 7)).filter(Boolean); return pg.length ? `<p class="prevgoals">Semana passada: <b>${pg.filter(x => x.st === 'ok').length} de ${pg.length}</b> metas cumpridas.</p>` : ''; })();
+  const goalsSec = `<section class="card goals"><div class="g-head"><h3>Metas da semana</h3><span>${list.length}/3</span></div>
+    ${list.length ? `<ul>${goalsHtml}</ul>` : '<p class="muted">Metas medidas pelos próprios dados dos apps. Escolha de 1 a 3.</p>'}
+    ${list.length < 3 ? `<div class="g-add"><input id="gTarget" type="number" min="0" step="1" inputmode="numeric" placeholder="Nº" aria-label="Valor da meta"><select id="gMetric" aria-label="Tipo de meta">${avail.map(([k, d]) => `<option value="${k}">${d.label}</option>`).join('')}</select><button class="btn primary" id="gAdd">Adicionar</button></div>` : ''}
+    ${PREV_WK}</section>`;
+
+  // --- Tendências: últimos 7 dias x 7 anteriores
+  const A = metrics(S, addDays(t, -6), t), B = metrics(S, addDays(t, -13), addDays(t, -7));
+  const trends = [
+    S.memento ? trendRow('Execução média (Memento)', A.exec, B.exec, { unit: '%', pp: true }) : '',
+    S.memento ? trendRow('Projetos (Memento)', A.prod, B.prod, { fmt: fmtMin }) : '',
+    S.memento ? trendRow('Desvio (Memento)', A.desvio, B.desvio, { fmt: fmtMin, lowerBetter: true }) : '',
+    S.memento ? trendRow('Dias registrados', A.memDays, B.memDays) : '',
+    S.cognitio ? trendRow('Prática (Cognitio)', A.pillMin, B.pillMin, { fmt: fmtMin }) : '',
+    S.cognitio ? trendRow('Fichas escritas', A.notes, B.notes) : '',
+    S.volumen ? trendRow('Páginas lidas (Volumen)', A.pages, B.pages) : '',
+    S.memento ? trendRow('Gastos registrados', A.spent, B.spent, { fmt: v => brl(v), lowerBetter: true }) : ''
+  ].join('');
+  // --- Sequências
+  const sMem = S.memento ? streak(S.memento.daylog.map(x => x.date)) : null;
+  const sCog = S.cognitio ? streak(S.cognitio.pillLog.map(l => dayKey(l.at))) : null;
+  const sAtr = streak(history.map(x => x.date));
+  const streaks = `<div class="streaks">${sMem !== null ? `<div><b>${sMem ? '🔥 ' : ''}${sMem}</b><small>${sMem === 1 ? 'dia' : 'dias'} seguidos registrando no Memento</small></div>` : ''}${sCog !== null ? `<div><b>${sCog ? '🔥 ' : ''}${sCog}</b><small>${sCog === 1 ? 'dia' : 'dias'} seguidos com pílulas</small></div>` : ''}<div><b>${sAtr ? '🔥 ' : ''}${sAtr}</b><small>${sAtr === 1 ? 'dia' : 'dias'} cumprindo a ação do dia</small></div></div>`;
+
+  // --- Ritmo (mapa de calor)
+  const n = range, days = Array.from({ length: n }, (_, i) => addDays(t, -(n - 1 - i)));
+  const rows = [];
+  if (S.cognitio) { const by = {}; S.cognitio.pillLog.forEach(l => { const k = dayKey(l.at); by[k] = (by[k] || 0) + l.minutes; }); rows.push({ cls: 'cog', label: 'Cognitio', unit: 'min de pílulas', vals: days.map(d => by[d] || 0) }); }
+  if (S.volumen) { const by = {}; S.volumen.items.forEach(i => i.sessions.forEach(s => { if (s.delta > 0) by[s.date] = (by[s.date] || 0) + s.delta; })); rows.push({ cls: 'vol', label: 'Volumen', unit: 'de progresso', vals: days.map(d => by[d] || 0) }); }
+  if (S.memento) { const by = {}; S.memento.daylog.forEach(x => { if (x.score !== null) by[x.date] = x.score; }); rows.push({ cls: 'mem', label: 'Memento', unit: '% de execução', vals: days.map(d => by[d] ?? null), abs: 100 }); }
+  if (history.length) { const by = {}; history.forEach(x => { by[x.date] = (by[x.date] || 0) + 1; }); rows.push({ cls: 'atr', label: 'Atrium', unit: 'ações feitas', vals: days.map(d => by[d] || 0) }); }
+  const heat = rows.length ? `<div class="heat-grid" style="grid-template-columns:auto repeat(${n},minmax(0,1fr))">
+      ${rows.map(r => { const max = r.abs || Math.max(1, ...r.vals.map(v => v || 0));
+        return `<span class="heat-label ${r.cls}">${r.label}</span>` + r.vals.map((v, i) => `<span class="cell ${r.cls}${days[i] === t ? ' today' : ''}"${v ? ` data-v style="--p:${Math.round(18 + 82 * v / max)}"` : ''} title="${fmtDate(keyToDate(days[i]))}: ${v === null ? 'sem registro' : v + ' ' + r.unit}"></span>`).join(''); }).join('')}
+      <span></span>${days.map((d, i) => `<span class="dlabel">${n === 7 ? keyToDate(d).toLocaleDateString('pt-BR', { weekday: 'narrow' }) : (i % 5 === 0 || i === n - 1) ? d.slice(8) : ''}</span>`).join('')}
+    </div>` : '<p class="empty-note">Importe ao menos um backup para ver o ritmo.</p>';
+
+  view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Semana</h2><p>Promessa, metas e tendência.</p></div></div>
+    ${freshStrip(S)}${ritual}${goalsSec}
+    <section class="card trends"><h3>Tendência</h3><p class="muted">Últimos 7 dias comparados com os 7 anteriores.</p>${trends || '<p class="muted">Sem dados suficientes.</p>'}</section>
+    ${streaks}
+    <section class="card heat"><div class="g-head"><h3>Ritmo</h3><div class="seg" id="rangeSeg"><button data-r="7" aria-pressed="${n === 7}">7 dias</button><button data-r="30" aria-pressed="${n === 30}">30 dias</button></div></div>${heat}
+      <p class="heat-note">Cada linha usa a sua própria escala.</p></section></div>`;
+}
+
+/* ---------- Ligações: por categoria, com ação proposta ---------- */
+function renderLigacoes(S) {
+  if (!S.volumen || !S.cognitio) {
+    view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Ligações</h2><p>Leituras do Volumen ligadas a áreas do Cognitio.</p></div></div>
+      <section class="card panel"><p>Para ligar leituras a áreas de estudo, o Atrium precisa dos backups do <b>Volumen</b> e do <b>Cognitio</b>.</p><div class="row"><button class="btn primary" data-go="fontes">Importar backups</button></div></section></div>`;
+    return;
+  }
+  const all = linkRows(S);
+  const linked = all.filter(r => r.link), practiced = linked.filter(r => r.verdict === 2).length, notesOnly = linked.filter(r => r.verdict === 1).length, readOnly = linked.filter(r => r.verdict === 0).length;
+  const F = { andamento: r => r.item.status === 'in_progress', concluidos: r => r.item.status === 'done', soltos: r => !r.link && r.item.status !== 'not_started', todos: () => true };
+  const rows = all.filter(F[linkFilter]);
+  const groups = new Map();
+  rows.forEach(r => { const k = r.item.category || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+  const order = [...groups.keys()].sort((a, b) => (!a) - (!b) || groups.get(b).length - groups.get(a).length || a.localeCompare(b));
+  const areaOpts = (sel, ph) => `<option value="">${ph}</option>` + S.cognitio.fields.map(f => `<optgroup label="${esc(f.icon + ' ' + f.title)}">${S.cognitio.areas.filter(a => a.fieldId === f.id).map(a => `<option value="${a.id}"${a.id === sel ? ' selected' : ''}>${esc(a.title)}</option>`).join('')}</optgroup>`).join('');
+  const VT = ['Só leitura', 'Virou fichas', 'Virou prática'];
+  const itemHtml = r => {
+    const it = r.item, sug = !r.link && suggestArea(S.cognitio, it), pa = proposeAction(r), pct = it.total ? Math.round(it.current / it.total * 100) : 0;
+    return `<article class="card litem">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${TYPE_ICON[it.type] || '📘'}'}))">` : `<div class="ph">${TYPE_ICON[it.type] || '📘'}</div>`}
+      <div class="li-main">
+        <div class="li-top"><div style="min-width:0"><p class="li-title">${esc(it.title)}</p><p class="li-sub">${esc(it.author || '')}${it.total ? `${it.author ? ' · ' : ''}${pct}%` : ''}</p></div>
+          ${r.link ? `<span class="verdict v${r.verdict}">${VT[r.verdict]}</span>` : ''}</div>
+        ${r.link ? `<p class="li-proof">${esc(r.area.title)}: ${pl(r.notes, 'ficha', 'fichas')}, ${pl(r.pills, 'pílula resolvida', 'pílulas resolvidas')}.</p>` : ''}
+        ${pa ? `<div class="li-act"><span>→ ${esc(pa.label)}</span><button class="btn sm" data-today="${esc(it.id)}">Fazer hoje</button></div>` : ''}
+        ${sug ? `<button class="suggest" data-sug="${esc(it.id)}" data-area="${sug.a.id}">Ligar a ${esc(sug.a.title)}? <small>(${sug.why})</small></button>` : ''}
+        <div class="li-link"><select data-link="${esc(it.id)}" aria-label="Área do Cognitio para ${esc(it.title)}">${areaOpts(r.link ? r.link.areaId : '', 'Ligar a uma área…')}</select>${r.link ? `<button class="btn sm" data-unlink="${esc(it.id)}">Desligar</button>` : ''}</div>
+      </div></article>`;
+  };
+  const dupsNote = S.volumen.dups && S.volumen.dups.length ? `<p class="dupnote">${pl(S.volumen.dups.length, 'item repetido no Volumen foi juntado', 'itens repetidos no Volumen foram juntados')}: ${S.volumen.dups.map(x => `“${esc(clip(x, 40))}”`).join(', ')}. Vale apagar a cópia no próprio Volumen.</p>` : '';
+  view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Ligações</h2><p>O que você lê virou ficha e pílula, ou ficou só em “lido”?</p></div></div>
+    <section class="card linksum"><div><b>${linked.length}</b><small>ligadas</small></div><div><b style="color:var(--vol)">${practiced}</b><small>viraram prática</small></div><div><b style="color:var(--cog)">${notesOnly}</b><small>viraram fichas</small></div><div><b style="color:var(--mem)">${readOnly}</b><small>só leitura</small></div></section>
+    ${dupsNote}
+    <div class="filters">${[['andamento', 'Em andamento'], ['concluidos', 'Concluídos'], ['soltos', 'Lidos sem ligação'], ['todos', 'Todos']].map(([k, l]) => `<button data-f="${k}" aria-pressed="${linkFilter === k}">${l}</button>`).join('')}</div>
+    ${order.length ? order.map(cat => {
+      const g = groups.get(cat), mapped = cat && store.catMap[norm(cat)];
+      return `<section class="lgroup"><div class="lg-head"><h3>${cat ? esc(cat) : 'Sem categoria'} <small>${g.length}</small></h3>
+        ${cat ? `<select data-cat="${esc(cat)}" aria-label="Ligar a categoria ${esc(cat)}">${areaOpts(mapped || '', 'Ligar a categoria inteira a…')}</select>` : '<span class="lg-hint">Defina a categoria no Volumen para ligar em grupo.</span>'}</div>
+        <div class="litems">${g.map(itemHtml).join('')}</div></section>`;
+    }).join('') : '<p class="empty-note">Nada neste filtro.</p>'}</div>`;
+}
+
+/* ---------- Fontes ---------- */
+function renderFontes() {
+  const card = app => {
+    const s = store.sources[app], f = freshness(app);
+    return `<section class="card src ${app.slice(0, 3)}"><h3>${NAMES[app]}</h3>
+      ${s ? `<p class="state">${f && f.stale ? '<span class="stale-t">⚠ Desatualizado</span> · ' : ''}Dados de <b>${f ? f.label : '–'}</b>${s.origin === 'direto' ? ' (leitura direta)' : ''}<br>Importado em ${fmtDT(s.importedAt)}</p><ul>${SUMS[app](s.data).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
+        : `<p class="state">Nenhum backup importado.</p>`}
+      <div><label for="url-${app}">Link para abrir o app (opcional)</label><input id="url-${app}" data-url="${app}" placeholder="https://… ou nome do arquivo .html" value="${esc(store.appUrls[app])}"></div>
+      <div class="row"><button class="btn sm primary" data-import>Importar backup</button>${s ? `<button class="btn sm danger" data-clear="${app}">Remover</button>` : ''}</div></section>`;
+  };
+  let used = 0; try { used = ((localStorage.getItem(KEY) || '').length + (localStorage.getItem(HISTORY_KEY) || '').length) * 2; } catch {}
+  const pct = Math.min(100, used / (5 * 1024 * 1024) * 100);
+  view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Fontes</h2><p>De onde o Atrium tira os dados. Ele só lê: nada volta para os apps.</p></div>
+      <button class="btn primary" data-import>Importar backups</button></div>
+    <div class="srcs">${card('memento')}${card('volumen')}${card('cognitio')}</div>
+    <section class="card panel"><h3>Como atualizar</h3><p>Exporte o backup em cada app e importe aqui; pode selecionar os três de uma vez. Acima de ${STALE_HOURS} h sem atualizar, o Atrium avisa na tela Hoje, porque a ação do dia passa a usar dados velhos.</p>
+      <div class="meter"><i style="width:${pct}%"></i></div><p class="note" style="font-size:12px">${(used / 1024).toFixed(0)} KB usados pelo Atrium, de cerca de 5 MB.</p></section>
+    <section class="card panel"><h3>Leitura direta (Fase 2)</h3><p>Com o Atrium e os três apps publicados no mesmo endereço (ex.: GitHub Pages), ele lê o Cognitio no localStorage e o Memento e o Volumen no IndexedDB, sem backup. ${USE_GITHUB_PAGES_ORIGIN ? '<b>Ativa:</b> a leitura acontece ao abrir e ao voltar para a aba.' : 'Para ligar de vez, mude <code>USE_GITHUB_PAGES_ORIGIN</code> para <code>true</code> no código.'}</p><div class="row"><button class="btn" id="nativeBtn">Tentar leitura direta agora</button></div></section>
+    <section class="card panel"><h3>Backup do Atrium</h3><p>Guarda ligações, metas, histórico de ações, links dos apps e os resumos importados.</p><div class="row"><button class="btn" id="expBtn">Exportar backup do Atrium</button><button class="btn" id="impBtn">Importar backup do Atrium</button></div></section></div>`;
+}
+
+/* =============================================================
+   MÓDULO 10 — EVENTOS
+   ============================================================= */
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function applyTheme() { const t = document.documentElement.dataset.theme; $('#themeBtn').innerHTML = t === 'dark' ? SUN : MOON; $('#metaTheme').content = t === 'dark' ? '#0d0e12' : '#f5f0e6'; }
+function go(t) { tab = t; render(); window.scrollTo({ top: 0 }); }
+function burst(el) {
+  const r = el.getBoundingClientRect(), colors = ['var(--mem)', 'var(--vol)', 'var(--cog)'];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('i'); s.className = 'spark';
+    s.style.cssText = `left:${r.left + r.width / 2}px;top:${r.top + r.height / 2}px;background:${colors[i % 3]};--dx:${Math.cos(i / 18 * 6.28) * (40 + Math.random() * 40)}px;--dy:${Math.sin(i / 18 * 6.28) * (40 + Math.random() * 40)}px`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 700);
+  }
+}
+function findItem(id) { const v = sources().volumen; return v && v.items.find(i => i.id === id || (i.aliases || []).includes(id)); }
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  const tb = t.closest('[data-tab]'); if (tb) return go(tb.dataset.tab);
+  const g = t.closest('[data-go]'); if (g) return go(g.dataset.go);
+  if (t.closest('#themeBtn')) { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem(THEME_KEY, n); } catch {} applyTheme(); return; }
+  if (t.closest('[data-import]')) return $('#fileIn').click();
+  // Próxima ação
+  const did = t.closest('[data-did]');
+  if (did) {
+    const act = currentAction(sources()); if (!act) return;
+    const st = todayState();
+    history.push({ id: uid(), date: today(), at: new Date().toISOString(), text: act.text, minutes: act.min, parts: act.parts.map(p => ({ app: p.app, kind: p.kind, label: p.label })) });
+    persistHistory();
+    Object.assign(st, { doneAt: new Date().toISOString(), doneText: act.text, more: false, variant: st.variant + 1, override: null });
+    persist(); burst(did);
+    const s = streak(history.map(x => x.date));
+    toast(s > 1 ? `Registrado. ${s} dias seguidos.` : 'Registrado. Bom começo.');
+    setTimeout(render, 250); return;
+  }
+  if (t.closest('[data-swap]')) { const st = todayState(); st.variant++; st.override = null; persist(); render(); return; }
+  if (t.closest('[data-more]')) { const st = todayState(); st.more = true; persist(); render(); return; }
+  const td = t.closest('[data-today]');
+  if (td) {
+    const S = sources(), row = linkRows(S).find(r => r.item.id === td.dataset.today), pa = row && proposeAction(row);
+    if (!pa) return;
+    const st = todayState(); st.override = { app: pa.app, kind: 'ligacao', min: pa.min, label: pa.label, why: 'escolhida por você em Ligações' }; st.variant = 0; st.more = true; persist();
+    toast('Virou a sua próxima ação de hoje'); return go('hoje');
+  }
+  // Metas
+  if (t.closest('#gAdd')) {
+    const metric = $('#gMetric').value, target = Math.max(0, Math.round(num($('#gTarget').value) * 10) / 10), def = GOALS[metric];
+    if (!target && def.dir > 0) { toast('Escreva um número para a meta.', true); $('#gTarget').focus(); return; }
+    if (def.max && target > def.max) { toast(`O máximo para esta meta é ${def.max}.`, true); return; }
+    const wk = weekKey(); store.goals[wk] = [...(store.goals[wk] || []), { id: uid(), metric, target }].slice(0, 3); persist(); render(); toast('Meta adicionada'); return;
+  }
+  const gr = t.closest('[data-goal-rm]'); if (gr) { const wk = weekKey(); store.goals[wk] = (store.goals[wk] || []).filter(x => x.id !== gr.dataset.goalRm); persist(); render(); return; }
+  // Fontes e ligações
+  const cl = t.closest('[data-clear]');
+  if (cl) { if (!confirm(`Remover o resumo do ${NAMES[cl.dataset.clear]} do Atrium? O app original não é afetado.`)) return; store.sources[cl.dataset.clear] = null; persist(); render(); return; }
+  const r = t.closest('[data-r]'); if (r) { range = +r.dataset.r; render(); return; }
+  const f = t.closest('[data-f]'); if (f) { linkFilter = f.dataset.f; render(); return; }
+  const sg = t.closest('[data-sug]'); if (sg) { const it = findItem(sg.dataset.sug); if (it) { setLink(it, sg.dataset.area); render(); toast('Ligação criada'); } return; }
+  const ul = t.closest('[data-unlink]'); if (ul) { const it = findItem(ul.dataset.unlink); if (it) { setLink(it, ''); render(); } return; }
+  if (t.closest('#nativeBtn')) return readNative();
+  if (t.closest('#expBtn')) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ app: 'Atrium', exportedAt: new Date().toISOString(), ...store, history }, null, 2)], { type: 'application/json' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: `atrium-backup-${today()}.json` });
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500); toast('Backup do Atrium exportado'); return;
+  }
+  if (t.closest('#impBtn')) return $('#atriumIn').click();
+});
+document.addEventListener('change', e => {
+  const sel = e.target.closest('[data-link]');
+  if (sel) { const it = findItem(sel.dataset.link); if (it) { setLink(it, sel.value); render(); if (sel.value) toast('Ligação criada'); } return; }
+  const cs = e.target.closest('[data-cat]');
+  if (cs) {
+    const cat = cs.dataset.cat, areaId = cs.value, S = sources();
+    if (areaId) store.catMap[norm(cat)] = areaId; else delete store.catMap[norm(cat)];
+    let n = 0;
+    if (areaId) linkRows(S).filter(r => r.item.category === cat && !r.link).forEach(r => { setLink(r.item, areaId); n++; });
+    persist(); render(); if (areaId) toast(n ? `${pl(n, 'item ligado', 'itens ligados')}; novos itens de “${cat}” vão sugerir esta área` : 'Categoria mapeada'); return;
+  }
+  const u = e.target.closest('[data-url]');
+  if (u) { const v = u.value.trim(); if (v && !safeUrl(v) && !/^[\w./-]+\.html?$/i.test(v)) { toast('Use um link https:// ou um nome de arquivo .html', true); u.value = store.appUrls[u.dataset.url]; return; } store.appUrls[u.dataset.url] = v; persist(); toast('Link salvo'); }
+});
+$('#fileIn').addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) importFiles(files); });
+$('#atriumIn').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (d.app !== 'Atrium' || !d.sources) throw 0;
+    if (!confirm('Substituir tudo o que está no Atrium por este backup?')) return;
+    const { history: h, app, exportedAt, ...rest } = d;
+    store = Object.assign(blank(), rest); history = Array.isArray(h) ? h : [];
+    persist(); persistHistory(); render(); toast('Backup do Atrium restaurado');
+  } catch { toast('Este arquivo não é um backup do Atrium.', true); }
+});
+if (USE_GITHUB_PAGES_ORIGIN) {
+  readNative({ silent: true });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') readNative({ silent: true }); });
+}
+applyTheme();
+render();
+})();
+</script>
+</body>
+</html>
