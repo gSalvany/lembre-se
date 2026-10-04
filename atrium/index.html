@@ -236,8 +236,8 @@ dialog::backdrop{background:var(--backdrop);backdrop-filter:blur(4px)}
 /* =============================================================
    10. v2: FRESCOR, AÇÃO DO DIA, SEMANA, LIGAÇÕES POR CATEGORIA
    ============================================================= */
-:root{--atr:#8fa9e6}
-html[data-theme="light"]{--atr:#35589f}
+:root{--atr:#8fa9e6;--aud:#a78bfa;--aud-soft:rgba(167,139,250,.14)}
+html[data-theme="light"]{--atr:#35589f;--aud:#6d4fd1;--aud-soft:rgba(109,79,209,.10)}
 .muted{color:var(--faint);font-size:13.5px}
 .stale-t{color:var(--mem);font-weight:700}
 .freshbar{margin:14px 0 14px}
@@ -254,6 +254,9 @@ html[data-theme="light"]{--atr:#35589f}
 .act-parts li{display:flex;flex-direction:column;align-items:flex-start;gap:5px;font-family:var(--serif);font-size:clamp(20px,5.4vw,25px);line-height:1.25;color:var(--text)}
 .act-parts .chip{font-family:var(--sans);font-size:11px}
 .act-parts li + li{border-top:1px solid var(--line);padding-top:10px}
+.chip.aud{color:var(--aud);background:var(--aud-soft)}
+.weekline.aud-line{text-decoration:none}
+.weekline.aud-line span{color:var(--aud)}
 .chip.atr{color:var(--atr);background:color-mix(in srgb,var(--atr) 14%,transparent)}
 .act-text{font-family:var(--serif);font-size:clamp(20px,5.4vw,24px);line-height:1.3;color:var(--text);margin:10px 0}
 .act-why{font-size:13px;line-height:1.5;color:var(--muted)}
@@ -376,7 +379,7 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
         </button>
         <h1>Atrium <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></h1>
       </div>
-      <p>O átrio do Memento, Volumen e Cognitio</p>
+      <p>O átrio do Memento, Volumen, Cognitio e Audire</p>
     </div>
     <button class="icon-btn" id="themeBtn" aria-label="Alternar tema"></button>
   </header>
@@ -781,6 +784,9 @@ const TYPE_ICON = { book: '📖', course: '🎓', video: '🎬', article: '📰'
    gargalo do Cognitio > revisões vencidas > leitura ativa do Volumen >
    ficha que falta sobre essa leitura; à noite, o registro no Memento.
    ============================================================= */
+/* Audire: resumo que o próprio Audire deixa no mesmo domínio (audire.summary) */
+const AUDIRE_URL = '../audire/';
+function audire() { try { const s = JSON.parse(localStorage.getItem('audire.summary')); return s && s.version >= 2 ? s : null; } catch { return null; } }
 function linkOf(itemId) { return store.links.find(l => l.volumenId === itemId); }
 function actionParts(S) {
   const P = {};
@@ -798,12 +804,25 @@ function actionParts(S) {
   }
   const h = new Date().getHours();
   if (S.memento && h >= 19 && !S.memento.daylog.some(x => x.date === today())) P.registro = { app: 'mem', kind: 'registro', min: 5, label: 'Registrar o dia no Confronto do Memento', why: 'o dia de hoje ainda não foi registrado' };
+  const A = audire();
+  if (A) {
+    const due = A.actionsDue && A.actionsDue[0];
+    if (due) {
+      const late = due.remindAt < today();
+      P.audLembrete = { app: 'aud', kind: 'lembrete', min: 15, id: due.id, label: due.nextStep ? clip(due.nextStep, 90) : `Retomar a ideia “${clip(due.title, 70)}”`,
+        why: `lembrete do Audire ${late ? 'atrasado' : 'para hoje'}${due.dest ? ', para levar ao ' + ({ memento: 'Memento', volumen: 'Volumen', cognitio: 'Cognitio' })[due.dest] : ''}` };
+    }
+    const week = !A.lastReview || Date.now() - A.lastReview > 6 * DAY;
+    if (A.inbox && (week || A.inbox >= 5)) P.audRevisao = { app: 'aud', kind: 'revisao', min: Math.min(15, 2 + A.inbox * 2), label: `Revisar ${pl(A.inbox, 'áudio', 'áudios')} na caixa de entrada do Audire`, why: A.lastReview ? `última revisão há ${Math.floor((Date.now() - A.lastReview) / DAY)} dias` : 'nenhuma revisão feita ainda' };
+    else if (A.revisitDue) P.audRevisao = { app: 'aud', kind: 'revisitar', min: 5, label: `Revisitar ${A.revisitDue === 1 ? '1 ideia antiga' : A.revisitDue + ' ideias antigas'} no Audire`, why: 'ideias guardadas que voltaram hoje' };
+  }
   return P;
 }
 function actionVariants(S) {
   const P = actionParts(S), cog = P.gargalo || P.revisao || P.pilula, V = [];
   const ov = store.today && store.today.date === today() && store.today.override;
   if (ov) V.push([ov]);
+  if (P.audLembrete) V.push([P.audLembrete]);
   if (cog && P.leitura) V.push([cog, P.leitura]);
   if (P.leitura && P.ficha) V.push([P.leitura, P.ficha]);
   if (cog) V.push([cog]);
@@ -811,6 +830,7 @@ function actionVariants(S) {
   if (!V.length && P.ficha) V.push([P.ficha]);
   if (P.registro) V.forEach(v => { if (v.length < 3) v.push(P.registro); });
   if (!V.length && P.registro) V.push([P.registro]);
+  if (P.audRevisao) { if (V.length && V[V.length - 1].length < 3 && V[V.length - 1][0].app !== 'aud') V.push([...V[V.length - 1], P.audRevisao]); else V.push([P.audRevisao]); }
   return V;
 }
 function todayState() {
@@ -918,7 +938,7 @@ function render() {
   ({ hoje: renderHoje, semana: renderSemana, ligacoes: renderLigacoes, fontes: renderFontes })[tab](S);
 }
 const openBtn = (app, label) => { const u = store.appUrls[app]; return u ? `<a class="btn sm ac-open" href="${esc(u)}" target="_blank" rel="noopener">${label}</a>` : ''; };
-const APPN = { cog: 'Cognitio', vol: 'Volumen', mem: 'Memento', atr: 'Atrium' };
+const APPN = { cog: 'Cognitio', vol: 'Volumen', mem: 'Memento', atr: 'Atrium', aud: 'Audire' };
 function freshStrip(S) {
   if (S.demo) return '';
   const chips = ['memento', 'volumen', 'cognitio'].map(app => {
@@ -931,6 +951,22 @@ function freshStrip(S) {
 }
 
 /* ---------- Hoje ---------- */
+function audLink(parts) {
+  const p = parts.find(x => x.app === 'aud'); if (!p) return '';
+  const q = p.kind === 'lembrete' ? '?clip=' + encodeURIComponent(p.id) : p.kind === 'revisao' ? '?revisar=1' : '';
+  return `<a class="btn" href="${AUDIRE_URL}${q}">Abrir no Audire</a>`;
+}
+function audLine() {
+  const A = audire();
+  if (!A) return `<a class="card weekline aud-line" href="${AUDIRE_URL}"><span>Audire</span><b>Grave pensamentos e ideias. Eles voltam aqui na hora certa.</b><em>›</em></a>`;
+  const bits = [];
+  if (A.inbox) bits.push(`${A.inbox} na caixa de entrada`);
+  if (A.actions) bits.push(`${A.actions} em ação`);
+  if (A.revisitDue) bits.push(`${A.revisitDue} para revisitar`);
+  const next = A.nextActions && A.nextActions[0];
+  const txt = bits.length ? bits.join(', ') : 'Tudo revisado.';
+  return `<a class="card weekline aud-line" href="${AUDIRE_URL}${A.inbox ? '?revisar=1' : ''}"><span>Audire</span><b>${esc(txt)}${next ? `<br><small style="font-weight:400;color:var(--muted)">Próximo passo: ${esc(clip(next.nextStep, 70))}</small>` : ''}</b><em>›</em></a>`;
+}
 function renderHoje(S) {
   const m = S.memento, name = m && m.name ? m.name.split(' ')[0] : '';
   const h = new Date().getHours(), sal = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
@@ -942,14 +978,14 @@ function renderHoje(S) {
   const act = currentAction(S), done = doneToday(), atrStreak = streak(history.map(x => x.date));
   const st = todayState();
   let actHtml;
-  if (!act) actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia</p><p class="act-text">Nada pendente nos três apps.</p><p class="act-why">Sem gargalos, sem revisões vencidas e sem leitura em andamento. Escolha um território novo no Cognitio.</p></section>`;
+  if (!act) actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia</p><p class="act-text">Nada pendente nos seus apps.</p><p class="act-why">Sem gargalos, sem revisões vencidas e sem leitura em andamento. Escolha um território novo no Cognitio.</p></section>`;
   else if (st.doneAt && !st.more) actHtml = `<section class="card action done"><div class="checkmark" aria-hidden="true">✓</div><p class="eyebrow">Ação do dia feita às ${fmtTime(st.doneAt)}</p><p class="act-text">${esc(st.doneText)}</p>
       <p class="act-why">${atrStreak > 1 ? `🔥 ${atrStreak} dias seguidos cumprindo a ação do dia.` : 'Primeiro dia da sequência. Amanhã tem outra.'}</p>
       <div class="act-row"><button class="btn" data-more>Mais uma ação</button></div></section>`;
   else actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia${done.length ? ` · ${done.length} feita${done.length > 1 ? 's' : ''} hoje` : ''}</p>
       <ul class="act-parts">${act.parts.map(p => `<li><span class="chip ${p.app}">${APPN[p.app]}</span><span>${esc(p.label)}</span></li>`).join('')}</ul>
       <p class="act-why">Por quê: ${esc(act.why.join('; '))}. Cerca de ${fmtMin(act.min)}.</p>
-      <div class="act-row"><button class="btn primary big" data-did>✓ Fiz</button>${act.total > 1 ? '<button class="btn" data-swap>Trocar</button>' : ''}</div></section>`;
+      <div class="act-row"><button class="btn primary big" data-did>✓ Fiz</button>${act.total > 1 ? '<button class="btn" data-swap>Trocar</button>' : ''}${audLink(act.parts)}</div></section>`;
 
   // Contexto compacto: um número por app
   const q = cogQueue(S.cognitio), cur = volCurrent(S.volumen), d = m && m.daylog[0];
@@ -967,7 +1003,7 @@ function renderHoje(S) {
     ? `<button class="card weekline" data-go="semana"><span>Metas da semana</span><b>${goals.filter(g => g.st === 'ok').length} cumpridas, ${goals.filter(g => g.st === 'track').length} no caminho, ${goals.filter(g => g.st === 'risk' || g.st === 'fail').length} em risco</b><em>›</em></button>`
     : `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Nenhuma meta definida. Defina de 1 a 3 metas.</b><em>›</em></button>`;
 
-  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${actHtml}${wkLine}${ctx}</div>`;
+  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${actHtml}${wkLine}${audLine()}${ctx}</div>`;
 }
 
 /* ---------- Semana: ritual, metas, tendências, sequências, ritmo ---------- */
