@@ -791,6 +791,56 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
 }
 @media (prefers-reduced-motion:reduce){.w-poster{animation:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ================= ANEXOS E VISUALIZADOR ================= */
+.attach2{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.a-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.a-thumb{aspect-ratio:1;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line);background:var(--card-2);padding:0}
+.a-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s var(--ease)}
+.a-thumb:hover img{transform:scale(1.04)}
+.a-thumb.missing{display:grid;place-items:center}.a-thumb.missing::after{content:"🔍";font-size:20px}
+.a-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r-md);background:var(--card);border:1px solid var(--line);transition:border-color .15s}
+.a-card:hover{border-color:var(--amber-line)}
+.a-ic{width:38px;height:38px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;font-size:19px;background:var(--amber-soft)}
+.a-tx{display:flex;flex-direction:column;min-width:0}
+.a-tx b{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-tx small{font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-card.yt{padding:8px}
+.a-card.yt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex-shrink:0}
+.a-card.legacy{opacity:.6;border-style:dashed}
+.a-ref{font-size:13px;color:var(--muted)}
+.a-ref b{font-size:10px;font-weight:800;color:var(--amber);border:1px solid var(--amber-line);border-radius:4px;padding:0 4px;margin-right:4px}
+.drop-on{outline:2px dashed var(--amber);outline-offset:-6px}
+.storage-hint{font-size:12px;color:var(--faint)}
+dialog.viewer{background:var(--bg)}
+.v-wrap{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.v-head{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;border-bottom:1px solid var(--line);background:var(--card)}
+.v-head .grow{min-width:0;flex:1}
+.v-head h2{font-family:var(--serif);font-weight:500;font-size:18px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-head p{font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:560px){.v-head{flex-wrap:wrap}.v-head .grow{flex-basis:calc(100% - 50px)}.v-actions{order:3;width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}}
+.v-body{flex:1;overflow:auto;position:relative;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.v-center{min-height:100%;display:flex;align-items:center;justify-content:center;padding:14px}
+.v-img{display:block;max-width:100%;max-height:calc(100dvh - 150px);object-fit:contain;border-radius:6px;cursor:zoom-in}
+.v-body.zoomed .v-img{max-width:none;max-height:none;width:calc(100% * var(--z,1));cursor:zoom-out}
+.v-body.zoomed .v-center.z{display:block}
+.v-frame{display:block;width:100%;height:100%;border:0;background:#fff}
+.v-media{width:100%;max-width:1100px;aspect-ratio:16/9;border:0;border-radius:10px;background:#000}
+.v-pdf{display:flex;flex-direction:column;gap:10px;padding:10px;width:calc(100% * var(--z,1));max-width:calc(900px * var(--z,1));margin:0 auto}
+.v-page{width:100%;background:#fff;border-radius:3px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.v-page canvas{display:block;width:100%;height:auto;border-radius:3px}
+.v-doc{max-width:720px;margin:0 auto;padding:20px 18px 40px}
+.v-text{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--text);padding:16px}
+.v-card{max-width:420px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card)}
+.v-card h3{font-family:var(--serif);font-weight:500;font-size:20px;color:var(--text);word-break:break-word}
+.v-card p{font-size:14px;line-height:1.55}
+.v-big{font-size:38px}
+.v-card-act{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.v-url{font-size:12.5px;word-break:break-all;color:var(--faint)}
+.v-off,.v-hint{font-size:12.5px;color:var(--amber);text-align:center;padding:8px 14px}
+.v-hint + .v-frame{height:calc(100% - 40px)}
+.v-nav{display:flex;justify-content:space-between;align-items:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card);font-size:12.5px}
+.v-nav .btn[disabled]{opacity:.35;pointer-events:none}
 </style>
 </head>
 <body>
@@ -894,6 +944,14 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
       <button class="x" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="sheet-body" id="noteBody"></div>
+  </div>
+</dialog>
+
+<dialog id="dlgView" class="viewer" aria-labelledby="vTitle">
+  <div class="v-wrap">
+    <header class="v-head"><div class="grow"><h2 id="vTitle"></h2><p id="vSub"></p></div><button class="x" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="v-actions" id="vActions"></div></header>
+    <div class="v-body" id="vBody"></div>
+    <nav class="v-nav" id="vNav" hidden></nav>
   </div>
 </dialog>
 
@@ -1130,7 +1188,7 @@ function normalize(d) {
     n.title = n.title || 'Sem título'; n.body = n.body || '';
     n.tags = Array.isArray(n.tags) ? n.tags.filter(t => typeof t === 'string') : [];
     n.refs = Array.isArray(n.refs) ? n.refs.filter(r => typeof r === 'string') : [];
-    n.files = Array.isArray(n.files) ? n.files.filter(f => f && f.name) : [];
+    n.files = Array.isArray(n.files) ? n.files.filter(f => f && f.name).map(f => ({ ...(f.id ? { id: String(f.id) } : {}), name: String(f.name), ...(f.url ? { url: String(f.url) } : {}), type: typeof f.type === 'string' ? f.type : '', size: +f.size || 0, ...(f.addedAt ? { addedAt: f.addedAt } : {}) })) : [];
     n.cover = typeof n.cover === 'string' ? n.cover : '';
     n.createdAt = n.createdAt || new Date().toISOString();
   });
@@ -1454,10 +1512,7 @@ function renderReader() {
       <p class="ch-meta">${fmtDate(n.createdAt)}${n.tags.map(t => ` <span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</p>
       ${cover ? `<img class="ch-cover" src="${esc(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>
-      ${n.refs.length || n.files.length ? `<div class="attach">
-        ${n.refs.map(r => safeUrl(r) ? `<a class="att" href="${esc(r)}" target="_blank" rel="noopener"><b>LINK</b><span>${esc(r.replace(/^https?:\/\/(www\.)?/, ''))}</span></a>` : `<span class="att"><b>REF</b><span>${esc(r)}</span></span>`).join('')}
-        ${n.files.map(x => safeUrl(x.url || '') ? `<a class="att" href="${esc(x.url)}" target="_blank" rel="noopener"><b>${ext(x.name)}</b><span>${esc(x.name)}</span></a>` : `<span class="att"><b>${ext(x.name)}</b><span>${esc(x.name)}</span></span>`).join('')}
-      </div>` : ''}
+      ${attachHtml(n)}
       <div class="ch-actions"><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
     </section>`;
   };
@@ -1475,6 +1530,7 @@ function renderReader() {
     ${notes.length ? `<article class="doc">${notes.map(chapter).join('')}</article>`
       : `<div class="empty"><p>Este caderno ainda está em branco.</p><button class="btn primary" data-compose="${a.id}">+ Escrever a primeira ficha</button></div>`}
   </div>`;
+  hydrateThumbs($('#reader'));
 }
 
 function openBook(areaId, { noteId = null, compose = false } = {}) {
@@ -1526,6 +1582,7 @@ function renderAreaCard(editOpen = false) {
   $('#aDelete').addEventListener('click', () => {
     if (!confirm(`Excluir a área "${a.title}"${n ? ` e ${plural(n, 'fichamento', 'fichamentos')}` : ''}? Esta ação não pode ser desfeita.`)) return;
     state.areas = state.areas.filter(x => x.id !== a.id);
+    blobDelMany(fileIdsOf(state.notes.filter(x => x.areaId === a.id)));
     state.notes = state.notes.filter(x => x.areaId !== a.id);
     state.decks.forEach(k => { if (k.areaId === a.id) k.areaId = null; });
     if (openBookId === a.id) openBookId = null;
@@ -1565,35 +1622,47 @@ function renderDrawer() {
           <div class="fld"><label for="nTags">Tags (separadas por vírgula)</label><input class="input" id="nTags" placeholder="revisão, conceito" value="${n ? esc(n.tags.join(', ')) : ''}"></div>
           <div class="fld"><label for="nCover">Capa (link de imagem)</label><input class="input" id="nCover" placeholder="https://…/capa.jpg" value="${n ? esc(n.cover) : ''}"></div>
         </div>
-        <div class="fld"><label for="nRefs">Links e referências (um por linha)</label><textarea class="textarea small" id="nRefs" placeholder="https://… ou AUTOR, Título, ano">${n ? esc(n.refs.join('\n')) : ''}</textarea></div>
-        <div class="fld"><span class="label">Arquivos e PDFs vinculados</span>
-          <div class="file-row"><input class="input" id="nFileUrl" placeholder="Nome do arquivo ou link">
-            <button type="button" class="btn sm" id="nFileAdd">Vincular</button><button type="button" class="btn sm" id="nFilePick">Do dispositivo</button>
+        <div class="fld"><label for="nRefs">Links e referências (um por linha)</label><textarea class="textarea small" id="nRefs" placeholder="Aula 3 — https://youtu.be/…&#10;https://site.com/artigo.pdf&#10;AUTOR, Título, ano">${n ? esc(n.refs.join('\n')) : ''}</textarea>
+          <p class="hint">Para dar nome a um link: <b>Título — https://…</b>. YouTube, Vimeo, Google Drive/Docs, imagens e PDFs abrem dentro do app.</p></div>
+        <div class="fld"><span class="label">Arquivos (PDF, imagens, áudio, vídeo, texto)</span>
+          <div class="file-row"><button type="button" class="btn sm primary" id="nFilePick">📎 Anexar do dispositivo</button>
             <input type="file" id="nFileInput" multiple hidden></div>
           <div class="attach" id="draftFiles" style="padding:0"></div>
-          <p class="hint">Guarda o nome e o link do arquivo, não o conteúdo.</p></div>
+          <p class="hint storage-hint" id="storageHint">O arquivo fica guardado no aparelho e abre dentro do Cognitio, até sem internet.</p></div>
       </div></details>
     <div class="drawer-actions"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="nSave">${n ? 'Salvar alterações' : 'Guardar ficha'}</button></div>`;
   renderDraftFiles();
   const body = $('#noteBody');
   body.querySelector('.fmt').addEventListener('click', e => { const b = e.target.closest('[data-fmt]'); if (b) wrapSel($('#nBody'), b.dataset.fmt); });
-  const addFile = (name, url) => { draftFiles.push(url ? { name, url } : { name }); renderDraftFiles(); };
-  $('#nFileAdd').addEventListener('click', () => {
-    const v = $('#nFileUrl').value.trim(); if (!v) return;
-    if (safeUrl(v)) addFile(decodeURIComponent(v.split(/[?#]/)[0].split('/').filter(Boolean).pop() || v), v); else addFile(v);
-    $('#nFileUrl').value = '';
-  });
-  $('#nFileUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#nFileAdd').click(); } });
+  const addFiles = list => {
+    let skipped = 0;
+    [...list].forEach(f => { if (f.size > MAX_FILE) { skipped++; return; } draftFiles.push({ id: uid(), name: f.name, type: f.type || '', size: f.size, addedAt: new Date().toISOString(), _blob: f }); });
+    if (skipped) toast(`${plural(skipped, 'arquivo passou', 'arquivos passaram')} de 100 MB e ficou de fora.`, true);
+    renderDraftFiles(); body.querySelector('.more').open = true;
+  };
   $('#nFilePick').addEventListener('click', () => $('#nFileInput').click());
-  $('#nFileInput').addEventListener('change', e => { [...e.target.files].forEach(f => addFile(f.name)); e.target.value = ''; });
+  $('#nFileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+  body.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); body.classList.add('drop-on'); } });
+  body.addEventListener('dragleave', e => { if (e.target === body) body.classList.remove('drop-on'); });
+  body.addEventListener('drop', e => { if (!e.dataTransfer.files.length) return; e.preventDefault(); body.classList.remove('drop-on'); addFiles(e.dataTransfer.files); });
   $('#draftFiles').addEventListener('click', e => { const b = e.target.closest('[data-rm-file]'); if (b) { draftFiles.splice(+b.dataset.rmFile, 1); renderDraftFiles(); } });
-  $('#nSave').addEventListener('click', () => {
+  storageHint();
+  $('#nSave').addEventListener('click', async () => {
     const title = $('#nTitle').value.trim(), text = $('#nBody').value.trim();
     const refs = $('#nRefs').value.split('\n').map(s => s.trim()).filter(Boolean);
     const tags = parseTags($('#nTags').value), cover = $('#nCover').value.trim();
     if (cover && !safeUrl(cover)) { toast('A capa precisa de um link que comece por http:// ou https://', true); body.querySelector('.more').open = true; $('#nCover').focus(); return; }
     if (!title && !text) { toast('Escreva um título ou um texto para guardar.', true); $('#nTitle').focus(); return; }
-    const data = { title: title || 'Sem título', body: text, tags, refs, files: draftFiles, cover };
+    const btn = $('#nSave'); if (btn.disabled) return;
+    const fresh = draftFiles.filter(x => x._blob);
+    if (fresh.length) {
+      btn.disabled = true; btn.textContent = 'Guardando arquivos…';
+      try { for (const x of fresh) await blobPut(x.id, x._blob); }
+      catch (err) { console.error(err); btn.disabled = false; btn.textContent = editingNoteId ? 'Salvar alterações' : 'Guardar ficha'; toast('Sem espaço para guardar os arquivos no aparelho.', true); return; }
+    }
+    const files = draftFiles.map(({ _blob, ...x }) => x);
+    if (editingNoteId) { const old = state.notes.find(y => y.id === editingNoteId), keep = new Set(files.map(x => x.id)); blobDelMany(old.files.filter(x => x.id && !keep.has(x.id)).map(x => x.id)); }
+    const data = { title: title || 'Sem título', body: text, tags, refs, files, cover };
     let id;
     if (editingNoteId) { const x = state.notes.find(y => y.id === editingNoteId); Object.assign(x, data, { updatedAt: new Date().toISOString() }); id = x.id; toast('Ficha atualizada'); }
     else {
@@ -1606,8 +1675,17 @@ function renderDrawer() {
   });
 }
 function renderDraftFiles() {
-  $('#draftFiles').innerHTML = draftFiles.map((x, i) =>
-    `<span class="att"><b>${ext(x.url || x.name)}</b><span>${esc(x.name)}</span><button class="rm" data-rm-file="${i}" aria-label="Remover ${esc(x.name)}">×</button></span>`).join('');
+  $('#draftFiles').innerHTML = draftFiles.map((x, i) => {
+    const k = x.url ? linkInfo(x.url).kind : kindOf(x.name, x.type);
+    return `<span class="att"><b>${KIND[k][0]}</b><span>${esc(x.name)}${x.size ? ` · ${fmtSize(x.size)}` : ''}${!x.id && !x.url ? ' (só o nome)' : ''}</span><button class="rm" data-rm-file="${i}" aria-label="Remover ${esc(x.name)}">×</button></span>`;
+  }).join('');
+}
+async function storageHint() {
+  try {
+    if (!navigator.storage || !navigator.storage.estimate) return;
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate(), el = $('#storageHint');
+    if (el && quota) el.textContent = `O arquivo fica guardado no aparelho e abre dentro do Cognitio, até sem internet. Em uso: ${fmtSize(usage) || '0 KB'} de ${fmtSize(quota)} disponíveis.`;
+  } catch {}
 }
 function wrapSel(ta, kind) {
   const s = ta.selectionStart, e = ta.selectionEnd, v = ta.value, sel = v.slice(s, e);
@@ -1714,8 +1792,19 @@ function renderForm(presetField) {
 }
 
 /* ============ Backup ============ */
-function exportBackup() {
+const blobToDataUrl = b => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(r.error); r.readAsDataURL(b); });
+async function exportBackup() {
   const data = { app: 'Cognitio', exportedAt: new Date().toISOString(), theme: savedTheme(), ...state };
+  const files = state.notes.flatMap(n => n.files.filter(f => f.id));
+  if (files.length) {
+    const total = files.reduce((t, f) => t + (f.size || 0), 0);
+    const withFiles = confirm(`Incluir os ${plural(files.length, 'arquivo anexado', 'arquivos anexados')} (${fmtSize(total)}) no backup?\n\nOK: backup completo, maior.\nCancelar: só o texto; os arquivos ficam apenas neste aparelho.`);
+    if (withFiles) {
+      toast('Preparando backup com arquivos…');
+      data.attachments = {};
+      for (const f of files) { try { const b = await blobGet(f.id); if (b) data.attachments[f.id] = { name: f.name, type: b.type || f.type, data: await blobToDataUrl(b) }; } catch {} }
+    }
+  }
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const a = Object.assign(document.createElement('a'), { href: url, download: 'cognitio-backup.json' });
   document.body.appendChild(a); a.click(); a.remove();
@@ -1732,7 +1821,15 @@ function importBackup(file) {
       const summary = `${plural(d.fields.length, 'campo', 'campos')}, ${plural(d.areas.length, 'área', 'áreas')} e ${plural(d.notes.length, 'fichamento', 'fichamentos')}`;
       if (!confirm(`Importar ${summary}? Os dados atuais serão substituídos.`)) return;
       if (d.theme === 'light' || d.theme === 'dark') { try { localStorage.setItem(THEME_KEY, d.theme); } catch {} applyTheme(); }
+      const atts = d.attachments && typeof d.attachments === 'object' ? d.attachments : null;
+      delete d.attachments;
       state = normalize(d); persist();
+      (async () => {
+        let restored = 0;
+        if (atts) for (const [id, a] of Object.entries(atts)) { try { if (/^data:/.test(a.data)) { await blobPut(id, await (await fetch(a.data)).blob()); restored++; } } catch {} }
+        try { const used = new Set(fileIdsOf(state.notes)); await blobDelMany((await blobKeys()).filter(k => !used.has(k))); } catch {}
+        if (restored) { toast(`Backup importado com ${plural(restored, 'arquivo', 'arquivos')}`); render(); }
+      })();
       expanded.clear(); if (state.fields[0]) expanded.add(state.fields[0].id);
       fieldFilter = ''; render(); toast('Backup importado');
     } catch { toast('Este arquivo não é um backup válido do Cognitio.', true); }
@@ -1740,6 +1837,266 @@ function importBackup(file) {
   r.onerror = () => toast('Não foi possível ler o arquivo.', true);
   r.readAsText(file);
 }
+
+/* ============ Anexos: arquivos guardados no aparelho e visualizador ============
+   O conteúdo dos arquivos fica no IndexedDB ('cognitio-files'), porque o
+   localStorage só comporta uns 5 MB. As fichas guardam apenas id, nome,
+   tipo e tamanho. Links ficam como texto, um por linha ("Título — https://…"). */
+const FILES_DB = 'cognitio-files', MAX_FILE = 100 * 1024 * 1024;
+let filesDbP = null;
+function filesDb() {
+  if (!filesDbP) filesDbP = new Promise((ok, no) => {
+    const r = indexedDB.open(FILES_DB, 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('blobs')) r.result.createObjectStore('blobs'); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => { filesDbP = null; no(r.error); };
+  });
+  return filesDbP;
+}
+async function fileOp(mode, fn) {
+  const db = await filesDb();
+  return new Promise((ok, no) => {
+    const tx = db.transaction('blobs', mode), req = fn(tx.objectStore('blobs'));
+    tx.oncomplete = () => ok(req ? req.result : undefined); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error);
+  });
+}
+const blobPut = (id, blob) => fileOp('readwrite', s => s.put(blob, id));
+const blobGet = id => fileOp('readonly', s => s.get(id));
+const blobKeys = () => fileOp('readonly', s => s.getAllKeys());
+async function blobDelMany(ids) { if (!ids.length) return; try { await fileOp('readwrite', s => { ids.forEach(id => s.delete(id)); return null; }); } catch (e) { console.warn(e); } }
+const fileIdsOf = notes => notes.flatMap(n => n.files.filter(f => f.id).map(f => f.id));
+
+const fileExt = n => ((String(n).split(/[?#]/)[0].match(/\.([a-z0-9]{1,5})$/i) || [])[1] || '').toLowerCase();
+function kindOf(name, type = '') {
+  const e = fileExt(name);
+  if (/^image\//.test(type) || /^(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(e)) return 'image';
+  if (type === 'application/pdf' || e === 'pdf') return 'pdf';
+  if (/^video\//.test(type) || /^(mp4|webm|mov|m4v)$/.test(e)) return 'video';
+  if (/^audio\//.test(type) || /^(mp3|m4a|wav|ogg|oga|aac|opus)$/.test(e)) return 'audio';
+  if (e === 'md' || e === 'markdown') return 'md';
+  if (/^text\//.test(type) || /^(txt|csv|tsv|json|log)$/.test(e)) return 'text';
+  return 'other';
+}
+const KIND = { image: ['🖼️', 'Imagem'], pdf: ['📄', 'PDF'], video: ['🎬', 'Vídeo'], audio: ['🎧', 'Áudio'], md: ['📝', 'Texto'], text: ['📝', 'Texto'], other: ['📎', 'Arquivo'],
+  youtube: ['▶️', 'YouTube'], embed: ['🗂️', 'Documento'], 'video-embed': ['🎬', 'Vídeo'], link: ['🔗', 'Link'] };
+const fmtSize = b => !b ? '' : b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+/* "Título — https://…", "https://…" ou referência sem link */
+function parseRef(r) {
+  const m = String(r).match(/https?:\/\/\S+/);
+  if (!m) return { label: String(r), url: '' };
+  const url = m[0].replace(/[),.;]+$/, '');
+  return { url, label: String(r).replace(m[0], '').replace(/^[\s:|—–-]+|[\s:|—–-]+$/g, '').trim() };
+}
+function linkInfo(url) {
+  let u; try { u = new URL(url); } catch { return { kind: 'link', host: url }; }
+  const h = u.hostname.replace(/^(www|m)\./, '');
+  let yt = null;
+  if (h === 'youtu.be') yt = u.pathname.slice(1).split('/')[0];
+  else if (/(^|\.)youtube\.com$/.test(h)) yt = u.searchParams.get('v') || (u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]+)/) || [])[1];
+  if (yt && /^[\w-]{6,}$/.test(yt)) {
+    const t = parseInt(u.searchParams.get('t') || u.searchParams.get('start') || '0', 10) || 0;
+    return { kind: 'youtube', host: 'YouTube', embed: `https://www.youtube-nocookie.com/embed/${yt}?rel=0${t ? `&start=${t}` : ''}`, thumb: `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` };
+  }
+  const vm = h === 'vimeo.com' && u.pathname.match(/^\/(\d+)/);
+  if (vm) return { kind: 'video-embed', host: 'Vimeo', embed: `https://player.vimeo.com/video/${vm[1]}` };
+  const gd = h === 'drive.google.com' && u.pathname.match(/\/file\/d\/([\w-]+)/);
+  if (gd) return { kind: 'embed', host: 'Google Drive', embed: `https://drive.google.com/file/d/${gd[1]}/preview` };
+  const gdoc = h === 'docs.google.com' && u.pathname.match(/\/(document|presentation|spreadsheets)\/d\/([\w-]+)/);
+  if (gdoc) return { kind: 'embed', host: 'Google Docs', embed: `https://docs.google.com/${gdoc[1]}/d/${gdoc[2]}/preview` };
+  const k = kindOf(u.pathname);
+  if (['image', 'pdf', 'video', 'audio'].includes(k)) return { kind: k, host: h };
+  return { kind: 'link', host: h };
+}
+/* Lista de anexos visualizáveis de uma ficha: arquivos primeiro, depois links */
+function attachList(n) {
+  return [...n.files.map(f => ({ t: 'file', f })), ...n.refs.map(parseRef).filter(r => safeUrl(r.url)).map(r => ({ t: 'link', url: r.url, label: r.label }))];
+}
+const thumbUrls = new Map();
+async function blobUrl(id) {
+  if (thumbUrls.has(id)) return thumbUrls.get(id);
+  const b = await blobGet(id); if (!b) return '';
+  const u = URL.createObjectURL(b); thumbUrls.set(id, u); return u;
+}
+function hydrateThumbs(root = document) {
+  root.querySelectorAll('img[data-blob]').forEach(async img => {
+    const id = img.dataset.blob; img.removeAttribute('data-blob');
+    try { const u = await blobUrl(id); if (u) img.src = u; else img.closest('.a-thumb')?.classList.add('missing'); } catch {}
+  });
+}
+function attachHtml(n) {
+  const list = attachList(n), plain = n.refs.map(parseRef).filter(r => !safeUrl(r.url));
+  if (!list.length && !plain.length) return '';
+  const imgs = [], cards = [];
+  list.forEach((a, i) => {
+    const key = `${n.id}:${i}`;
+    if (a.t === 'file') {
+      const f = a.f, k = f.url ? linkInfo(f.url).kind : kindOf(f.name, f.type);
+      if (f.id && k === 'image') { imgs.push(`<button class="a-thumb" data-view="${key}" aria-label="Ver ${esc(f.name)}"><img data-blob="${esc(f.id)}" alt=""></button>`); return; }
+      const legacy = !f.id && !f.url;
+      cards.push(`<button class="a-card${legacy ? ' legacy' : ''}" data-view="${key}"><span class="a-ic">${KIND[k][0]}</span><span class="a-tx"><b>${esc(f.name)}</b><small>${legacy ? 'só o nome foi guardado' : [f.url ? 'Link' : KIND[k][1], fileExt(f.name).toUpperCase() === KIND[k][1].toUpperCase() ? '' : fileExt(f.name).toUpperCase(), fmtSize(f.size)].filter(Boolean).join(' · ')}</small></span></button>`);
+    } else {
+      const li = linkInfo(a.url);
+      if (li.kind === 'youtube') { cards.push(`<button class="a-card yt" data-view="${key}"><img src="${esc(li.thumb)}" alt="" loading="lazy" onerror="this.remove()"><span class="a-tx"><b>${esc(a.label || 'Vídeo no YouTube')}</b><small>▶ YouTube</small></span></button>`); return; }
+      cards.push(`<button class="a-card" data-view="${key}"><span class="a-ic">${KIND[li.kind][0]}</span><span class="a-tx"><b>${esc(a.label || li.host)}</b><small>${esc(a.label ? li.host : a.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 60))}</small></span></button>`);
+    }
+  });
+  return `<div class="attach2">${imgs.length ? `<div class="a-grid">${imgs.join('')}</div>` : ''}${cards.join('')}
+    ${plain.map(r => `<p class="a-ref"><b>REF</b> ${esc(r.label)}</p>`).join('')}</div>`;
+}
+
+/* ---------- visualizador em tela cheia ---------- */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let pdfjsP = null;
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsP) pdfjsP = new Promise((ok, no) => {
+    const s = document.createElement('script'); s.src = PDFJS;
+    s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; ok(window.pdfjsLib); };
+    s.onerror = () => { pdfjsP = null; s.remove(); no(new Error('pdf.js')); };
+    document.head.appendChild(s);
+  });
+  return pdfjsP;
+}
+let viewList = [], viewIdx = 0, viewToken = 0, viewObjUrl = '', viewCleanup = null, viewZoom = 1, viewHist = false, viewBlob = null, viewName = '';
+const nativePdf = () => navigator.pdfViewerEnabled === true && !matchMedia('(pointer:coarse)').matches;
+function openViewer(list, idx = 0) {
+  viewList = list; viewIdx = Math.max(0, Math.min(idx, list.length - 1));
+  const d = $('#dlgView'); if (!d.open) d.showModal();
+  if (!viewHist) { try { history.pushState({ cogView: 1 }, ''); viewHist = true; } catch {} }
+  showViewItem();
+}
+function viewCleanupAll() {
+  viewToken++;
+  if (viewCleanup) { try { viewCleanup(); } catch {} viewCleanup = null; }
+  if (viewObjUrl) { URL.revokeObjectURL(viewObjUrl); viewObjUrl = ''; }
+  viewBlob = null; $('#vBody').innerHTML = '';
+}
+function vMsg(icon, title, text, actions = '') {
+  return `<div class="v-center"><div class="v-card"><div class="v-big">${icon}</div><h3>${title}</h3>${text ? `<p>${text}</p>` : ''}${actions ? `<div class="v-card-act">${actions}</div>` : ''}</div></div>`;
+}
+const offlineNote = () => navigator.onLine === false ? '<p class="v-off">Você está sem internet: este conteúdo vem da web e pode não carregar.</p>' : '';
+async function showViewItem() {
+  viewCleanupAll(); viewZoom = 1;
+  const token = viewToken, a = viewList[viewIdx], body = $('#vBody');
+  const actions = [], zoomable = { on: false };
+  let title = '', sub = '';
+  $('#vNav').hidden = viewList.length < 2;
+  $('#vNav').innerHTML = `<button class="btn sm" data-vnav="-1"${viewIdx === 0 ? ' disabled' : ''}>‹ Anterior</button><span>${viewIdx + 1} de ${viewList.length}</span><button class="btn sm" data-vnav="1"${viewIdx === viewList.length - 1 ? ' disabled' : ''}>Próximo ›</button>`;
+  const setHead = () => {
+    $('#vTitle').textContent = title; $('#vSub').textContent = sub;
+    $('#vActions').innerHTML = (zoomable.on ? `<button class="btn sm" data-vzoom="-1" aria-label="Diminuir">−</button><button class="btn sm" data-vzoom="1" aria-label="Aumentar">+</button>` : '') + actions.join('');
+  };
+  // ---- arquivo guardado no aparelho
+  if (a.t === 'file' && !a.f.url) {
+    const f = a.f, k = kindOf(f.name, f.type);
+    title = f.name; sub = [KIND[k][1], fmtSize(f.size)].filter(Boolean).join(' · ');
+    if (!f.id) { setHead(); body.innerHTML = vMsg('📎', 'Só o nome foi guardado', 'Este anexo é de uma versão antiga do Cognitio, que guardava apenas o nome. Edite a ficha e anexe o arquivo de novo em <b>Do dispositivo</b>.'); return; }
+    setHead(); body.innerHTML = vMsg('⏳', 'Abrindo…', '');
+    let blob = null; try { blob = await blobGet(f.id); } catch {}
+    if (token !== viewToken) return;
+    if (!blob) { body.innerHTML = vMsg('🔍', 'Arquivo não encontrado neste aparelho', 'Ele pode ter vindo de um backup sem arquivos ou de outro aparelho. Edite a ficha e anexe de novo.'); return; }
+    viewBlob = blob; viewName = f.name;
+    viewObjUrl = URL.createObjectURL(blob);
+    actions.push(`<a class="btn sm" href="${viewObjUrl}" download="${esc(f.name)}">Baixar</a>`);
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], f.name, { type: blob.type || f.type || '' })] })) actions.push('<button class="btn sm" data-vshare>Abrir com…</button>');
+    if (k === 'image') { zoomable.on = true; setHead(); body.innerHTML = `<div class="v-center z"><img class="v-img" src="${viewObjUrl}" alt="${esc(f.name)}"></div>`; return; }
+    if (k === 'pdf') {
+      if (nativePdf()) { setHead(); body.innerHTML = `<iframe class="v-frame" src="${viewObjUrl}" title="${esc(f.name)}"></iframe>`; return; }
+      zoomable.on = true; setHead();
+      return renderPdf(body, { data: new Uint8Array(await blob.arrayBuffer()) }, token, f.name);
+    }
+    if (k === 'video') { setHead(); body.innerHTML = `<div class="v-center"><video class="v-media" src="${viewObjUrl}" controls playsinline></video></div>`; return; }
+    if (k === 'audio') { setHead(); body.innerHTML = `<div class="v-center"><div class="v-card"><div class="v-big">🎧</div><h3>${esc(f.name)}</h3><audio src="${viewObjUrl}" controls style="width:100%"></audio></div></div>`; return; }
+    if (k === 'md' || k === 'text') {
+      const text = await blob.slice(0, 2 * 1024 * 1024).text(); if (token !== viewToken) return;
+      setHead(); body.innerHTML = k === 'md' ? `<div class="v-doc prose">${renderProse(text)}</div>` : `<pre class="v-text">${esc(text)}</pre>`; return;
+    }
+    setHead(); body.innerHTML = vMsg(KIND.other[0], 'Este tipo de arquivo não abre aqui', `Arquivos .${esc(fileExt(f.name) || '?')} precisam de outro app. Use <b>Abrir com…</b> ou <b>Baixar</b>.`, actions.join(''));
+    return;
+  }
+  // ---- link
+  const url = a.t === 'file' ? a.f.url : a.url, li = linkInfo(url);
+  title = (a.t === 'file' ? a.f.name : a.label) || li.host; sub = KIND[li.kind][1] === li.host ? li.host : `${KIND[li.kind][1]} · ${li.host}`;
+  actions.push(`<a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">Abrir no navegador</a>`);
+  if (li.kind === 'youtube' || li.kind === 'video-embed') { setHead(); body.innerHTML = `${offlineNote()}<div class="v-center"><iframe class="v-media" src="${esc(li.embed)}" title="${esc(title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`; return; }
+  if (li.kind === 'embed') { setHead(); body.innerHTML = `${offlineNote()}<iframe class="v-frame" src="${esc(li.embed)}" title="${esc(title)}" allow="fullscreen"></iframe>`; return; }
+  if (li.kind === 'image') { zoomable.on = true; setHead(); body.innerHTML = `${offlineNote()}<div class="v-center z"><img class="v-img" src="${esc(url)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'v-off',textContent:'Não foi possível carregar a imagem.'}))"></div>`; return; }
+  if (li.kind === 'video') { setHead(); body.innerHTML = `${offlineNote()}<div class="v-center"><video class="v-media" src="${esc(url)}" controls playsinline></video></div>`; return; }
+  if (li.kind === 'audio') { setHead(); body.innerHTML = `<div class="v-center"><audio src="${esc(url)}" controls></audio></div>`; return; }
+  if (li.kind === 'pdf') {
+    if (nativePdf()) { setHead(); body.innerHTML = `<iframe class="v-frame" src="${esc(url)}" title="${esc(title)}"></iframe>`; return; }
+    zoomable.on = true; setHead();
+    return renderPdf(body, { url }, token, title, url);
+  }
+  setHead();
+  body.innerHTML = vMsg('🔗', esc(title), `<span class="v-url">${esc(url)}</span>`,
+    `<a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Abrir no navegador</a><button class="btn" data-vtry>Tentar mostrar aqui</button>`) + offlineNote();
+  body.querySelector('[data-vtry]').addEventListener('click', () => {
+    body.innerHTML = `<p class="v-hint">Se ficar em branco, o site não permite ser exibido dentro de outro app. Use “Abrir no navegador”.</p><iframe class="v-frame" src="${esc(url)}" title="${esc(title)}" referrerpolicy="no-referrer"></iframe>`;
+  });
+}
+async function renderPdf(body, src, token, name, url = '') {
+  body.innerHTML = vMsg('⏳', 'Abrindo PDF…', '');
+  let lib, doc;
+  try { lib = await loadPdfJs(); doc = await lib.getDocument(src).promise; }
+  catch (e) {
+    if (token !== viewToken) return;
+    const can = viewBlob && navigator.canShare && navigator.canShare({ files: [new File([viewBlob], name, { type: 'application/pdf' })] });
+    body.innerHTML = vMsg('📄', 'Não consegui mostrar este PDF aqui',
+      url ? 'O site que hospeda o PDF não permite que outro app o leia. Abra no navegador.' : (navigator.onLine === false ? 'O leitor de PDF precisa de internet na primeira vez. Abra no app de PDF do celular.' : 'Abra no app de PDF do celular.'),
+      url ? `<a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Abrir no navegador</a>` : `${can ? '<button class="btn primary" data-vshare>Abrir com…</button>' : ''}<a class="btn" href="${viewObjUrl}" download="${esc(name)}">Baixar</a>`);
+    return;
+  }
+  if (token !== viewToken) { doc.destroy(); return; }
+  $('#vSub').textContent = `PDF · ${pl(doc.numPages, 'página', 'páginas')}`;
+  body.innerHTML = '<div class="v-pdf"></div>';
+  const wrap = body.querySelector('.v-pdf'), p1 = (await doc.getPage(1)).getViewport({ scale: 1 });
+  for (let i = 1; i <= doc.numPages; i++) { const el = document.createElement('div'); el.className = 'v-page'; el.dataset.p = i; el.style.aspectRatio = `${p1.width} / ${p1.height}`; wrap.appendChild(el); }
+  const draw = async el => {
+    if (token !== viewToken) return;
+    const page = await doc.getPage(+el.dataset.p), base = page.getViewport({ scale: 1 });
+    const scale = Math.min(4, (el.clientWidth * (window.devicePixelRatio || 1)) / base.width), vp = page.getViewport({ scale });
+    const cv = document.createElement('canvas'); cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+    el.style.aspectRatio = `${base.width} / ${base.height}`;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    if (token === viewToken) { el.replaceChildren(cv); el.dataset.done = scale; }
+  };
+  const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && !en.target.dataset.done) { en.target.dataset.done = '1'; draw(en.target).catch(() => {}); } }), { root: body, rootMargin: '800px 0px' });
+  wrap.querySelectorAll('.v-page').forEach(el => io.observe(el));
+  viewCleanup = () => { io.disconnect(); doc.destroy(); };
+  viewRedraw = () => wrap.querySelectorAll('.v-page[data-done]').forEach(el => draw(el).catch(() => {}));
+}
+let viewRedraw = null, redrawT;
+function setViewZoom(dir) {
+  viewZoom = Math.max(1, Math.min(3, Math.round((viewZoom + dir * 0.5) * 10) / 10));
+  const body = $('#vBody'); body.style.setProperty('--z', viewZoom); body.classList.toggle('zoomed', viewZoom > 1);
+  clearTimeout(redrawT); if (viewRedraw) redrawT = setTimeout(viewRedraw, 350);
+}
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-view]');
+  if (v) { const [nid, i] = v.dataset.view.split(':'), n = state.notes.find(x => x.id === nid); if (n) openViewer(attachList(n), +i); return; }
+  const vu = e.target.closest('[data-view-url]');
+  if (vu) { e.preventDefault(); openViewer([{ t: 'link', url: vu.dataset.viewUrl, label: vu.dataset.label || '' }], 0); return; }
+  const nv = e.target.closest('[data-vnav]');
+  if (nv) { const ni = viewIdx + +nv.dataset.vnav; if (ni >= 0 && ni < viewList.length) { viewIdx = ni; $('#vBody').style.removeProperty('--z'); $('#vBody').classList.remove('zoomed'); viewRedraw = null; showViewItem(); } return; }
+  const vz = e.target.closest('[data-vzoom]'); if (vz) return setViewZoom(+vz.dataset.vzoom);
+  if (e.target.closest('[data-vshare]') && viewBlob) {
+    navigator.share({ files: [new File([viewBlob], viewName, { type: viewBlob.type || '' })], title: viewName }).catch(() => {});
+    return;
+  }
+  const img = e.target.closest('.v-center.z .v-img');
+  if (img) setViewZoom(viewZoom > 1 ? -4 : 2);
+});
+$('#dlgView').addEventListener('close', () => {
+  viewCleanupAll(); viewRedraw = null; $('#vBody').style.removeProperty('--z'); $('#vBody').classList.remove('zoomed');
+  if (viewHist) { viewHist = false; try { history.back(); } catch {} }
+});
+window.addEventListener('popstate', () => { if (viewHist) { viewHist = false; if ($('#dlgView').open) $('#dlgView').close(); } });
+document.addEventListener('keydown', e => {
+  if (!$('#dlgView').open) return;
+  if (e.key === 'ArrowRight' && viewIdx < viewList.length - 1) { viewIdx++; showViewItem(); }
+  if (e.key === 'ArrowLeft' && viewIdx > 0) { viewIdx--; showViewItem(); }
+});
 
 /* ============ Navegação (abas mutuamente exclusivas) ============ */
 const TABS = { map: '#viewMap', notes: '#viewNotes', pills: '#viewPills' };
@@ -1800,7 +2157,7 @@ document.addEventListener('click', e => {
   const ne = t.closest('[data-note-edit]');
   if (ne) return openNoteDrawer(openBookId, ne.dataset.noteEdit);
   const nd = t.closest('[data-note-del]');
-  if (nd) { if (!confirm('Excluir esta ficha? Esta ação não pode ser desfeita.')) return; state.notes = state.notes.filter(n => n.id !== nd.dataset.noteDel); persist(); render(); toast('Ficha excluída'); return; }
+  if (nd) { if (!confirm('Excluir esta ficha e os arquivos anexados? Esta ação não pode ser desfeita.')) return; blobDelMany(fileIdsOf(state.notes.filter(n => n.id === nd.dataset.noteDel))); state.notes = state.notes.filter(n => n.id !== nd.dataset.noteDel); persist(); render(); toast('Ficha excluída'); return; }
   const ef = t.closest('[data-edit-field]');
   if (ef) return openForm('field', { editId: ef.dataset.editField });
   const nw = t.closest('[data-new]');
@@ -2303,7 +2660,7 @@ function renderFocus() {
   const key = principleOf(k, it), P = PRINCIPLES[key], isMc = it.type === 'mc';
   const src = safeUrl(k.source), isPdf = /\.pdf($|[?#])/i.test(k.source);
   const top = `<div class="f-top"><span class="f-label">${CAPSULE}<span>${session.kind === 'day' ? 'Pílula do dia' : session.extra ? 'Treino extra' : 'Pílula de 10 minutos'}</span></span>
-    <div class="f-top-r">${src ? `<a class="btn sm pdf-btn" href="${esc(k.source)}" target="_blank" rel="noopener">${isPdf ? '📄 Ver PDF Original' : '🔗 Ver fonte original'}</a>` : ''}
+    <div class="f-top-r">${src ? `<button class="btn sm pdf-btn" data-view-url="${esc(k.source)}" data-label="${esc(k.title)}">${isPdf ? '📄 Ver PDF Original' : '🔗 Ver fonte original'}</button>` : ''}
     <button class="x" data-f="close" aria-label="Sair"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>`;
   const idx = k.items.indexOf(it) + 1;
   const meta = `<div class="f-meta"><span class="area-tag">${esc(f.icon)} ${esc(k.title)}</span>${prinTag(key)}<span class="qcount">${isMc ? 'Múltipla escolha' : 'Dissertativa'}, ${idx}/${k.items.length}</span></div>`;
