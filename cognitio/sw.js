@@ -1,6 +1,6 @@
 // Service worker do Cognitio: guarda o app para funcionar offline.
 // Ao atualizar o index.html, aumente a versão abaixo (v2 -> v3) para o celular baixar a nova versão.
-const CACHE = 'cognitio-v2';
+const CACHE = 'cognitio-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 // Leitor de PDF (pdf.js), baixado na primeira vez que você abre um PDF e guardado para uso offline.
 const PDFJS_HOST = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/';
