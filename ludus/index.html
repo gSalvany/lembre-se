@@ -11,6 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ludus">
+<script src="../comum/lembre.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
@@ -191,8 +192,18 @@ function idbOpenExisting(name){
 }
 const idbReq = q => new Promise((res,rej)=>{ q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); });
 /* ===== Memento: dias vividos, intenção do mês e citações (IndexedDB 'memento', só leitura) ===== */
+const chaveMesAtual = () => { const agora=new Date(), mes=agora.toLocaleDateString('pt-BR',{month:'long'}); return mes.charAt(0).toUpperCase()+mes.slice(1)+' de '+agora.getFullYear(); };
 async function lerMemento(){
-  const out={}; const db=await idbOpenExisting('memento');
+  const R = window.Lembre ? await Lembre.ler('memento') : null;            // contrato lembre-se: o resumo que o Memento publica
+  if(R && R.dados && Array.isArray(R.dados.memories)){
+    const d=R.dados, chave=chaveMesAtual(), intencao=d.memories.filter(m=>m.scope==='Mês'&&m.monthYear===chave)[0];
+    ECO.memento = { nascimento: /^\d{4}-\d{2}-\d{2}$/.test(d.birth||'') ? d.birth : '', intencao: intencao ? String(intencao.text||'').replace(/[#*_>`]/g,'').trim() : '',
+      citacoes: (d.quotes||[]).map(q=>({ texto:String(q.text), autor:String(q.author||'') })) };
+    (d.daylog||[]).forEach(x=>marcarDia(x.date));
+    d.memories.forEach(m=>{ const x=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(m.date||''); if(x) marcarDia(`${x[3]}-${x[2]}-${x[1]}`); else if(m.ts) marcarDia(diaDe(m.ts)); });
+    return;
+  }
+  const out={}; const db=await idbOpenExisting('memento');                  // reserva: Memento ainda sem resumo
   if(db){
     try{ if(db.objectStoreNames.contains('kv')){
       const kv=db.transaction('kv','readonly').objectStore('kv');
@@ -216,13 +227,14 @@ async function lerMemento(){
   (Array.isArray(daylog)?daylog:[]).forEach(d=>d&&marcarDia(d.date));
   (Array.isArray(mem)?mem:[]).forEach(m=>{ const x=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(m&&m.date||''); if(x) marcarDia(`${x[3]}-${x[2]}-${x[1]}`); });
 }
-/* ===== Cognitio: áreas e fichas (localStorage 'cognitio.v2', só leitura) ===== */
-function lerCognitio(){
-  const c = store.get('cognitio.v2');
+/* ===== Cognitio: áreas e fichas (resumo publicado pelo Cognitio; reserva: localStorage antigo) ===== */
+async function lerCognitio(){
+  const R = window.Lembre ? await Lembre.ler('cognitio') : null;
+  const c = R && R.dados && Array.isArray(R.dados.areas) ? R.dados : store.get('cognitio.v2');
   if(!c || !Array.isArray(c.areas)){ ECO.cognitio=null; return; }
   const areas = c.areas.filter(a=>a&&a.title).map(a=>({ id:a.id, titulo:String(a.title), status:[0,1,2].includes(+a.status)?+a.status:0 }));
   const nomeArea = Object.fromEntries(areas.map(a=>[a.id,a.titulo]));
-  const notas = (c.notes||[]).filter(n=>n&&n.title).map(n=>({ titulo:String(n.title), area:nomeArea[n.areaId]||'', quando:Date.parse(n.createdAt)||0 }))
+  const notas = (c.notes||[]).filter(n=>n&&n.title).map(n=>({ id:n.id, titulo:String(n.title), area:nomeArea[n.areaId]||'', quando:Date.parse(n.createdAt)||0 }))
     .sort((a,b)=>b.quando-a.quando);
   ECO.cognitio = { areas, notas };
   notas.forEach(n=>n.quando&&marcarDia(diaDe(n.quando)));
@@ -239,8 +251,10 @@ function constancia(){
   return { dias:n, feitoHoje };
 }
 async function lerVolumen(){
-  let st=null; const db=await idbOpenExisting('volumen');
-  if(db){ try{ if(db.objectStoreNames.contains('kv')) st=await idbReq(db.transaction('kv','readonly').objectStore('kv').get('state')); }catch(e){} db.close(); }
+  const R = window.Lembre ? await Lembre.ler('volumen') : null;
+  let st = R && R.dados && Array.isArray(R.dados.items) ? R.dados : null;    // o resumo já vem no mesmo formato de itens
+  if(!st){ const db=await idbOpenExisting('volumen');
+    if(db){ try{ if(db.objectStoreNames.contains('kv')) st=await idbReq(db.transaction('kv','readonly').objectStore('kv').get('state')); }catch(e){} db.close(); } }
   if(!st) st=store.get('my_mediatheca_v2');
   const raw = st&&Array.isArray(st.items) ? st.items : Array.isArray(st) ? st : [];
   const n = v => { const x=+v; return isFinite(x)?x:0; };
@@ -264,8 +278,7 @@ let lendoIdx = 0, notaIdx = 0, citIdx = -1;
 async function lerEco(){
   DIAS.clear();
   try{ (store.get('atrium_history')||[]).forEach(x=>x&&marcarDia(x.date)); }catch(e){}
-  try{ lerCognitio(); }catch(e){}
-  try{ await Promise.all([lerVolumen(), lerAudire(), lerMemento()]); }catch(e){}
+  try{ await Promise.all([lerCognitio(), lerVolumen(), lerAudire(), lerMemento()]); }catch(e){}
   notaIdx = Math.min(notaIdx, Math.max(0, (ECO.cognitio?ECO.cognitio.notas.length:1)-1));
   lendoIdx = Math.min(lendoIdx, Math.max(0, ECO.lendo.length-1));
   montarObjetos();
@@ -312,7 +325,7 @@ function montarObjetos(){
       const l=ECO.lendo[lendoIdx]; return `${l.autor?l.autor+'. ':''}${l.pct}% lido${ECO.lendo.length>1?`. ${lendoIdx+1} de ${ECO.lendo.length} sobre a mesa.`:'.'}`; },
     get acoes(){ const a=[];
       if(ECO.lendo.length>1) a.push({ rotulo:'Outro', fn:()=>{ lendoIdx=(lendoIdx+1)%ECO.lendo.length; mostrarPorta(atual); } });
-      a.push({ rotulo: ECO.lendo.length?'Continuar no Volumen':'Abrir o Volumen', fn:()=>irPara('../volumen/', COR_VOL, 'volumen') });
+      a.push({ rotulo: ECO.lendo.length?'Continuar no Volumen':'Abrir o Volumen', fn:()=>irPara(ECO.lendo.length ? '../volumen/?abrir='+encodeURIComponent(ECO.lendo[lendoIdx].id) : '../volumen/', COR_VOL, 'volumen') });
       return a; } });
   // ampulheta do Memento: a areia de cima é o que resta de hoje
   OBJ.push({ obj:true, tipo:'ampulheta', ret:{x:AMPULHETA.x-16, y:AMPULHETA.y-T*2, w:32, h:T*2+2},
@@ -345,7 +358,8 @@ function montarObjetos(){
       const f=c.notas[notaIdx]; return `${f.area?'Caderno '+f.area+', ':''}ficha ${f.quando?quandoTxt(f.quando):''}. ${c.notas.length} ${c.notas.length===1?'ficha':'fichas'} no total.`; },
     get acoes(){ const a=[], c=ECO.cognitio;
       if(c && c.notas.length>1) a.push({ rotulo:'Outra', fn:()=>{ notaIdx=(notaIdx+1)%Math.min(c.notas.length,12); mostrarPorta(atual); } });
-      a.push({ rotulo:'Abrir o Cognitio', fn:()=>irPara('../cognitio/', COR_COG, 'cognitio') });
+      const fc = c && c.notas.length && c.notas[notaIdx];
+      a.push({ rotulo: fc && fc.id ? 'Abrir a ficha' : 'Abrir o Cognitio', fn:()=>irPara(fc && fc.id ? '../cognitio/?ficha='+encodeURIComponent(fc.id) : '../cognitio/', COR_COG, 'cognitio') });
       return a; } });
   // ecos: os áudios recentes flutuam no pátio, perto da porta do Audire
   const n=ECO.ecos.length, bx=W/2, by=H-T*4.4;
@@ -681,6 +695,7 @@ function entrar(){
 }
 window.addEventListener('pageshow', e=>{ saindo=false; document.getElementById('veu').classList.remove('on'); if(e.persisted) lerEco(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') lerEco(); else pararEco(); });
+if(window.Lembre){ let t=null; Lembre.ouvir(()=>{ clearTimeout(t); t=setTimeout(lerEco, 300); }); }
 
 /* ===== Render ===== */
 function redimensionar(){
