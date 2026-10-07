@@ -1,11 +1,11 @@
 // Service worker do Cognitio: guarda o app para funcionar offline.
 // Ao atualizar o index.html, aumente a versão abaixo (v2 -> v3) para o celular baixar a nova versão.
-const CACHE = 'cognitio-v3';
+const CACHE = 'cognitio-v4';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 // Leitor de PDF (pdf.js), baixado na primeira vez que você abre um PDF e guardado para uso offline.
 const PDFJS_HOST = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/';
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).then(() => c.add('../comum/lembre.js').catch(() => {}))).then(() => self.skipWaiting()));   // a biblioteca comum também funciona offline
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('cognitio-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

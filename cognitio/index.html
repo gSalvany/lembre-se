@@ -10,6 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Cognitio">
+<script src="../comum/lembre.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -1073,7 +1074,7 @@ dialog.viewer{background:var(--bg)}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script>
+<script type="text/plain" id="cogApp">
 (() => {
 'use strict';
 
@@ -1268,14 +1269,41 @@ function normalize(d) {
   return { version: 4, fields: d.fields, areas: d.areas, notes: d.notes, decks, pillLog, pillOfDay };
 }
 function load() {
-  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (isValid(d)) return normalize(d); } }
-  catch (e) { console.warn('Falha ao ler localStorage', e); }
+  try { const raw = CogStore.get(); if (raw) { const d = JSON.parse(raw); if (isValid(d)) return normalize(d); } }
+  catch (e) { console.warn('Falha ao ler os dados salvos', e); }
   const d = normalize(seed()); persist(d); return d;
 }
 function persist(d = state) {
-  try { localStorage.setItem(KEY, JSON.stringify(d)); }
+  try { CogStore.set(JSON.stringify(d)); }
   catch (e) { toast('Não foi possível salvar no navegador. Exporte um backup.', true); }
+  try { if (d === state) publicarResumo(); } catch (e) {}      // na primeira carga o estado ainda não existe
 }
+
+/* ============ Resumo para os outros apps (contrato lembre-se, ver ../comum/lembre.js) ============
+   O Atrium, o Ludus e o Audire leem só este resumo: campos, áreas, títulos das fichas,
+   questões e pílulas. O texto das fichas e os anexos ficam só aqui.
+   Links diretos para os outros apps: ../cognitio/?area=ID e ../cognitio/?ficha=ID */
+function construirResumoCognitio() {
+  const clip = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; };
+  const num = v => Number.isFinite(+v) ? +v : 0;
+  return {
+    exportedAt: null,
+    fields: state.fields.map(f => ({ id: f.id, title: f.title, icon: f.icon || '📚', posture: f.posture || 'ultra' })),
+    areas: state.areas.map(a => ({ id: a.id, fieldId: a.fieldId, title: a.title, status: [0, 1, 2].includes(+a.status) ? +a.status : 0 })),
+    notes: state.notes.map(n => ({ id: n.id, areaId: n.areaId, title: clip(n.title, 120), tags: Array.isArray(n.tags) ? n.tags.slice(0, 8) : [], createdAt: n.createdAt })),
+    decks: state.decks.map(k => ({ id: k.id, title: k.title, fieldId: k.fieldId, areaId: k.areaId || null,
+      items: k.items.map(i => ({ id: i.id, last: i.lastAt || null, t: clip(i.text, 160), due: i.due || null, g: typeof i.lastGrade === 'number' ? i.lastGrade : -1, seen: !!i.seen, done: !!i.done })) })),
+    pillLog: state.pillLog.slice(-500).map(l => ({ deckId: l.deckId, t: clip(l.text, 120), minutes: num(l.minutes), grade: l.grade, at: l.at })),
+    pillOfDay: state.pillOfDay || null
+  };
+}
+function publicarResumo() {
+  if (!window.Lembre) return;
+  if (!publicarResumo.agendado) publicarResumo.agendado = Lembre.agendar('cognitio', construirResumoCognitio, 900);
+  publicarResumo.agendado();
+}
+CogStore.onError = () => toast('Não foi possível salvar no navegador. Exporte um backup.', true);
+CogStore.onRecover = () => toast('Salvamento restabelecido.');
 
 let state = load();
 persist();                                   // grava já os campos novos normalizados
@@ -2394,8 +2422,9 @@ $('#themeBtn').addEventListener('click', toggleTheme);
 $('#btnExport').addEventListener('click', exportBackup);
 $('#btnImport').addEventListener('click', () => $('#fileImport').click());
 $('#fileImport').addEventListener('change', e => { importBackup(e.target.files[0]); e.target.value = ''; });
+CogStore.onExternal = () => { state = load(); route = cleanRoute(route); applyRoute(route); render(); };   // outra aba do Cognitio salvou
 window.addEventListener('storage', e => {
-  if (e.key === KEY) { state = load(); route = cleanRoute(route); applyRoute(route); render(); }
+  if (e.key === KEY && CogStore.status.backend === 'ls') { state = load(); route = cleanRoute(route); applyRoute(route); render(); }
   if (e.key === THEME_KEY) applyTheme();
 });
 matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (!savedTheme()) applyTheme(); });
@@ -3191,7 +3220,100 @@ setDaily(dailyOpen);
   else if (aid && areaById(aid)) go({ v: 'area', areaId: aid });
 })();
 render();
+publicarResumo();
+if (CogStore.status.migrated) setTimeout(() => toast('Seus dados foram movidos para o IndexedDB: agora têm espaço próprio.'), 500);
 try { if (!localStorage.getItem(WELCOME_KEY)) openWelcome(); } catch { openWelcome(); }
+})();
+</script>
+<script>
+/* =============================================================
+   ARMAZENAMENTO DO COGNITIO: IndexedDB 'cognitio' (tabela kv, chave 'state')
+   Até a versão anterior, tudo ficava no localStorage ('cognitio.v2'), que tem
+   uns 5 MB para todos os apps do endereço juntos. Na primeira abertura desta
+   versão, os dados são copiados para o IndexedDB, conferidos byte a byte e só
+   então apagados do localStorage. Se o IndexedDB não funcionar neste aparelho,
+   nada muda: o Cognitio continua no localStorage, como antes.
+   ============================================================= */
+(function () {
+  const KEY = 'cognitio.v2', DBN = 'cognitio';
+  const S = { backend: 'ls', db: null, cache: null, pending: false, writing: Promise.resolve(), lastError: null, migrated: false };
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const req = r => new Promise((ok, no) => { r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+  const txDone = tx => new Promise((ok, no) => { tx.oncomplete = () => ok(); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error || new Error('abortada')); });
+  function open() {
+    return new Promise(res => {
+      if (!('indexedDB' in window)) return res(null);
+      let r; try { r = indexedDB.open(DBN, 1); } catch (e) { return res(null); }
+      const t = setTimeout(() => res(null), 4000);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+      r.onsuccess = () => { clearTimeout(t); const db = r.result; db.onversionchange = () => { db.close(); if (S.db === db) S.db = null; }; res(db); };
+      r.onerror = r.onblocked = () => { clearTimeout(t); res(null); };
+    });
+  }
+  async function works(db) {                                  // teste real: alguns modos de abrir arquivos bloqueiam o IndexedDB
+    try {
+      const a = db.transaction('kv', 'readwrite'); a.objectStore('kv').put(1, '__probe'); await txDone(a);
+      const b = db.transaction('kv', 'readwrite'); const v = await req(b.objectStore('kv').get('__probe')); b.objectStore('kv').delete('__probe'); await txDone(b);
+      return v === 1;
+    } catch (e) { return false; }
+  }
+  const get = k => req(S.db.transaction('kv', 'readonly').objectStore('kv').get(k));
+  async function put(k, v) { const tx = S.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); await txDone(tx); }
+  async function init() {
+    const db = await open();
+    if (!db || !(await works(db))) return;                    // segue no localStorage
+    S.db = db;
+    const st = await get('state'), meta = await get('__meta'), ls = lsGet(KEY);
+    if (typeof st === 'string' && st) {                       // já está no IndexedDB
+      S.backend = 'idb'; S.cache = st;
+      if (ls && meta && meta.migrated) { try { localStorage.removeItem(KEY); } catch (e) {} }   // sobra de uma migração interrompida
+      return;
+    }
+    if (ls) {                                                 // migração: copia, confere e só então apaga
+      await put('state', ls);
+      const back = await get('state');
+      if (back !== ls) return;                                // não conferiu: continua no localStorage
+      await put('__meta', { migrated: true, at: new Date().toISOString(), bytes: ls.length });
+      S.backend = 'idb'; S.cache = ls; S.migrated = true;
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      return;
+    }
+    S.backend = 'idb'; S.cache = null;                        // primeira abertura: os dados já nascem no IndexedDB
+    await put('__meta', { migrated: true, at: new Date().toISOString(), bytes: 0 });
+  }
+  let canal = null; try { canal = new BroadcastChannel('cognitio-sync'); } catch (e) {}
+  function flush() {
+    if (S.backend !== 'idb' || !S.pending || !S.db) return S.writing;
+    S.pending = false; const v = S.cache;
+    S.writing = S.writing.then(() => put('state', v)).then(() => {
+      if (S.lastError) { S.lastError = null; api.onRecover && api.onRecover(); }
+      try { canal && canal.postMessage({ t: Date.now() }); } catch (e) {}
+    }).catch(e => { console.error(e); S.pending = true; if (!S.lastError) { S.lastError = e; api.onError && api.onError(e); } });
+    return S.writing;
+  }
+  let timer = null;
+  const api = {
+    status: S,
+    get() { return S.backend === 'idb' ? S.cache : lsGet(KEY); },
+    set(v) {                                                  // no localStorage, erro de espaço continua subindo para o app
+      if (S.backend === 'idb') { S.cache = v; S.pending = true; clearTimeout(timer); timer = setTimeout(flush, 0); return; }
+      localStorage.setItem(KEY, v);
+    },
+    flush, onError: null, onRecover: null, onExternal: null
+  };
+  addEventListener('pagehide', () => flush());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  if (canal) canal.addEventListener('message', async () => {   // outra aba do Cognitio salvou
+    if (S.backend !== 'idb' || !S.db || S.pending) return;
+    try { const v = await get('state'); if (typeof v === 'string' && v !== S.cache) { S.cache = v; api.onExternal && api.onExternal(); } } catch (e) {}
+  });
+  window.CogStore = api;
+  (async function boot() {
+    try { await init(); } catch (e) { console.error(e); }
+    const s = document.createElement('script');
+    s.textContent = document.getElementById('cogApp').textContent;
+    document.body.appendChild(s);
+  })();
 })();
 </script>
 </body>
