@@ -367,6 +367,57 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
   .em-view{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion:reduce){#dlgEmblem[open],.em-coin{animation:none}}
+
+/* ---------- O dia: intenção, missões, fechar ---------- */
+.intent{margin:14px 0 4px;padding:2px 0 2px 14px;border-left:3px solid var(--line-2);text-decoration:none;display:block}
+.intent .in-l{font-size:11.5px;font-weight:700;color:var(--faint);margin-top:6px}
+.intent .in-m{font-family:var(--serif);font-size:15px;color:var(--muted);line-height:1.4}
+.intent .in-s{font-family:var(--serif);font-size:20px;color:var(--text);line-height:1.3}
+.intent.empty .in-m{font-size:14px}
+.wake{padding:14px 16px;margin-top:12px}.wake p{color:var(--text);font-weight:600;margin-bottom:8px}
+.wake-r{display:flex;gap:8px}.wake-r input{flex:1;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.dseg{margin:16px 0 10px}
+.budget{padding:12px 16px}.bd-r{display:flex;justify-content:space-between;gap:8px;font-size:13px}.bd-r b{color:var(--text)}
+.bd-n{font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.45}
+.mi-bar{height:5px;border-radius:3px;background:var(--card-3);overflow:hidden;margin-top:8px}.mi-bar i{display:block;height:100%;background:var(--atr);border-radius:3px;transition:width .4s var(--ease)}
+.mis{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.mi{padding:12px 14px}.mi.run{border-color:var(--atr);box-shadow:0 0 0 1px var(--atr) inset}.mi.ok .mi-bar i{background:var(--vol)}.mi.off{opacity:.55}
+.mi-top{display:flex;align-items:center;gap:12px}
+.mi-chk{width:28px;height:28px;flex:none;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;color:transparent;font-weight:800;font-size:14px}
+.mi-chk.on{background:var(--vol);border-color:var(--vol);color:#fff}
+.mi-t{flex:1;min-width:0}.mi-t b{display:block;color:var(--text);font-size:15px;line-height:1.3}.mi-t small{font-size:12px;color:var(--faint)}
+.mi-t .chip{font-size:10px;padding:1px 7px;margin-right:2px}
+.mi-more{width:34px;height:34px;flex:none;border-radius:50%;font-size:18px;color:var(--faint)}
+.mi-time{font-size:12.5px;margin-top:6px}.mi-time b{color:var(--atr);font-size:18px;font-variant-numeric:tabular-nums;margin-right:4px}
+.mi-note{font-size:12.5px;color:var(--cog);margin-top:6px}
+.mi-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mi-add{display:flex;gap:8px;margin-top:10px}.mi-add .btn{flex:1}
+.mi-empty{padding:10px 2px}
+.mi-x{color:var(--faint);font-size:16px;padding:0 4px}
+.pec,.desv,.fim{padding:14px 16px;margin-top:12px}
+.pec-h{display:flex;justify-content:space-between;align-items:center}
+.pec-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.pec-g div{background:var(--card-2);border-radius:14px;padding:10px 12px}
+.pec-g small{display:block;font-size:11.5px;color:var(--faint)}.pec-g b{display:block;font-size:20px;color:var(--text)}.pec-g b.bad{color:var(--mem)}.pec-g b.good{color:var(--vol)}
+.pec-m{display:flex;justify-content:space-between;font-size:12.5px;margin-top:10px}
+.dv-r{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--line)}.dv-r:last-child{border:0}
+.fim h3{font-family:var(--serif);font-weight:500;font-size:20px;color:var(--text);margin:4px 0 8px}
+.fim.done{border-color:var(--vol)}.fim.done p{font-size:14px;margin-top:4px}
+.fim-b{margin-top:12px}.fim-b span{color:var(--atr)}
+.fx-r{padding:10px 0;border-bottom:1px solid var(--line)}.fx-r b{color:var(--text);font-size:14px}.fx-r small{display:block;font-size:12px;color:var(--faint)}
+.fx-e{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.fx-b{font-size:12px;padding:5px 10px;border-radius:var(--pill);border:1px solid var(--line)}.fx-b.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:700}
+.fx-l{display:block;font-size:12.5px;font-weight:700;color:var(--faint);margin:12px 0 6px}
+.fim textarea{width:100%;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--text);font:inherit;resize:vertical}
+.fx-v{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-top:10px;color:var(--text)}
+.act-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fo-f{display:flex;flex-direction:column;gap:10px}
+.fo-f input,.fo-f select{width:100%;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--text)}
+.fo-f label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--faint)}
+.fo-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fo-g{display:flex;flex-wrap:wrap;gap:8px}
+.fo-h{font-size:12px;font-weight:700;color:var(--faint);margin-top:8px}
+.fo-o{display:flex;gap:10px;align-items:center;text-align:left;padding:9px 10px;border-radius:12px;border:1px solid var(--line);width:100%}
+.fo-o b{display:block;color:var(--text);font-size:14px;font-weight:600}.fo-o small{font-size:12px;color:var(--faint)}
 </style>
 </head>
 <body>
@@ -979,44 +1030,7 @@ function audLine() {
   const txt = bits.length ? bits.join(', ') : 'Tudo revisado.';
   return `<a class="card weekline aud-line" href="${AUDIRE_URL}${A.inbox ? '?revisar=1' : ''}"><span>Audire</span><b>${esc(txt)}${next ? `<br><small style="font-weight:400;color:var(--muted)">Próximo passo: ${esc(clip(next.nextStep, 70))}</small>` : ''}</b><em>›</em></a>`;
 }
-function renderHoje(S) {
-  const m = S.memento, name = m && m.name ? m.name.split(' ')[0] : '';
-  const h = new Date().getHours(), sal = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-  let life = '';
-  if (m && /^\d{4}-\d{2}-\d{2}$/.test(m.birth)) {
-    const days = Math.floor((Date.now() - Date.parse(m.birth + 'T00:00:00')) / DAY);
-    life = `<p class="life">Dia <b>${days.toLocaleString('pt-BR')}</b> da sua vida.</p>`;
-  }
-  const act = currentAction(S), done = doneToday(), atrStreak = streak(history.map(x => x.date));
-  const st = todayState();
-  let actHtml;
-  if (!act) actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia</p><p class="act-text">Nada pendente nos seus apps.</p><p class="act-why">Sem gargalos, sem revisões vencidas e sem leitura em andamento. Escolha um território novo no Cognitio.</p></section>`;
-  else if (st.doneAt && !st.more) actHtml = `<section class="card action done"><div class="checkmark" aria-hidden="true">✓</div><p class="eyebrow">Ação do dia feita às ${fmtTime(st.doneAt)}</p><p class="act-text">${esc(st.doneText)}</p>
-      <p class="act-why">${atrStreak > 1 ? `🔥 ${atrStreak} dias seguidos cumprindo a ação do dia.` : 'Primeiro dia da sequência. Amanhã tem outra.'}</p>
-      <div class="act-row"><button class="btn" data-more>Mais uma ação</button></div></section>`;
-  else actHtml = `<section class="card action"><p class="eyebrow">Sua próxima ação do dia${done.length ? ` · ${done.length} feita${done.length > 1 ? 's' : ''} hoje` : ''}</p>
-      <ul class="act-parts">${act.parts.map(p => `<li><span class="chip ${p.app}">${APPN[p.app]}</span><span>${esc(p.label)}</span></li>`).join('')}</ul>
-      <p class="act-why">Por quê: ${esc(act.why.join('; '))}. Cerca de ${fmtMin(act.min)}.</p>
-      <div class="act-row"><button class="btn primary big" data-did>✓ Fiz</button>${act.total > 1 ? '<button class="btn" data-swap>Trocar</button>' : ''}${audLink(act.parts)}</div></section>`;
-
-  // Contexto compacto: um número por app
-  const q = cogQueue(S.cognitio), cur = volCurrent(S.volumen), d = m && m.daylog[0];
-  const f = app => { const x = freshness(app); return x ? `<small class="${x.stale ? 'stale-t' : ''}">${x.label}</small>` : ''; };
-  const ctx = `<div class="ctx">
-    <article class="card ctx-c mem"><p class="ac-name">MEMENTO ${f('memento')}</p>${m ? d ? `<p class="ctx-v">${d.score === null ? '–' : d.score + '%'}</p><p class="ctx-l">execução em ${fmtDate(keyToDate(d.date))}${d.checkTotal ? `, checklist ${d.checkDone}/${d.checkTotal}` : ''}</p>` : '<p class="ctx-l">Nenhum dia registrado.</p>' : '<p class="ctx-l">Sem dados.</p>'}${openBtn('memento', 'Abrir')}</article>
-    <article class="card ctx-c vol"><p class="ac-name">VOLUMEN ${f('volumen')}</p>${cur ? `<p class="ctx-v">${cur.total ? Math.round(cur.current / cur.total * 100) + '%' : '–'}</p><p class="ctx-l">${esc(clip(cur.title, 40))}</p>` : `<p class="ctx-l">${S.volumen ? 'Nada em andamento.' : 'Sem dados.'}</p>`}${openBtn('volumen', 'Abrir')}</article>
-    <article class="card ctx-c cog"><p class="ac-name">COGNITIO ${f('cognitio')}</p>${S.cognitio ? `<p class="ctx-v">${q.due}</p><p class="ctx-l">${q.due === 1 ? 'revisão vencida' : 'revisões vencidas'}${q.weak ? `, ${q.weak} 🎯` : ''}</p>` : '<p class="ctx-l">Sem dados.</p>'}${openBtn('cognitio', 'Abrir')}</article>
-  </div>`;
-
-  // Semana em uma linha
-  const wk = weekKey(), from = mondayOf(today()), elapsed = Math.round((keyToDate(today()) - keyToDate(from)) / DAY) + 1;
-  const goals = (store.goals[wk] || []).map(g => goalStatus(S, g, from, today(), elapsed)).filter(Boolean);
-  const wkLine = goals.length
-    ? `<button class="card weekline" data-go="semana"><span>Metas da semana</span><b>${goals.filter(g => g.st === 'ok').length} cumpridas, ${goals.filter(g => g.st === 'track').length} no caminho, ${goals.filter(g => g.st === 'risk' || g.st === 'fail').length} em risco</b><em>›</em></button>`
-    : `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Nenhuma meta definida. Defina de 1 a 3 metas.</b><em>›</em></button>`;
-
-  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${actHtml}${wkLine}${audLine()}${ctx}</div>`;
-}
+/* renderHoje agora mora no MÓDULO 10 (o dia) */
 
 /* ---------- Semana: ritual, metas, tendências, sequências, ritmo ---------- */
 function trendRow(label, now, prev, { unit = '', pp = false, lowerBetter = false, fmt = v => v } = {}) {
@@ -1211,8 +1225,11 @@ document.addEventListener('click', e => {
   if (td) {
     const S = sources(), row = linkRows(S).find(r => r.item.id === td.dataset.today), pa = row && proposeAction(row);
     if (!pa) return;
-    const st = todayState(); st.override = { app: pa.app, kind: 'ligacao', min: pa.min, label: pa.label, why: 'escolhida por você em Ligações' }; st.variant = 0; st.more = true; persist();
-    toast('Virou a sua próxima ação de hoje'); return go('hoje');
+    const it0 = row.item, mi = DIA.missoes.find(x => !x.concluida && x.ref && x.ref.app === 'volumen' && x.ref.id === it0.id) ||
+      { id: uid(), tipo: 'volumen', titulo: it0.title, icone: TYPE_ICON[it0.type] || '📖', ref: { app: 'volumen', id: it0.id, title: it0.title }, cartao: it0.type === 'course' ? 'Curso' : 'Leitura', estimado: 0, concluida: false, criadaEm: Date.now() };
+    if (!DIA.missoes.includes(mi)) DIA.missoes.push(mi);
+    const dd = dia(today()); if (!dd.itens.some(i => i.mid === mi.id)) dd.itens.push({ mid: mi.id, decidido: pa.min || 30, sessoes: [], extra: 0, estado: null });
+    salvarDia(); diaSel = 'hoje'; toast('Virou uma missão de hoje'); return go('hoje');
   }
   // Metas
   if (t.closest('#gAdd')) {
@@ -1263,6 +1280,389 @@ $('#atriumIn').addEventListener('change', async e => {
     persist(); persistHistory(); render(); toast('Backup do Atrium restaurado');
   } catch { toast('Este arquivo não é um backup do Atrium.', true); }
 });
+/* =============================================================
+   MÓDULO 10 — O DIA: intenção, missões, cronômetro, reprogramar, fechar
+   -------------------------------------------------------------
+   O Atrium é o plano vivo. Ele guarda só o que é dele: as missões e os dias.
+   Hábitos, sono, cards de execução e Pecúnia vêm do resumo do Memento (plano).
+   Ao fechar o dia, o Atrium publica o fechamento no resumo dele; o Memento lê
+   e OFERECE preencher a Ficha de Consciência. Quem registra a verdade é você.
+   ============================================================= */
+const DIA_KEY = 'atrium.dia';
+const diaVazio = () => ({ missoes: [], dias: {}, ligHab: {} });
+let DIA = (() => { try { const d = JSON.parse(localStorage.getItem(DIA_KEY)); if (d && d.dias) return Object.assign(diaVazio(), d); } catch {} return diaVazio(); })();
+function salvarDia() {
+  const lim = addDays(today(), -120);
+  Object.keys(DIA.dias).forEach(k => { if (k < lim) delete DIA.dias[k]; });
+  DIA.missoes = DIA.missoes.filter(m => !m.concluida || (m.concluidaEm || 0) > Date.now() - 120 * DAY);
+  try { localStorage.setItem(DIA_KEY, JSON.stringify(DIA)); } catch { toast('Sem espaço no navegador para guardar o dia.', true); }
+}
+let diaSel = 'hoje', fechando = false;
+const diaKey = () => diaSel === 'amanha' ? addDays(today(), 1) : today();
+function dia(k = diaKey()) {
+  return DIA.dias[k] || (DIA.dias[k] = { itens: [], timer: null, desvios: [], acordou: '', sintese: '', virada: false, fechadoEm: null, semHab: [] });
+}
+const plano = () => { const m = sources().memento; return m && m.plano ? m.plano : null; };
+const MEM_URL = '../memento/', VOL_URL = '../volumen/', COG_URL = '../cognitio/';
+
+/* ---------- horas ---------- */
+const hm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const minDe = t => { const m = /^(\d\d):(\d\d)$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
+const relogio = ms => { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s % 60).padStart(2, '0'); };
+const chave = t => norm(t).replace(/[\s#]+/g, '');
+
+/* ---------- missões ---------- */
+function habitos() {
+  const p = plano();
+  return p ? p.ideal.map(h => ({ id: 'h:' + h.id, tipo: 'habito', habitoId: h.id, titulo: h.name, min: h.minutes || 30 })) : [];
+}
+function missao(mid) {
+  if (String(mid).startsWith('h:')) return habitos().find(h => h.id === mid) || { id: mid, tipo: 'habito', habitoId: mid.slice(2), titulo: 'Hábito removido do Memento', min: 0, sumiu: true };
+  return DIA.missoes.find(m => m.id === mid) || null;
+}
+function garantirHabitos(d) {
+  if (d.fechadoEm) return;
+  habitos().forEach(h => { if (!d.itens.some(i => i.mid === h.id) && !(d.semHab || []).includes(h.id)) d.itens.push({ mid: h.id, decidido: h.min, sessoes: [], extra: 0, estado: null }); });
+}
+const realMs = (it, agora = Date.now()) => it.sessoes.reduce((t, s) => t + ((s.ate || agora) - s.de), 0) + (it.extra || 0) * 60000;
+const realMin = it => Math.round(realMs(it) / 60000);
+function estadoFinal(it) {
+  if (it.estado) return it.estado;
+  const r = realMin(it);
+  return r <= 0 ? 'nao' : r >= (it.decidido || 1) ? 'feita' : 'parcial';
+}
+const ativo = it => !['adiada', 'fora'].includes(it.estado);
+function feitoTotal(mid) { let t = 0; Object.values(DIA.dias).forEach(d => d.itens.forEach(i => { if (i.mid === mid) t += realMin(i); })); return t; }
+function abrirLink(m) {
+  const lig = m.tipo === 'habito' ? DIA.ligHab[m.habitoId] : m.ref;
+  if (!lig) return null;
+  if (lig.app === 'volumen') return { href: VOL_URL + '?abrir=' + encodeURIComponent(lig.id), txt: 'Abrir no Volumen', title: lig.title };
+  if (lig.app === 'cognitio') return { href: COG_URL + '?area=' + encodeURIComponent(lig.id), txt: 'Abrir no Cognitio', title: lig.title };
+  return null;
+}
+const CHIP = { habito: ['mem', 'Hábito'], livre: ['atr', 'Missão'], volumen: ['vol', 'Volumen'], cognitio: ['cog', 'Cognitio'] };
+
+/* ---------- cronômetro ---------- */
+function pararTimer(d) {
+  if (!d.timer) return;
+  const it = d.itens.find(i => i.mid === d.timer.mid);
+  if (it && Date.now() - d.timer.de > 30000) it.sessoes.push({ de: d.timer.de, ate: Date.now() });
+  d.timer = null;
+}
+function iniciar(mid) {
+  const d = dia(today());
+  pararTimer(d);
+  d.timer = { mid, de: Date.now() };
+  const it = d.itens.find(i => i.mid === mid); if (it && it.estado === 'nao') it.estado = null;
+  salvarDia(); render();
+}
+setInterval(() => {
+  document.querySelectorAll('[data-tick]').forEach(el => {
+    const d = DIA.dias[today()]; if (!d || !d.timer) return;
+    const it = d.itens.find(i => i.mid === d.timer.mid); if (!it) return;
+    el.textContent = relogio(realMs(it) + (Date.now() - d.timer.de));
+  });
+}, 1000);
+
+/* ---------- Memento: intenção, sono, Pecúnia ---------- */
+function intencoes() {
+  const m = sources().memento; if (!m) return {};
+  const agora = new Date(), mes = agora.toLocaleDateString('pt-BR', { month: 'long' }), my = mes.charAt(0).toUpperCase() + mes.slice(1) + ' de ' + agora.getFullYear();
+  return { mes: m.memories.find(x => x.scope === 'Mês' && x.monthYear === my), semana: m.memories.find(x => x.scope === 'Semana' && x.wk === weekKey()) };
+}
+function janela(d) {
+  const p = plano() || {};
+  const acorda = minDe(d.acordou) ?? minDe(p.wakeIntent) ?? 480, dorme = minDe(p.sleepIntent) ?? 0;
+  const acordado = ((dorme - acorda + 1440) % 1440) || 1440;
+  const agora = new Date(), nowMin = agora.getHours() * 60 + agora.getMinutes();
+  const passou = (nowMin - acorda + 1440) % 1440;
+  return { acordado, resta: passou < acordado ? acordado - passou : 0, dorme: p.sleepIntent || '' };
+}
+function pecunia() {
+  const m = sources().memento; if (!m) return null;
+  const p = m.plano || {}, k = today();
+  const gastoHoje = m.expenses.filter(e => e.date === k).reduce((t, e) => t + e.value, 0);
+  const dias = new Set(m.expenses.map(e => e.date)).size;
+  const media = dias ? m.expenses.reduce((t, e) => t + e.value, 0) / dias : 0;
+  const salvoHoje = (p.savings || []).filter(s => s.date === k).reduce((t, s) => t + s.amount, 0);
+  const meta = (p.goals || []).filter(g => g.value > 0).sort((a, b) => (a.saved / a.value) - (b.saved / b.value))[0] || null;
+  return { gastoHoje, media, salvoHoje, meta, hora: p.hourlyRate || 0 };
+}
+
+/* ---------- resumo do Atrium (o que o Memento lê) ---------- */
+function fechamento(k) {
+  const d = DIA.dias[k]; if (!d || !d.fechadoEm) return null;
+  const habitos_ = {}, blocos = [], notas = [];
+  d.itens.forEach(it => {
+    const m = missao(it.mid); if (!m) return;
+    const est = estadoFinal(it), r = realMin(it);
+    if (it.estado === 'adiada') { notas.push('Adiado: ' + m.titulo + (it.motivo ? ' (' + it.motivo + ')' : '') + '.'); return; }
+    if (it.estado === 'fora') return;
+    if (est === 'imprevisto') notas.push('Imprevisto: ' + m.titulo + (it.motivo ? ' (' + it.motivo + ')' : '') + '.');
+    if (m.tipo === 'habito') {
+      if (m.sumiu) return;
+      habitos_[m.habitoId] = { minutos: r || (est === 'feita' ? it.decidido : 0), estado: est === 'feita' ? 'done' : est === 'parcial' ? 'partial' : 'missed' };
+      return;
+    }
+    const cat = m.cartao || m.titulo, ic = m.icone || '';
+    it.sessoes.forEach(s => { const mn = Math.round((s.ate - s.de) / 60000); if (mn > 0) blocos.push({ categoria: cat, icone: ic, tipo: 'producao', de: hm(s.de), ate: hm(s.ate), minutos: mn }); });
+    if (it.extra > 0) blocos.push({ categoria: cat, icone: ic, tipo: 'producao', minutos: it.extra });
+    if (!r && est === 'feita' && it.decidido) blocos.push({ categoria: cat, icone: ic, tipo: 'producao', minutos: it.decidido });
+  });
+  (d.desvios || []).forEach(x => { if (x.minutos > 0) blocos.push({ categoria: x.categoria, icone: x.icone || '', tipo: 'desvio', minutos: x.minutos }); });
+  const sintese = [String(d.sintese || '').trim(), ...notas].filter(Boolean).join('\n');
+  return { preparadoEm: d.fechadoEm, acordou: d.acordou || '', habitos: habitos_, blocos, sintese, virada: !!d.virada };
+}
+async function publicarAtrium() {
+  if (!window.Lembre) return false;
+  const dias = {};
+  Object.keys(DIA.dias).filter(k => k >= addDays(today(), -14)).forEach(k => { const f = fechamento(k); if (f) dias[k] = f; });
+  return Lembre.publicar('atrium', { dias, atualizadoEm: Date.now() });
+}
+
+/* ---------- folha (bottom sheet) ---------- */
+function folha(html, onAcao) {
+  const d = $('#dlg'); $('#dlgBody').innerHTML = html;
+  const onClick = e => {
+    if (e.target === d) { fechar(); return; }
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    const r = onAcao(b.dataset.s, b); if (r !== false) fechar();
+  };
+  const fechar = () => { d.removeEventListener('click', onClick); if (d.open) d.close(); };
+  d.addEventListener('click', onClick);
+  d.addEventListener('close', () => d.removeEventListener('click', onClick), { once: true });
+  d.showModal();
+}
+
+/* ---------- tela ---------- */
+function itemHtml(it, d, k) {
+  const m = missao(it.mid); if (!m) return '';
+  const [cls, lbl] = CHIP[m.tipo] || CHIP.livre, isHoje = k === today(), fechado = !!d.fechadoEm;
+  const rodando = isHoje && d.timer && d.timer.mid === it.mid;
+  const r = realMs(it) + (rodando ? Date.now() - d.timer.de : 0), rm = Math.round(r / 60000);
+  const est = it.estado, fin = estadoFinal(it), pct = it.decidido ? Math.min(100, Math.round(rm / it.decidido * 100)) : 0;
+  const lk = abrirLink(m), tot = m.estimado ? feitoTotal(m.id) : 0;
+  const sub = [it.decidido ? fmtMin(it.decidido) + ' hoje' : '', lk && lk.title ? clip(lk.title, 34) : '', m.estimado ? `${fmtMin(tot)} de ~${fmtMin(m.estimado)} na missão` : ''].filter(Boolean).join(' · ');
+  const tag = est === 'imprevisto' ? `<p class="mi-note">Imprevisto${it.motivo ? ': ' + esc(it.motivo) : ''}</p>` : est === 'adiada' ? `<p class="mi-note">Passou para amanhã${it.motivo ? ': ' + esc(it.motivo) : ''}</p>` : '';
+  const ok = fin === 'feita' && est !== 'imprevisto';
+  const acts = !isHoje || fechado || !ativo(it) ? '' : `<div class="mi-act">
+      ${rodando ? `<button class="btn primary" data-m="pausar" data-id="${esc(it.mid)}">❚❚ Pausar</button>` : `<button class="btn" data-m="iniciar" data-id="${esc(it.mid)}">▶ Começar</button>`}
+      <button class="btn sm" data-m="mais15" data-id="${esc(it.mid)}" title="Fiz sem cronômetro">+15 min</button>
+      ${lk ? `<a class="btn sm" href="${lk.href}">${lk.txt}</a>` : ''}
+      <a class="btn sm" href="${AUDIRE_URL}?gravar=1" title="Gravar um relato de campo no Audire">🎙 Relato</a></div>`;
+  return `<article class="card mi${rodando ? ' run' : ''}${ok ? ' ok' : ''}${!ativo(it) ? ' off' : ''}">
+    <div class="mi-top">
+      ${isHoje && !fechado && ativo(it) ? `<button class="mi-chk${ok ? ' on' : ''}" data-m="fiz" data-id="${esc(it.mid)}" aria-label="${ok ? 'Desmarcar' : 'Marcar como feito'}">✓</button>` : `<span class="mi-chk${ok ? ' on' : ''}" aria-hidden="true">${ok ? '✓' : ''}</span>`}
+      <div class="mi-t"><b>${esc(m.icone ? m.icone + ' ' : '')}${esc(m.titulo)}</b><small><span class="chip ${cls}">${lbl}</span> ${esc(sub)}</small></div>
+      ${fechado ? '' : `<button class="mi-more" data-m="menu" data-id="${esc(it.mid)}" aria-label="Opções de ${esc(m.titulo)}">⋯</button>`}
+    </div>
+    ${isHoje && ativo(it) ? `<div class="mi-bar"><i style="width:${pct}%"></i></div><p class="mi-time">${rodando ? `<b data-tick>${relogio(r)}</b> rodando desde ${hm(d.timer.de)}` : rm ? `${fmtMin(rm)} feitos` : 'Ainda não começou'}${it.decidido ? ` de ${fmtMin(it.decidido)}` : ''}</p>` : ''}
+    ${tag}${acts}</article>`;
+}
+function renderHoje(S) {
+  const k = diaKey(), d = dia(k), isHoje = k === today(), m = S.memento;
+  garantirHabitos(d);
+  const name = m && m.name ? m.name.split(' ')[0] : '';
+  const h = new Date().getHours(), sal = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  let life = '';
+  if (m && /^\d{4}-\d{2}-\d{2}$/.test(m.birth)) life = `<p class="life">Dia <b>${Math.floor((Date.now() - Date.parse(m.birth + 'T00:00:00')) / DAY).toLocaleString('pt-BR')}</b> da sua vida.</p>`;
+
+  const I = intencoes();
+  const intent = (I.mes || I.semana) ? `<section class="intent">${I.mes ? `<p class="in-l">Intenção do mês</p><p class="in-m">${esc(clip(I.mes.title || I.mes.text, 160))}</p>` : ''}${I.semana ? `<p class="in-l">Intenção da semana</p><p class="in-s">${esc(clip(I.semana.title || I.semana.text, 220))}</p>` : ''}</section>`
+    : m ? `<a class="intent empty" href="${MEM_URL}"><p class="in-l">Intenção da semana</p><p class="in-m">Nenhuma ainda. Defina no Memento; ela guia as missões daqui.</p></a>` : '';
+
+  const acordou = isHoje && !d.acordou && !d.fechadoEm && h >= 4 && h < 15
+    ? `<section class="card wake"><p>Acordou a que horas?</p><div class="wake-r"><input type="time" id="wakeIn" value="${hm(Date.now())}"><button class="btn primary" data-m="acordei">Salvar</button></div></section>` : '';
+
+  const vivos = d.itens.filter(ativo), plan = vivos.reduce((t, i) => t + (i.decidido || 0), 0), J = janela(d);
+  const restante = vivos.reduce((t, i) => t + Math.max(0, (i.decidido || 0) - realMin(i)), 0);
+  const budget = `<section class="card budget"><div class="bd-r"><span>Planejado <b>${fmtMin(plan)}</b> de ${fmtMin(J.acordado)} acordado</span><span>${vivos.filter(i => estadoFinal(i) === 'feita').length} de ${vivos.length}</span></div>
+    <div class="mi-bar"><i style="width:${Math.min(100, Math.round(plan / J.acordado * 100))}%"></i></div>
+    ${isHoje && !d.fechadoEm ? `<p class="bd-n">${J.resta ? `Restam ${fmtMin(J.resta)} até a meta de dormir${J.dorme ? ' (' + J.dorme + ')' : ''}.` : 'Passou da meta de dormir.'}${restante > J.resta && J.resta ? ' Há mais planejado do que cabe no que resta. Reprograme sem culpa.' : ''}</p>` : `<p class="bd-n">O plano de amanhã é um rascunho: o dia decide. Tudo pode mudar de manhã.</p>`}</section>`;
+
+  const seg = `<div class="seg dseg"><button data-m="ver" data-v="hoje" aria-pressed="${isHoje}">Hoje</button><button data-m="ver" data-v="amanha" aria-pressed="${!isHoje}">Amanhã</button></div>`;
+  const itens = d.itens.map(i => itemHtml(i, d, k)).join('') || `<p class="muted mi-empty">${plano() ? 'Nenhuma missão ainda.' : 'Abra o Memento uma vez para os hábitos ideais aparecerem aqui.'}</p>`;
+  const add = d.fechadoEm ? '' : `<div class="mi-add"><button class="btn" data-m="add">＋ Missão</button>${isHoje ? '<button class="btn" data-m="desvio">Perdi tempo</button>' : ''}</div>`;
+
+  const P = isHoje ? pecunia() : null;
+  const pec = P ? `<section class="card pec"><div class="pec-h"><p class="eyebrow">Pecúnia</p><a class="btn sm" href="${MEM_URL}?ficha=hoje">Abrir no Memento</a></div>
+    <div class="pec-g"><div><small>Gasto hoje</small><b class="${P.media && P.gastoHoje > P.media ? 'bad' : ''}">${brl(P.gastoHoje)}</b><small>média ${brl(P.media)}</small></div>
+    <div><small>Guardado hoje</small><b class="good">${brl(P.salvoHoje)}</b><small>escolhas conscientes</small></div></div>
+    ${P.hora && P.gastoHoje ? `<p class="bd-n">O gasto de hoje custou ${fmtMin(P.gastoHoje / P.hora * 60)} da sua vida.</p>` : ''}
+    ${P.meta ? `<div class="pec-m"><span>${esc(P.meta.name)}</span><span>${brl(P.meta.saved)} de ${brl(P.meta.value)}</span></div><div class="mi-bar"><i style="width:${Math.min(100, Math.round(P.meta.saved / P.meta.value * 100))}%"></i></div>` : ''}</section>` : '';
+
+  const desv = isHoje && (d.desvios || []).length ? `<section class="card desv"><p class="eyebrow">Para onde o tempo foi</p>${d.desvios.map((x, i) => `<div class="dv-r"><span>${esc(x.icone || '')} ${esc(x.categoria)}</span><span>${fmtMin(x.minutos)}${P && P.hora ? ' · ' + brl(x.minutos / 60 * P.hora) : ''}${d.fechadoEm ? '' : ` <button class="mi-x" data-m="rmdesvio" data-i="${i}" aria-label="Remover">×</button>`}</span></div>`).join('')}</section>` : '';
+
+  let fim = '';
+  if (isHoje && d.fechadoEm) fim = `<section class="card fim done"><p class="eyebrow">Dia fechado às ${hm(d.fechadoEm)}</p><p>O Memento vai oferecer preencher a Ficha de Consciência com o que foi medido aqui. Lá você revisa e registra a verdade.</p>
+      <div class="act-row"><a class="btn primary" href="${MEM_URL}?ficha=${k}">Revisar no Memento</a><button class="btn" data-m="ver" data-v="amanha">Planejar amanhã</button><button class="btn sm" data-m="reabrir">Reabrir</button></div></section>`;
+  else if (isHoje && fechando) fim = fechamentoHtml(d);
+  else if (isHoje && d.itens.length) fim = `<button class="card weekline fim-b" data-m="fechar"><span>Lembrar-se</span><b>Fechar o dia: o que você decidiu e o que aconteceu</b><em>›</em></button>`;
+
+  const wk = weekKey();
+  const wkLine = `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Ver a semana</b><em>›</em></button>`;
+  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${acordou}${seg}${budget}<div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
+  if (fechando && isHoje) { const ta = $('#fxSint'); ta && ta.addEventListener('input', () => { d.sintese = ta.value; salvarDia(); }); }
+}
+function fechamentoHtml(d) {
+  const ESTS = [['feita', 'Feito'], ['parcial', 'Parcial'], ['nao', 'Não fiz'], ['imprevisto', 'Imprevisto']];
+  const rows = d.itens.filter(ativo).map(it => {
+    const m = missao(it.mid); if (!m) return '';
+    const f = estadoFinal(it);
+    return `<div class="fx-r"><div><b>${esc(m.titulo)}</b><small>decidido ${fmtMin(it.decidido || 0)} · real ${fmtMin(realMin(it))}</small></div>
+      <div class="fx-e">${ESTS.map(([v, l]) => `<button class="fx-b${f === v ? ' on' : ''}" data-m="est" data-id="${esc(it.mid)}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+  }).join('');
+  const adiadas = d.itens.filter(i => i.estado === 'adiada').map(i => missao(i.mid)).filter(Boolean);
+  const houveImprev = d.itens.some(i => i.estado === 'imprevisto' || i.estado === 'adiada');
+  return `<section class="card fim"><p class="eyebrow">Lembrar-se · fechar o dia</p><h3>O que você decidiu e o que aconteceu</h3>${rows}
+    ${adiadas.length ? `<p class="bd-n">Passaram para amanhã: ${adiadas.map(m => esc(m.titulo)).join(', ')}.</p>` : ''}
+    <label class="fx-l" for="fxSint">Uma linha honesta sobre o dia</label>
+    <textarea id="fxSint" rows="3" placeholder="Deveria ter… Em vez disso…">${esc(d.sintese || '')}</textarea>
+    <label class="fx-v"><input type="checkbox" data-m="virada" ${d.virada ? 'checked' : ''}> Houve virada: a intenção ruiu, mas quebrei a inércia</label>
+    ${houveImprev && !d.virada ? '<p class="bd-n">Teve imprevisto e mesmo assim você fez algo? Isso é uma virada.</p>' : ''}
+    <div class="act-row"><button class="btn primary" data-m="fecharok">Fechar o dia e mandar ao Memento</button><button class="btn sm" data-m="fecharx">Agora não</button></div></section>`;
+}
+
+/* ---------- folhas: adicionar, menu, desvio ---------- */
+function folhaAdd() {
+  const S = sources(), k = diaKey(), d = dia(k), noDia = new Set(d.itens.map(i => i.mid));
+  const abertas = DIA.missoes.filter(m => !m.concluida && !noDia.has(m.id));
+  const vols = S.volumen ? S.volumen.items.filter(i => i.status === 'in_progress') : [];
+  const flds = S.cognitio ? Object.fromEntries((S.cognitio.fields || []).map(f => [f.id, f])) : {};
+  const areas = S.cognitio ? S.cognitio.areas.filter(a => +a.status === 1).concat(S.cognitio.areas.filter(a => +a.status === 0).slice(0, 6)) : [];
+  const p = plano(), cards = p ? p.activityCats.filter(c => c.kind === 'producao') : [];
+  const opt = (s, id, icon, t, sub) => `<button class="fo-o" data-s="${s}" data-id="${esc(id)}"><span>${esc(icon)}</span><span><b>${esc(t)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
+  folha(`<p class="eyebrow">${k === today() ? 'Hoje' : 'Amanhã'}</p><h2>Nova missão</h2>
+    <div class="fo-f"><input id="foT" placeholder="Cortar a árvore caída do pátio" maxlength="80">
+      <div class="fo-2"><label>Hoje<select id="foD">${[15, 30, 45, 60, 90, 120, 180, 240].map(v => `<option value="${v}"${v === 60 ? ' selected' : ''}>${fmtMin(v)}</option>`).join('')}</select></label>
+      <label>A missão toda leva<select id="foE"><option value="0">Cabe em hoje</option>${[120, 180, 240, 360, 480, 600, 900, 1200].map(v => `<option value="${v}">~${fmtMin(v)}</option>`).join('')}</select></label></div>
+      <label>Card no Memento<select id="foC"><option value="">O próprio nome da missão</option>${cards.map(c => `<option value="${esc(c.name)}">${esc((c.icon ? c.icon + ' ' : '') + c.name)}</option>`).join('')}</select></label>
+      <button class="btn primary" data-s="livre">Adicionar missão</button></div>
+    ${abertas.length ? `<p class="fo-h">Missões em aberto</p>${abertas.map(m => opt('aberta', m.id, m.icone || '◆', m.titulo, m.estimado ? `${fmtMin(feitoTotal(m.id))} de ~${fmtMin(m.estimado)}` : '')).join('')}` : ''}
+    ${vols.length ? `<p class="fo-h">Do Volumen, em andamento</p>${vols.slice(0, 8).map(i => opt('vol', i.id, TYPE_ICON[i.type] || '📖', i.title, i.author || '')).join('')}` : ''}
+    ${areas.length ? `<p class="fo-h">Do Cognitio</p>${areas.map(a => opt('cog', a.id, (flds[a.fieldId] && flds[a.fieldId].icon) || '🧠', a.title, [flds[a.fieldId] && flds[a.fieldId].title, +a.status === 1 ? 'em estudo' : 'por começar'].filter(Boolean).join(' · '))).join('')}` : ''}`,
+  (acao, b) => {
+    let m = null, dec = +$('#foD').value || 60;
+    if (acao === 'livre') {
+      const t = $('#foT').value.trim(); if (!t) { toast('Dê um nome à missão.', true); $('#foT').focus(); return false; }
+      const em = t.match(/^(\p{Extended_Pictographic}\uFE0F?)\s*(.+)$/u);
+      m = { id: uid(), tipo: 'livre', titulo: em ? em[2] : t, icone: em ? em[1] : '', estimado: +$('#foE').value || 0, cartao: $('#foC').value || '', concluida: false, criadaEm: Date.now() };
+    } else if (acao === 'aberta') { m = DIA.missoes.find(x => x.id === b.dataset.id); }
+    else if (acao === 'vol') {
+      const i = vols.find(x => x.id === b.dataset.id); if (!i) return;
+      m = DIA.missoes.find(x => !x.concluida && x.ref && x.ref.app === 'volumen' && x.ref.id === i.id) ||
+        { id: uid(), tipo: 'volumen', titulo: i.title, icone: TYPE_ICON[i.type] || '📖', ref: { app: 'volumen', id: i.id, title: i.title }, cartao: i.type === 'course' ? 'Curso' : 'Leitura', estimado: 0, concluida: false, criadaEm: Date.now() };
+      dec = Math.min(dec, 60);
+    } else if (acao === 'cog') {
+      const a = areas.find(x => x.id === b.dataset.id); if (!a) return;
+      m = DIA.missoes.find(x => !x.concluida && x.ref && x.ref.app === 'cognitio' && x.ref.id === a.id) ||
+        { id: uid(), tipo: 'cognitio', titulo: a.title, icone: (flds[a.fieldId] && flds[a.fieldId].icon) || '🧠', ref: { app: 'cognitio', id: a.id, title: a.title }, cartao: 'Estudo', estimado: 0, concluida: false, criadaEm: Date.now() };
+    }
+    if (!m) return;
+    if (!DIA.missoes.includes(m)) DIA.missoes.push(m);
+    if (!d.itens.some(i => i.mid === m.id)) d.itens.push({ mid: m.id, decidido: dec, sessoes: [], extra: 0, estado: null });
+    salvarDia(); render(); toast('Missão adicionada');
+  });
+}
+function folhaMenu(mid) {
+  const k = diaKey(), d = dia(k), it = d.itens.find(i => i.mid === mid), m = missao(mid); if (!it || !m) return;
+  const S = sources(), isHoje = k === today();
+  const ligOpts = m.tipo === 'habito' ? [
+    ...(S.volumen ? S.volumen.items.filter(i => i.status === 'in_progress').map(i => ['volumen', i.id, i.title]) : []),
+    ...(S.cognitio ? S.cognitio.areas.filter(a => +a.status === 1).map(a => ['cognitio', a.id, a.title]) : [])] : [];
+  const lig = m.tipo === 'habito' ? DIA.ligHab[m.habitoId] : null;
+  folha(`<p class="eyebrow">${esc(CHIP[m.tipo][1])}</p><h2>${esc(m.titulo)}</h2>
+    <div class="fo-f"><label>Tempo decidido para ${isHoje ? 'hoje' : 'amanhã'}<select id="moD">${[0, 10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240].map(v => `<option value="${v}"${v === it.decidido ? ' selected' : ''}>${v ? fmtMin(v) : 'Sem tempo definido'}</option>`).join('')}${[0, 10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240].includes(it.decidido) ? '' : `<option selected value="${it.decidido}">${fmtMin(it.decidido)}</option>`}</select></label>
+    ${ligOpts.length ? `<label>Ligar este hábito a<select id="moL"><option value="">Nada</option>${ligOpts.map(([a, id, t]) => `<option value="${a}|${esc(id)}"${lig && lig.app === a && lig.id === id ? ' selected' : ''}>${a === 'volumen' ? '📖' : '🧠'} ${esc(clip(t, 50))}</option>`).join('')}</select></label>` : ''}
+    <input id="moM" placeholder="Motivo (opcional): choveu, visita, cansaço…" maxlength="80" value="${esc(it.motivo || '')}">
+    <button class="btn primary" data-s="salvar">Salvar</button></div>
+    <div class="fo-g">
+      ${isHoje ? '<button class="btn" data-s="amanha">Passar para amanhã</button><button class="btn" data-s="imprevisto">Imprevisto</button>' : '<button class="btn" data-s="hojeja">Trazer para hoje</button>'}
+      <button class="btn" data-s="fora">Não vou fazer ${isHoje ? 'hoje' : 'amanhã'}</button>
+      ${it.estado ? '<button class="btn" data-s="limpar">Voltar ao normal</button>' : ''}
+      ${m.tipo !== 'habito' ? '<button class="btn" data-s="concluir">Missão concluída</button>' : ''}
+    </div>`,
+  acao => {
+    const motivo = ($('#moM').value || '').trim().slice(0, 80);
+    const salvarCampos = () => {
+      it.decidido = +$('#moD').value || 0;
+      const l = $('#moL'); if (l) { if (l.value) { const [a, ...r] = l.value.split('|'), id = r.join('|'), o = ligOpts.find(x => x[0] === a && x[1] === id); DIA.ligHab[m.habitoId] = { app: a, id, title: o ? o[2] : '' }; } else delete DIA.ligHab[m.habitoId]; }
+    };
+    if (acao === 'salvar') { salvarCampos(); it.motivo = motivo; }
+    else if (acao === 'amanha' || acao === 'hojeja') {
+      if (d.timer && d.timer.mid === mid) pararTimer(d);
+      const alvo = dia(acao === 'amanha' ? addDays(today(), 1) : today());
+      if (acao === 'amanha') { it.estado = 'adiada'; it.motivo = motivo; } else d.itens = d.itens.filter(i => i !== it);
+      const ex = alvo.itens.find(i => i.mid === mid);
+      if (ex) { ex.estado = null; } else alvo.itens.push({ mid, decidido: it.decidido, sessoes: [], extra: 0, estado: null });
+      if (m.tipo === 'habito') alvo.semHab = (alvo.semHab || []).filter(x => x !== mid);
+      toast(acao === 'amanha' ? 'Passou para amanhã. Memento vivere: o dia decide.' : 'Trazida para hoje');
+    }
+    else if (acao === 'imprevisto') { if (d.timer && d.timer.mid === mid) pararTimer(d); it.estado = 'imprevisto'; it.motivo = motivo; toast('Imprevisto registrado. Não conta como "não fiz".'); }
+    else if (acao === 'fora') {
+      if (d.timer && d.timer.mid === mid) pararTimer(d);
+      if (m.tipo === 'habito') { d.semHab = [...new Set([...(d.semHab || []), mid])]; }
+      if (realMs(it) > 0) { it.estado = 'fora'; it.motivo = motivo; } else d.itens = d.itens.filter(i => i !== it);
+    }
+    else if (acao === 'limpar') { it.estado = null; it.motivo = ''; }
+    else if (acao === 'concluir') { salvarCampos(); m.concluida = true; m.concluidaEm = Date.now(); if (!realMs(it)) it.estado = 'feita'; toast('Missão concluída 🏅'); }
+    salvarDia(); render();
+  });
+}
+function folhaDesvio() {
+  const p = plano(), cats = p ? p.activityCats.filter(c => c.kind === 'desvio') : [];
+  folha(`<p class="eyebrow">Sem culpa, com verdade</p><h2>Para onde o tempo foi?</h2>
+    <div class="fo-f"><label>O quê<select id="dvC">${cats.map(c => `<option value="${esc(c.name)}" data-i="${esc(c.icon || '')}">${esc((c.icon ? c.icon + ' ' : '') + c.name)}</option>`).join('')}<option value="__novo">Outro…</option></select></label>
+    <input id="dvN" placeholder="Redes sociais" maxlength="40" ${cats.length ? 'hidden' : ''}>
+    <div class="fo-g">${[15, 30, 45, 60, 90, 120].map(v => `<button class="btn" data-s="m" data-v="${v}">${fmtMin(v)}</button>`).join('')}</div></div>`,
+  (acao, b) => {
+    if (acao !== 'm') return;
+    const sel = $('#dvC'); let nome = sel.value, icone = sel.selectedOptions[0] ? sel.selectedOptions[0].dataset.i || '' : '';
+    if (nome === '__novo' || !nome) { nome = ($('#dvN').value || '').trim(); icone = ''; }
+    if (!nome) { toast('Diga para onde o tempo foi.', true); $('#dvN').hidden = false; $('#dvN').focus(); return false; }
+    const d = dia(today()); d.desvios = d.desvios || [];
+    const ex = d.desvios.find(x => chave(x.categoria) === chave(nome));
+    if (ex) ex.minutos += +b.dataset.v; else d.desvios.push({ categoria: nome, icone, minutos: +b.dataset.v });
+    salvarDia(); render(); toast('Anotado. Amanhã é outro dia.');
+  });
+  const sel = $('#dvC'); sel && sel.addEventListener('change', () => { $('#dvN').hidden = sel.value !== '__novo'; });
+}
+
+/* ---------- ações ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b || b.closest('dialog')) return;
+  const a = b.dataset.m, id = b.dataset.id, d = dia(diaKey()), it = id ? d.itens.find(i => i.mid === id) : null;
+  if (a === 'ver') { diaSel = b.dataset.v; fechando = false; tab = 'hoje'; render(); window.scrollTo({ top: 0 }); return; }
+  if (a === 'iniciar') return iniciar(id);
+  if (a === 'pausar') { pararTimer(dia(today())); salvarDia(); render(); return; }
+  if (a === 'mais15' && it) { it.extra = (it.extra || 0) + 15; if (it.estado === 'nao') it.estado = null; salvarDia(); render(); toast('+15 min anotados'); return; }
+  if (a === 'fiz' && it) {
+    if (it.estado === 'feita') it.estado = null;
+    else if (estadoFinal(it) === 'feita') { toast('Já cumprida pelo tempo medido.'); return; }
+    else { if (d.timer && d.timer.mid === id) pararTimer(d); it.estado = 'feita'; burst(b); }
+    salvarDia(); render(); return;
+  }
+  if (a === 'menu') return folhaMenu(id);
+  if (a === 'add') return folhaAdd();
+  if (a === 'desvio') return folhaDesvio();
+  if (a === 'rmdesvio') { d.desvios.splice(+b.dataset.i, 1); salvarDia(); render(); return; }
+  if (a === 'acordei') { const v = $('#wakeIn').value; if (!/^\d\d:\d\d$/.test(v)) return; d.acordou = v; salvarDia(); render(); toast('Bom dia. O dia é finito: escolha bem.'); return; }
+  if (a === 'fechar') { pararTimer(d); salvarDia(); fechando = true; render(); setTimeout(() => { const f = document.querySelector('.fim'); f && f.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); return; }
+  if (a === 'fecharx') { fechando = false; render(); return; }
+  if (a === 'est' && it) { const auto = estadoFinal({ ...it, estado: null }); it.estado = b.dataset.v === auto ? null : b.dataset.v; salvarDia(); render(); return; }
+  if (a === 'fecharok') {
+    const ta = $('#fxSint'); if (ta) d.sintese = ta.value.trim();
+    pararTimer(d); d.fechadoEm = Date.now(); fechando = false; salvarDia();
+    publicarAtrium().then(ok => toast(ok ? 'Dia fechado. O Memento já pode preencher a ficha.' : 'Dia fechado aqui. Abra o Memento para registrar.'));
+    burst(b); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+  }
+  if (a === 'reabrir') { d.fechadoEm = null; salvarDia(); publicarAtrium(); render(); return; }
+});
+document.addEventListener('change', e => {
+  const v = e.target.closest('[data-m="virada"]'); if (!v) return;
+  const d = dia(today()); d.virada = v.checked; salvarDia(); render();
+});
+
 let primeiraLeitura = Promise.resolve();
 if (USE_GITHUB_PAGES_ORIGIN || window.Lembre) {        // com a biblioteca comum, os apps estão no mesmo endereço: lê sozinho
   primeiraLeitura = readNative({ silent: true });
