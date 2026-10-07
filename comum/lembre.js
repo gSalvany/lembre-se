@@ -12,8 +12,13 @@
 
    Quem publica o quê (contrato 1):
      memento  → { name, birth, quotes, memories, daylog, distractions, expenses, weekReviews }
+              + plano: { ideal, activityCats, expenseCats, goals, savings, fichas, sleepIntent, wakeIntent, hourlyRate }
      volumen  → { items: [{ id, type, title, author, category, status, current, total, notes, sessions, updatedAt, thumb }] }
-   (cognitio, audire e atrium entram nas próximas etapas)
+     cognitio → { fields, areas, notes (sem o texto), decks, pillLog, pillOfDay }
+     audire   → o mesmo resumo de 'audire.summary' (version 2)
+     atrium   → { dias: { 'AAAA-MM-DD': { preparadoEm, acordou, dormiu, habitos: { idDoHabito: { minutos, estado } },
+                  blocos: [{ categoria, icone, tipo: 'producao'|'desvio', de, ate, minutos }], sintese, virada } }, ... }
+                O Memento lê 'dias' e OFERECE preencher a Ficha de Consciência; quem registra é você.
 
    Avisos ao vivo: quando um app publica, os outros apps abertos
    recebem { tipo: 'resumo', app } pelo canal "lembre-se".
