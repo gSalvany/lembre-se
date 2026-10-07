@@ -373,7 +373,7 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
 .intent .in-l{font-size:11.5px;font-weight:700;color:var(--faint);margin-top:6px}
 .intent .in-m{font-family:var(--serif);font-size:15px;color:var(--muted);line-height:1.4}
 .intent .in-s{font-family:var(--serif);font-size:20px;color:var(--text);line-height:1.3}
-.intent.empty .in-m{font-size:14px}
+.in-falta{display:block;font-size:13px;color:var(--faint);text-decoration:none;margin-top:1px}
 .wake{padding:14px 16px;margin-top:12px}.wake p{color:var(--text);font-weight:600;margin-bottom:8px}
 .wake-r{display:flex;gap:8px}.wake-r input{flex:1;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .dseg{margin:16px 0 10px}
@@ -1298,7 +1298,7 @@ function salvarDia() {
   try { localStorage.setItem(DIA_KEY, JSON.stringify(DIA)); } catch { toast('Sem espaço no navegador para guardar o dia.', true); }
 }
 let diaSel = 'hoje', fechando = false;
-const diaKey = () => diaSel === 'amanha' ? addDays(today(), 1) : today();
+const diaKey = () => diaSel === 'amanha' ? addDays(today(), 1) : diaSel === 'ontem' ? addDays(today(), -1) : today();
 function dia(k = diaKey()) {
   return DIA.dias[k] || (DIA.dias[k] = { itens: [], timer: null, desvios: [], acordou: '', sintese: '', virada: false, fechadoEm: null, semHab: [] });
 }
@@ -1376,7 +1376,8 @@ function janela(d) {
   const acordado = ((dorme - acorda + 1440) % 1440) || 1440;
   const agora = new Date(), nowMin = agora.getHours() * 60 + agora.getMinutes();
   const passou = (nowMin - acorda + 1440) % 1440;
-  return { acordado, resta: passou < acordado ? acordado - passou : 0, dorme: p.sleepIntent || '' };
+  const fmt = x => String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
+  return { acordado, resta: passou < acordado ? acordado - passou : 0, fora: passou >= acordado, dorme: p.sleepIntent || fmt(dorme), acorda: d.acordou || p.wakeIntent || fmt(acorda) };
 }
 function pecunia() {
   const m = sources().memento; if (!m) return null;
@@ -1468,8 +1469,10 @@ function renderHoje(S) {
   if (m && /^\d{4}-\d{2}-\d{2}$/.test(m.birth)) life = `<p class="life">Dia <b>${Math.floor((Date.now() - Date.parse(m.birth + 'T00:00:00')) / DAY).toLocaleString('pt-BR')}</b> da sua vida.</p>`;
 
   const I = intencoes();
-  const intent = (I.mes || I.semana) ? `<section class="intent">${I.mes ? `<p class="in-l">Intenção do mês</p><p class="in-m">${esc(clip(I.mes.title || I.mes.text, 160))}</p>` : ''}${I.semana ? `<p class="in-l">Intenção da semana</p><p class="in-s">${esc(clip(I.semana.title || I.semana.text, 220))}</p>` : ''}</section>`
-    : m ? `<a class="intent empty" href="${MEM_URL}"><p class="in-l">Intenção da semana</p><p class="in-m">Nenhuma ainda. Defina no Memento; ela guia as missões daqui.</p></a>` : '';
+  const itxt = x => { const t = String(x.title || '').trim(); return t.replace(/[\s?!.…\-–—]/g, '').length >= 3 ? t : (String(x.text || '').trim() || t); };
+  const falta = qual => `<a class="in-falta" href="${MEM_URL}">Sem intenção para ${qual}. Definir no Memento ›</a>`;
+  const intent = m ? `<section class="intent"><p class="in-l">Intenção do mês</p>${I.mes ? `<p class="in-m">${esc(clip(itxt(I.mes), 160))}</p>` : falta('este mês')}
+    <p class="in-l">Intenção da semana</p>${I.semana ? `<p class="in-s">${esc(clip(itxt(I.semana), 220))}</p>` : falta('esta semana')}</section>` : '';
 
   const acordou = isHoje && !d.acordou && !d.fechadoEm && h >= 4 && h < 15
     ? `<section class="card wake"><p>Acordou a que horas?</p><div class="wake-r"><input type="time" id="wakeIn" value="${hm(Date.now())}"><button class="btn primary" data-m="acordei">Salvar</button></div></section>` : '';
@@ -1478,9 +1481,12 @@ function renderHoje(S) {
   const restante = vivos.reduce((t, i) => t + Math.max(0, (i.decidido || 0) - realMin(i)), 0);
   const budget = `<section class="card budget"><div class="bd-r"><span>Planejado <b>${fmtMin(plan)}</b> de ${fmtMin(J.acordado)} acordado</span><span>${vivos.filter(i => estadoFinal(i) === 'feita').length} de ${vivos.length}</span></div>
     <div class="mi-bar"><i style="width:${Math.min(100, Math.round(plan / J.acordado * 100))}%"></i></div>
-    ${isHoje && !d.fechadoEm ? `<p class="bd-n">${J.resta ? `Restam ${fmtMin(J.resta)} até a meta de dormir${J.dorme ? ' (' + J.dorme + ')' : ''}.` : 'Passou da meta de dormir.'}${restante > J.resta && J.resta ? ' Há mais planejado do que cabe no que resta. Reprograme sem culpa.' : ''}</p>` : `<p class="bd-n">O plano de amanhã é um rascunho: o dia decide. Tudo pode mudar de manhã.</p>`}</section>`;
+    ${isHoje && !d.fechadoEm ? `<p class="bd-n">${J.fora ? `Fora da sua janela acordado (dormir ${J.dorme}, acordar ${J.acorda}). Descanse: o plano de hoje começa quando você acordar.` : `Restam ${fmtMin(J.resta)} até a meta de dormir (${J.dorme}).`}${restante > J.resta && J.resta ? ' Há mais planejado do que cabe no que resta. Reprograme sem culpa.' : ''}</p>` : (k < today() ? `<p class="bd-n">O dia de ontem: feche com o que de fato aconteceu.</p>` : `<p class="bd-n">O plano de amanhã é um rascunho: o dia decide. Tudo pode mudar de manhã.</p>`)}</section>`;
 
-  const seg = `<div class="seg dseg"><button data-m="ver" data-v="hoje" aria-pressed="${isHoje}">Hoje</button><button data-m="ver" data-v="amanha" aria-pressed="${!isHoje}">Amanhã</button></div>`;
+  const kOntem = addDays(today(), -1), ontem = DIA.dias[kOntem];
+  const ontemAberto = ontem && !ontem.fechadoEm && ontem.itens.some(i => realMs(i) > 0 || i.estado);
+  const seg = `<div class="seg dseg">${diaSel === 'ontem' || ontemAberto ? `<button data-m="ver" data-v="ontem" aria-pressed="${diaSel === 'ontem'}">Ontem</button>` : ''}<button data-m="ver" data-v="hoje" aria-pressed="${isHoje}">Hoje</button><button data-m="ver" data-v="amanha" aria-pressed="${diaSel === 'amanha'}">Amanhã</button></div>`;
+  const avisoOntem = isHoje && ontemAberto && h < 12 ? `<button class="card weekline fim-b" data-m="ver" data-v="ontem"><span>Ontem</span><b>O dia de ontem ainda não foi fechado. Fechar agora</b><em>›</em></button>` : '';
   const itens = d.itens.map(i => itemHtml(i, d, k)).join('') || `<p class="muted mi-empty">${plano() ? 'Nenhuma missão ainda.' : 'Abra o Memento uma vez para os hábitos ideais aparecerem aqui.'}</p>`;
   const add = d.fechadoEm ? '' : `<div class="mi-add"><button class="btn" data-m="add">＋ Missão</button>${isHoje ? '<button class="btn" data-m="desvio">Perdi tempo</button>' : ''}</div>`;
 
@@ -1494,15 +1500,16 @@ function renderHoje(S) {
   const desv = isHoje && (d.desvios || []).length ? `<section class="card desv"><p class="eyebrow">Para onde o tempo foi</p>${d.desvios.map((x, i) => `<div class="dv-r"><span>${esc(x.icone || '')} ${esc(x.categoria)}</span><span>${fmtMin(x.minutos)}${P && P.hora ? ' · ' + brl(x.minutos / 60 * P.hora) : ''}${d.fechadoEm ? '' : ` <button class="mi-x" data-m="rmdesvio" data-i="${i}" aria-label="Remover">×</button>`}</span></div>`).join('')}</section>` : '';
 
   let fim = '';
-  if (isHoje && d.fechadoEm) fim = `<section class="card fim done"><p class="eyebrow">Dia fechado às ${hm(d.fechadoEm)}</p><p>O Memento vai oferecer preencher a Ficha de Consciência com o que foi medido aqui. Lá você revisa e registra a verdade.</p>
-      <div class="act-row"><a class="btn primary" href="${MEM_URL}?ficha=${k}">Revisar no Memento</a><button class="btn" data-m="ver" data-v="amanha">Planejar amanhã</button><button class="btn sm" data-m="reabrir">Reabrir</button></div></section>`;
-  else if (isHoje && fechando) fim = fechamentoHtml(d);
-  else if (isHoje && d.itens.length) fim = `<button class="card weekline fim-b" data-m="fechar"><span>Lembrar-se</span><b>Fechar o dia: o que você decidiu e o que aconteceu</b><em>›</em></button>`;
+  const podeFechar = k <= today();
+  if (podeFechar && d.fechadoEm) fim = `<section class="card fim done"><p class="eyebrow">${isHoje ? 'Dia fechado' : 'Ontem fechado'} às ${hm(d.fechadoEm)}</p><p>O Memento vai oferecer preencher a Ficha de Consciência com o que foi medido aqui. Lá você revisa e registra a verdade.</p>
+      <div class="act-row"><a class="btn primary" href="${MEM_URL}?ficha=${k}">Revisar no Memento</a>${isHoje ? '<button class="btn" data-m="ver" data-v="amanha">Planejar amanhã</button>' : '<button class="btn" data-m="ver" data-v="hoje">Ir para hoje</button>'}<button class="btn sm" data-m="reabrir">Reabrir</button></div></section>`;
+  else if (podeFechar && fechando) fim = fechamentoHtml(d);
+  else if (podeFechar && d.itens.length) fim = `<button class="card weekline fim-b" data-m="fechar"><span>Lembrar-se</span><b>Fechar o dia: o que você decidiu e o que aconteceu</b><em>›</em></button>`;
 
   const wk = weekKey();
   const wkLine = `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Ver a semana</b><em>›</em></button>`;
-  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${acordou}${seg}${budget}<div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
-  if (fechando && isHoje) { const ta = $('#fxSint'); ta && ta.addEventListener('input', () => { d.sintese = ta.value; salvarDia(); }); }
+  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${avisoOntem}${acordou}${seg}${budget}<div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
+  if (fechando && podeFechar) { const ta = $('#fxSint'); ta && ta.addEventListener('input', () => { d.sintese = ta.value; salvarDia(); }); }
 }
 function fechamentoHtml(d) {
   const ESTS = [['feita', 'Feito'], ['parcial', 'Parcial'], ['nao', 'Não fiz'], ['imprevisto', 'Imprevisto']];
@@ -1660,7 +1667,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const v = e.target.closest('[data-m="virada"]'); if (!v) return;
-  const d = dia(today()); d.virada = v.checked; salvarDia(); render();
+  const d = dia(diaKey()); d.virada = v.checked; salvarDia(); render();
 });
 
 let primeiraLeitura = Promise.resolve();
