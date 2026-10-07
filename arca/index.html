@@ -112,6 +112,7 @@ html[data-theme="light"] .btn.primary{color:#fff}
       <button class="btn primary" id="btnSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Baixar backup</button>
       <button class="btn" id="btnShare" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Enviar para o Drive</button>
     </div>
+    <button class="btn primary" id="btnSendReady" hidden style="width:100%;margin-top:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Backup pronto: toque para enviar</button>
     <div class="progress" id="pSave" hidden><i></i></div>
     <p class="msg" id="mSave"></p>
     <p class="note">Guarde o arquivo num lugar privado, como o seu Google Drive. <b>Sem senha, ele pode ser lido por quem tiver acesso a ele.</b></p>
@@ -287,17 +288,41 @@ async function save(share) {
   $('#mSave').className = 'msg'; $('#mSave').textContent = 'Preparando…';
   try {
     const { file, snap } = await buildFile(pw, '', bar);
+    const resumo = `${fmtMB(file.size)}, ${snap.stats.records} registros${snap.stats.blobs ? `, ${snap.stats.blobs} arquivos e áudios` : ''}${pw ? ', protegido com senha' : ''}`;
     if (share) {
-      try { await navigator.share({ files: [file], title: 'Backup da Arca' }); }
-      catch (e) { if (e && e.name === 'AbortError') { $('#mSave').textContent = 'Envio cancelado.'; return; } throw e; }
-    } else download(file, file.name);
-    try { localStorage.setItem(LAST_KEY, JSON.stringify({ em: Date.now(), tamanho: file.size, cifrado: !!pw })); } catch (e) {}
-    $('#mSave').className = 'msg ok';
-    $('#mSave').textContent = `Backup ${share ? 'enviado' : 'baixado'}: ${fmtMB(file.size)}, ${snap.stats.records} registros${snap.stats.blobs ? `, ${snap.stats.blobs} arquivos e áudios` : ''}${pw ? ', protegido com senha' : ''}.`;
-    renderStatus();
+      /* o Chrome só abre o "Compartilhar" logo depois de um toque; montar o backup leva alguns
+         segundos, então o envio vira um segundo toque, num botão que aparece com o arquivo pronto */
+      pending = { file, resumo, pw: !!pw };
+      $('#btnSendReady').hidden = false; $('#btnSendReady').focus();
+      $('#mSave').className = 'msg'; $('#mSave').textContent = `Backup pronto (${resumo}). Toque no botão acima para escolher o Drive.`;
+      return;
+    }
+    download(file, file.name);
+    done(file.size, !!pw, `Backup baixado: ${resumo}.`);
   } catch (e) {
     console.error(e); $('#mSave').className = 'msg err'; $('#mSave').textContent = 'Não foi possível criar o backup: ' + (e && e.message || e);
   } finally { btns.forEach(b => b.disabled = false); setTimeout(() => { pb.hidden = true; }, 600); }
+}
+
+let pending = null;
+function done(size, cifrado, text) {
+  try { localStorage.setItem(LAST_KEY, JSON.stringify({ em: Date.now(), tamanho: size, cifrado })); } catch (e) {}
+  $('#mSave').className = 'msg ok'; $('#mSave').textContent = text;
+  renderStatus();
+}
+async function sendReady() {
+  if (!pending) return;
+  const p = pending;
+  try {
+    await navigator.share({ files: [p.file], title: 'Backup da Arca' });
+    pending = null; $('#btnSendReady').hidden = true;
+    done(p.file.size, p.pw, `Backup enviado: ${p.resumo}.`);
+  } catch (e) {
+    if (e && e.name === 'AbortError') { $('#mSave').className = 'msg'; $('#mSave').textContent = 'Envio cancelado. O backup continua pronto: toque no botão para tentar de novo.'; return; }
+    pending = null; $('#btnSendReady').hidden = true;
+    download(p.file, p.file.name);
+    done(p.file.size, p.pw, `O celular não deixou compartilhar, então o backup foi baixado (${p.resumo}). Mova o arquivo para o Drive pelo app Arquivos.`);
+  }
 }
 
 /* =============================================================
@@ -446,8 +471,9 @@ const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 function applyTheme() { const t = document.documentElement.dataset.theme; $('#themeBtn').innerHTML = t === 'dark' ? SUN : MOON; document.querySelector('meta[name="theme-color"]').content = t === 'dark' ? '#0d0e12' : '#f5f0e6'; }
 $('#themeBtn').onclick = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('arca.theme', t); } catch (e) {} applyTheme(); };
 $('#usePw').onchange = e => { $('#pwBox').hidden = !e.target.checked; if (e.target.checked) $('#pw1').focus(); };
-$('#btnSave').onclick = () => save(false);
-$('#btnShare').onclick = () => save(true);
+$('#btnSave').onclick = () => { pending = null; $('#btnSendReady').hidden = true; save(false); };
+$('#btnShare').onclick = () => { pending = null; $('#btnSendReady').hidden = true; save(true); };
+$('#btnSendReady').onclick = sendReady;
 try { if (navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'a.json', { type: 'application/json' })] })) $('#btnShare').hidden = false; } catch (e) {}
 $('#btnPick').onclick = () => $('#file').click();
 $('#file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) openFile(f); };
