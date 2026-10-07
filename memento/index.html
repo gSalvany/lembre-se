@@ -595,6 +595,9 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
     #noteFormFields.locked { opacity: 0.35; pointer-events: none; }
     .edit-banner { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.35); color: var(--gold); border-radius: 8px; padding: 8px 12px; font-size: 0.74rem; margin: 8px 0; }
     .edit-banner .del-btn { color: var(--gold); }
+    .draft-banner.atrium-banner { color: #cfc6a8; border-color: #5a5236; border-style: solid; }
+    .atrium-acts { display: flex; align-items: center; gap: 8px; flex: none; }
+    .atrium-apply { background: #e8e1c8; color: #111; border: 0; border-radius: 6px; padding: 5px 10px; font: inherit; font-weight: 600; cursor: pointer; }
     .draft-banner { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .7rem; color: #9aa; background: #0a0a0a; border: 1px dashed #333; border-radius: 8px; padding: 6px 10px; margin-top: 8px; }
     .review-link { color: var(--gold) !important; margin-top: 8px; display: inline-block; }
     .commit-hint { font-size: .7rem; color: #888; margin-top: 6px; line-height: 1.5; }
@@ -1442,6 +1445,10 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
           <div id="draftBanner" class="draft-banner" hidden>
             <span>✎ Rascunho salvo automaticamente · ainda não registrado</span>
             <button type="button" id="btnDiscardDraft" class="del-btn">descartar</button>
+          </div>
+          <div id="atriumBanner" class="draft-banner atrium-banner" hidden>
+            <span id="atriumBannerText">O Atrium preparou este dia.</span>
+            <span class="atrium-acts"><button type="button" id="btnAtriumApply" class="atrium-apply">Preencher</button><button type="button" id="btnAtriumSkip" class="del-btn">agora não</button></span>
           </div>
 
           <div class="accordion-body" id="accBodyFicha">
@@ -3892,6 +3899,92 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
       return ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][new Date(dateStr + 'T00:00:00').getDay()];
     }
 
+    /* ---------- O ATRIUM PREPARA, O MEMENTO CONFIRMA ----------
+       O Atrium mede o dia (cronômetro das missões, hora de acordar, a linha do fechamento)
+       e publica isso no resumo dele. Aqui o Memento só OFERECE preencher a ficha:
+       nada entra no diário sem você ver e apertar "Registrar a verdade". */
+    let atriumDias = {};
+    let atriumAplicado = {};
+    try { atriumAplicado = JSON.parse(appStorage.getItem('memento_atrium_aplicado')) || {}; } catch (e) {}
+    async function lerAtrium() {
+      if (!window.Lembre) return;
+      try { const r = await Lembre.ler('atrium'); atriumDias = r && r.dados && r.dados.dias && typeof r.dados.dias === 'object' ? r.dados.dias : {}; }
+      catch (e) { atriumDias = {}; }
+      renderAtriumOffer(selectedFichaDate);
+    }
+    function atriumPendente(date) {
+      const d = atriumDias[date];
+      if (!d || !d.preparadoEm) return null;
+      return (atriumAplicado[date] || 0) >= d.preparadoEm ? null : d;
+    }
+    function marcarAtrium(date, em) {
+      atriumAplicado[date] = em;
+      const limite = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+      Object.keys(atriumAplicado).forEach(k => { if (k < limite) delete atriumAplicado[k]; });
+      try { appStorage.setItem('memento_atrium_aplicado', JSON.stringify(atriumAplicado)); } catch (e) {}
+    }
+    function renderAtriumOffer(date) {
+      const el = document.getElementById('atriumBanner');
+      if (!el) return;
+      const d = atriumPendente(date);
+      el.hidden = !d;
+      if (!d) return;
+      const partes = [];
+      if (d.acordou) partes.push('hora de acordar');
+      const nh = Object.keys(d.habitos || {}).filter(id => idealTasks.some(t => String(t.id) === String(id))).length;
+      if (nh) partes.push(nh + (nh === 1 ? ' hábito' : ' hábitos'));
+      const nb = (d.blocos || []).length;
+      if (nb) partes.push(nb + (nb === 1 ? ' bloco' : ' blocos'));
+      if (d.sintese) partes.push('síntese');
+      if (d.virada) partes.push('virada');
+      document.getElementById('atriumBannerText').textContent = 'O Atrium preparou este dia' + (partes.length ? ': ' + partes.join(', ') : '') + '.';
+    }
+    function aplicarAtrium() {
+      const date = selectedFichaDate, d = atriumPendente(date);
+      if (!d) return;
+      const hhmm = v => /^\d\d:\d\d$/.test(v || '') ? v : '';
+      if (hhmm(d.acordou) && !fichaEls.wakeReal.value && !fichaEls.allNighter.checked) fichaEls.wakeReal.value = d.acordou;
+      if (hhmm(d.dormiu) && !fichaEls.sleepReal.value && !fichaEls.allNighter.checked) fichaEls.sleepReal.value = d.dormiu;
+      Object.entries(d.habitos || {}).forEach(([id, h]) => {
+        const t = idealTasks.find(x => String(x.id) === String(id));
+        if (!t || !h) return;
+        const m = Math.round(+h.minutos || 0);
+        if (m > (fichaHabitMinutes[t.id] || 0)) { fichaHabitMinutes[t.id] = m; fichaChecklist[t.id] = stateFromMinutes(m, t.minutes); }
+        else if (!m && CHECK_STATES.includes(h.estado) && fichaChecklist[t.id] === 'missed') fichaChecklist[t.id] = h.estado;
+        if (fichaChecklist[t.id] === 'done') delete fichaHabitTags[t.id];
+      });
+      let fora = 0;
+      (d.blocos || []).forEach(b => {
+        if (!b || !b.categoria) return;
+        const de = hhmm(b.de), ate = hhmm(b.ate);
+        const min = Math.round(+b.minutos || 0) || (de && ate ? spanMinutes(de, ate) : 0);
+        if (!min) return;
+        const chave = t => String(t || '').replace(/[\s#]+/g, '').toLowerCase();
+        let cat = activityCats.find(c => chave(c.name) === chave(b.categoria));
+        if (!cat) { cat = { icon: b.icone || '⏳', name: String(b.categoria).slice(0, 40), kind: b.tipo === 'desvio' ? 'desvio' : 'producao' }; activityCats.push(cat); persistActivityCats(); }
+        if (fichaBlocks.some(x => x.category === cat.name && (x.from || '') === de && (x.to || '') === ate && blockMinutes(x) === min)) return;
+        if (totalBlockMinutes() + min > DAY_MINUTES) { fora++; return; }
+        fichaBlocks.push({ category: cat.name, from: de, to: ate, minutes: min });
+      });
+      fichaBlocks.sort((a, b) => (a.from || '99:99').localeCompare(b.from || '99:99'));
+      const sx = String(d.sintese || '').trim();
+      if (sx) { const cur = fichaEls.synthesis.value.trim(); if (!cur.includes(sx)) fichaEls.synthesis.value = cur ? cur + '\n\n' + sx : sx; }
+      if (d.virada) fichaEls.turnaround.checked = true;
+      marcarAtrium(date, d.preparadoEm);
+      markFichaDirty();
+      applyAllNighterState(); renderSynthesisTags(); renderIdealChecklist(); renderRealBlocks(); renderDiagnosis();
+      renderAtriumOffer(date);
+      showToast(fora ? 'Preenchido. Alguns blocos passariam de 24h e ficaram de fora.' : 'Preenchido com o que o Atrium mediu. Revise e registre a verdade.');
+    }
+    document.getElementById('btnAtriumApply').addEventListener('click', aplicarAtrium);
+    document.getElementById('btnAtriumSkip').addEventListener('click', () => {
+      const d = atriumPendente(selectedFichaDate);
+      if (d) marcarAtrium(selectedFichaDate, d.preparadoEm);
+      renderAtriumOffer(selectedFichaDate);
+    });
+    if (window.Lembre) Lembre.ouvir(m => { if (m.app === 'atrium') lerAtrium(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') lerAtrium(); });
+
     function loadFicha(date) {
       const entry = findLogFor(date);
       fichaChecklist = {};
@@ -3949,6 +4042,7 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
       renderIdealChecklist();
       renderRealBlocks();
       renderDiagnosis();
+      renderAtriumOffer(date);
     }
 
     function selectFichaDate(date) {
@@ -4833,6 +4927,16 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
     if (document.getElementById('accBodyHistory').classList.contains('open')) renderExpenseHistory();
     renderIdealManageList();
     loadFicha(selectedFichaDate);
+    lerAtrium();
+    // link vindo de outro app: ?ficha=AAAA-MM-DD (ou ?ficha=hoje) abre a Ficha de Consciência daquele dia
+    (function abrirPorLink() {
+      const q = new URLSearchParams(location.search), f = q.get('ficha');
+      if (!f) return;
+      const date = f === 'hoje' ? todayStr() : f;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayStr()) return;
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+      setTimeout(() => openFichaAt(date, false), 300);
+    })();
     renderUniversalCategoryChips();
     renderPecuniaDay();
     renderGoals();
@@ -5572,11 +5676,31 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
           quotes: (Array.isArray(quotes) ? quotes : []).filter(q => q && q.text).map(q => ({ text: q.text, author: q.author || '' })),
           memories, daylog, distractions,
           expenses: (Array.isArray(expenses) ? expenses : []).map(e => ({ date: e.date, cat: e.category || 'Outros', value: num(e.value) })).filter(e => e.value),
-          weekReviews: reviews && typeof reviews === 'object' ? reviews : {}
+          weekReviews: reviews && typeof reviews === 'object' ? reviews : {},
+          plano: construirPlano(daylogRaw)
+        };
+      }
+      // o que o Atrium precisa para guiar o dia: hábitos ideais, sono, cards de execução, Pecunia
+      function construirPlano(daylogRaw) {
+        const arr = v => Array.isArray(v) ? v : [];
+        const ideal = arr(ler('memento_pecunia_ideal', [])).filter(t => t && t.name).map(t => ({ id: String(t.id), name: String(t.name), minutes: num(t.minutes) }));
+        const cats = arr(ler('memento_activity_cats', [])).filter(c => c && c.name).map(c => ({ icon: c.icon || '', name: String(c.name), kind: c.kind === 'desvio' ? 'desvio' : 'producao' }));
+        const expenseCats = arr(ler('memento_pecunia_expense_cats', [])).map(c => typeof c === 'string' ? { icon: '', name: c } : { icon: (c && c.icon) || '', name: String((c && c.name) || '') }).filter(c => c.name);
+        const savings = arr(ler('memento_pecunia_savings', []));
+        const goals = arr(ler('memento_pecunia_goals', [])).filter(g => g && g.name).map(g => ({ id: String(g.id), name: String(g.name), value: num(g.value),
+          saved: Math.round(savings.filter(s => String(s.goalId) === String(g.id)).reduce((t, s) => t + num(s.amount), 0) * 100) / 100 }));
+        const limite = new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10);
+        const fichas = arr(daylogRaw).filter(x => x && x.date >= limite).map(x => ({ date: x.date, wake: x.actualWake || '', sleep: x.sleepTime || '', allNighter: !!x.allNighter,
+          checklist: x.checklist || {}, habitMinutes: x.habitMinutes || {}, turnaround: !!x.turnaround, registeredAt: x.registeredAt || '' }));
+        return {
+          ideal, activityCats: cats, expenseCats, goals, fichas,
+          savings: savings.slice(0, 300).map(s => ({ date: s.date || '', goalId: String(s.goalId || ''), category: s.category || '', amount: num(s.amount) })).filter(s => s.amount),
+          sleepIntent: appStorage.getItem('memento_sleep_intent') || '', wakeIntent: appStorage.getItem('memento_wake_intent') || '',
+          hourlyRate: num(appStorage.getItem('memento_pecunia_hourly_rate'))
         };
       }
       const publicar = Lembre.agendar('memento', construir, 1000);
-      const ignorar = k => /^memento_(ui_|presentation_|backup_reminded|last_backup|coin_pair)/.test(k);
+      const ignorar = k => /^memento_(ui_|presentation_|backup_reminded|last_backup|coin_pair|atrium_aplicado)/.test(k);
       const set = appStorage.setItem.bind(appStorage), del = appStorage.removeItem.bind(appStorage);
       appStorage.setItem = (k, v) => { const r = set(k, v); if (typeof k === 'string' && k.startsWith('memento_') && !ignorar(k)) publicar(); return r; };
       appStorage.removeItem = k => { const r = del(k); if (typeof k === 'string' && k.startsWith('memento_') && !ignorar(k)) publicar(); return r; };
