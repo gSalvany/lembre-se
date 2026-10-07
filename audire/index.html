@@ -11,6 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Audire">
+<script src="../comum/lembre.js"></script>
 <script>
 try { const t = localStorage.getItem('audire.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -697,8 +698,10 @@ function idbOpenExisting(name) {
 }
 async function loadExt() {
   if (Ext.loaded) return Ext;
+  const R = window.Lembre ? await Lembre.lerTodos() : {};                // contrato lembre-se: os resumos que cada app publica
   try {
-    let vol = null; const db = await idbOpenExisting('volumen');
+    let vol = R.volumen && R.volumen.dados && Array.isArray(R.volumen.dados.items) ? R.volumen.dados : null;
+    const db = vol ? null : await idbOpenExisting('volumen');             // reserva: Volumen ainda sem resumo
     if (db) {
       try { if (db.objectStoreNames.contains('kv')) vol = await new Promise(r => { const q = db.transaction('kv', 'readonly').objectStore('kv').get('state'); q.onsuccess = () => r(q.result); q.onerror = () => r(null); }); } catch (e) {}
       db.close();
@@ -710,7 +713,7 @@ async function loadExt() {
       .sort((a, b) => b.active - a.active || a.title.localeCompare(b.title));
   } catch (e) {}
   try {
-    const cg = LS.get('cognitio.v2', null);
+    const cg = R.cognitio && R.cognitio.dados && Array.isArray(R.cognitio.dados.areas) ? R.cognitio.dados : LS.get('cognitio.v2', null);
     if (cg && Array.isArray(cg.areas)) {
       const fields = Object.fromEntries((cg.fields || []).map(f => [f.id, f]));
       Ext.cognitio = cg.areas.filter(a => a && a.title).map(a => ({ app: 'cognitio', id: String(a.id), title: String(a.title).slice(0, 90), icon: (fields[a.fieldId] && fields[a.fieldId].icon) || '🧠' }))
@@ -719,6 +722,7 @@ async function loadExt() {
   } catch (e) {}
   Ext.loaded = true; return Ext;
 }
+if (window.Lembre) Lembre.ouvir(() => { Ext.loaded = false; });           // outro app salvou: relê na próxima vez
 function shareText(c) {
   const marks = (c.marks || []).filter(m => m.text).sort((a, b) => a.t - b.t).map(m => fmtDur(m.t * 1000) + ' — ' + m.text).join('\n');
   return [c.title, c.note, marks, c.nextStep ? 'Próximo passo: ' + c.nextStep : '', c.tags.length ? c.tags.map(t => '#' + t).join(' ') : '', c.transcript ? 'Transcrição:\n' + c.transcript : ''].filter(Boolean).join('\n\n');

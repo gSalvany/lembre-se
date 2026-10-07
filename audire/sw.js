@@ -1,12 +1,12 @@
 // Service worker do Audire: guarda o app para funcionar offline
 // e recebe áudios enviados pelo "Compartilhar" do Android (WhatsApp, gravador, arquivos).
 // Ao atualizar o index.html, aumente a versão abaixo para o celular baixar a nova versão.
-const CACHE = 'audire-v4';
+const CACHE = 'audire-v5';
 const SHARE = 'audire-share';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).then(() => c.add('../comum/lembre.js').catch(() => {}))).then(() => self.skipWaiting()));   // a biblioteca comum também funciona offline
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('audire-v') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
