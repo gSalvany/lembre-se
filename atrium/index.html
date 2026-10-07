@@ -472,7 +472,11 @@ function load() {
 let store = load();
 let history = (() => { try { const h = JSON.parse(localStorage.getItem(HISTORY_KEY)); return Array.isArray(h) ? h : []; } catch { return []; } })();
 function persist() {
-  try { localStorage.setItem(KEY, JSON.stringify(store)); return true; }
+  /* os dados dos outros apps não são copiados para cá: com a biblioteca comum, o Atrium relê os resumos
+     sempre que abre. Só o que veio de um backup importado (outro aparelho, sem resumo) fica guardado. */
+  const sources = {};
+  Object.entries(store.sources).forEach(([k, v]) => { sources[k] = v && v.origin === 'backup' ? v : null; });
+  try { localStorage.setItem(KEY, JSON.stringify({ ...store, sources })); return true; }
   catch { toast('Sem espaço no navegador para guardar este resumo.', true); return false; }
 }
 function persistHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-1000))); } catch {} }
@@ -682,13 +686,13 @@ async function nativeMemento() {
 async function readNative({ silent = false } = {}) {
   const found = [], at = new Date().toISOString();
   try {
-    const c = JSON.parse(localStorage.getItem(NATIVE.cognitio.ls) || 'null');
-    if (c && detect(c) === 'cognitio') { store.sources.cognitio = { importedAt: at, origin: 'direto', data: readCognitio(c) }; found.push('Cognitio'); }
     /* contrato lembre-se: primeiro o resumo que o próprio app publica; o leitor antigo fica de reserva
        para quando o app ainda não foi aberto depois da atualização */
     const R = window.Lembre ? await Lembre.lerTodos() : {};
     if (R.volumen && R.volumen.dados && Array.isArray(R.volumen.dados.items)) { const dd = dedupe(R.volumen.dados.items); store.sources.volumen = { importedAt: at, origin: 'resumo', data: { exportedAt: null, items: dd.items, dups: dd.dups } }; found.push('Volumen'); }
     else { const v = await nativeVolumen(); if (v) { store.sources.volumen = { importedAt: at, origin: 'direto', data: await readVolumen(v) }; found.push('Volumen'); } }
+    if (R.cognitio && R.cognitio.dados && Array.isArray(R.cognitio.dados.areas)) { store.sources.cognitio = { importedAt: at, origin: 'resumo', data: R.cognitio.dados }; found.push('Cognitio'); }
+    else { const c = JSON.parse(localStorage.getItem(NATIVE.cognitio.ls) || 'null'); if (c && detect(c) === 'cognitio') { store.sources.cognitio = { importedAt: at, origin: 'direto', data: readCognitio(c) }; found.push('Cognitio'); } }
     if (R.memento && R.memento.dados && Array.isArray(R.memento.dados.memories)) { store.sources.memento = { importedAt: at, origin: 'resumo', data: R.memento.dados }; found.push('Memento'); }
     else { const m = await nativeMemento(); if (m) { store.sources.memento = { importedAt: at, origin: 'direto', data: readMemento(m) }; found.push('Memento'); } }
   } catch (e) { console.error(e); }
@@ -1157,9 +1161,9 @@ function renderFontes() {
   view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Fontes</h2><p>De onde o Atrium tira os dados. Ele só lê: nada volta para os apps.</p></div>
       <button class="btn primary" data-import>Importar backups</button></div>
     <div class="srcs">${card('memento')}${card('volumen')}${card('cognitio')}</div>
-    <section class="card panel"><h3>Como atualizar</h3><p>Exporte o backup em cada app e importe aqui; pode selecionar os três de uma vez. Acima de ${STALE_HOURS} h sem atualizar, o Atrium avisa na tela Hoje, porque a ação do dia passa a usar dados velhos.</p>
+    <section class="card panel"><h3>Como atualizar</h3><p>${window.Lembre ? 'Neste aparelho, nada: os dados chegam sozinhos pelos resumos dos apps. Para ver dados de outro aparelho, exporte o backup em cada app de lá e importe aqui.' : `Exporte o backup em cada app e importe aqui; pode selecionar os três de uma vez. Acima de ${STALE_HOURS} h sem atualizar, o Atrium avisa na tela Hoje, porque a ação do dia passa a usar dados velhos.`}</p>
       <div class="meter"><i style="width:${pct}%"></i></div><p class="note" style="font-size:12px">${(used / 1024).toFixed(0)} KB usados pelo Atrium, de cerca de 5 MB.</p></section>
-    <section class="card panel"><h3>Leitura direta (Fase 2)</h3><p>Com o Atrium e os três apps publicados no mesmo endereço (ex.: GitHub Pages), ele lê o Cognitio no localStorage e o Memento e o Volumen no IndexedDB, sem backup. ${USE_GITHUB_PAGES_ORIGIN ? '<b>Ativa:</b> a leitura acontece ao abrir e ao voltar para a aba.' : 'Para ligar de vez, mude <code>USE_GITHUB_PAGES_ORIGIN</code> para <code>true</code> no código.'}</p><div class="row"><button class="btn" id="nativeBtn">Tentar leitura direta agora</button></div></section>
+    <section class="card panel"><h3>Leitura automática</h3><p>${window.Lembre ? 'Cada app publica um resumo sempre que você salva algo, e o Atrium lê esses resumos ao abrir, ao voltar para a aba e na hora em que outro app salva. Não precisa importar nada neste aparelho: a importação de backups serve só para ver dados de outro aparelho.' : 'A biblioteca comum dos apps não carregou (talvez sem internet na primeira abertura). Enquanto isso, use a leitura direta ou importe os backups.'}</p><div class="row"><button class="btn" id="nativeBtn">Ler agora</button></div></section>
     <section class="card panel"><h3>Backup do Atrium</h3><p>Guarda ligações, metas, histórico de ações, links dos apps e os resumos importados.</p><div class="row"><button class="btn" id="expBtn">Exportar backup do Atrium</button><button class="btn" id="impBtn">Importar backup do Atrium</button></div></section></div>`;
 }
 
@@ -1257,13 +1261,15 @@ $('#atriumIn').addEventListener('change', async e => {
     persist(); persistHistory(); render(); toast('Backup do Atrium restaurado');
   } catch { toast('Este arquivo não é um backup do Atrium.', true); }
 });
+let primeiraLeitura = Promise.resolve();
 if (USE_GITHUB_PAGES_ORIGIN || window.Lembre) {        // com a biblioteca comum, os apps estão no mesmo endereço: lê sozinho
-  readNative({ silent: true });
+  primeiraLeitura = readNative({ silent: true });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') readNative({ silent: true }); });
   if (window.Lembre) { let t = null; Lembre.ouvir(() => { clearTimeout(t); t = setTimeout(() => readNative({ silent: true }), 300); }); }   // outro app salvou: atualiza na hora
 }
 applyTheme();
-render();
+if (window.Lembre) { let feito = false; const r = () => { if (!feito) { feito = true; render(); } }; primeiraLeitura.then(r, r); setTimeout(r, 1500); }
+else render();
 })();
 
 /* ---------- emblema: uma única imagem, reaproveitada em todos os lugares ---------- */
