@@ -217,6 +217,23 @@ dialog::backdrop{background:var(--backdrop);backdrop-filter:blur(4px)}
 .hint{font-size:12px;color:var(--faint);line-height:1.45}
 .inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .inline input[type="date"]{width:auto;flex:1;min-width:150px}
+.relpick{display:flex;flex-direction:column;gap:6px}
+.rel-cur,.rel-opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--card-2);color:var(--text)}
+.rel-cur:hover,.rel-opt:hover{border-color:var(--line-2)}
+.ri{flex:none;width:22px;text-align:center;font-size:16px}
+.rt{flex:1;min-width:0;display:flex;flex-direction:column}
+.rt b{font-weight:600;font-size:14.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.rt b.muted{color:var(--muted);font-weight:500}
+.rt small{font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc{flex:none;font-size:12.5px;font-weight:700;color:var(--aud)}
+.rel-panel{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--card)}
+.rel-panel input{width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--card-2);color:var(--text);font-size:15px}
+.rel-panel input:focus{outline:none;border-color:var(--line-2)}
+.rel-list{display:flex;flex-direction:column;gap:4px;max-height:46vh;overflow-y:auto}
+.rel-opt{background:transparent;border-color:transparent;padding:8px 10px}
+.rel-opt.on{border-color:color-mix(in srgb,var(--aud) 50%,var(--line));background:var(--aud-soft)}
+.rel-h{font-size:12px;font-weight:700;color:var(--faint);margin:8px 4px 2px}
+.rel-more,.rel-empty{font-size:12.5px;color:var(--faint);padding:4px 8px}
 .field select{width:100%;padding:11px 13px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--card-2);color:var(--text);font-size:15px}
 .seg.wrap{flex-wrap:wrap}
 .row .l{display:flex;gap:8px;flex-wrap:wrap}
@@ -709,14 +726,18 @@ async function loadExt() {
     if (!vol) vol = LS.get('my_mediatheca_v2', null);
     const items = vol && Array.isArray(vol.items) ? vol.items : Array.isArray(vol) ? vol : [];
     const icon = { book: '📖', course: '🎓', video: '🎬', article: '📰' };
-    Ext.volumen = items.filter(i => i && i.title).map(i => ({ app: 'volumen', id: String(i.id), title: String(i.title).slice(0, 90), icon: icon[i.type] || '📖', active: i.status === 'in_progress' }))
+    const tipo = { book: 'Livro', course: 'Curso', video: 'Vídeo', article: 'Artigo' }, est = { in_progress: 'lendo', done: 'concluído' };
+    Ext.volumen = items.filter(i => i && i.title).map(i => ({ app: 'volumen', id: String(i.id), title: String(i.title).slice(0, 90), icon: icon[i.type] || '📖', active: i.status === 'in_progress',
+      ctx: [tipo[i.type] || 'Livro', i.author ? String(i.author).slice(0, 40) : '', est[i.status] || ''].filter(Boolean).join(' · ') }))
       .sort((a, b) => b.active - a.active || a.title.localeCompare(b.title));
   } catch (e) {}
   try {
     const cg = R.cognitio && R.cognitio.dados && Array.isArray(R.cognitio.dados.areas) ? R.cognitio.dados : LS.get('cognitio.v2', null);
     if (cg && Array.isArray(cg.areas)) {
       const fields = Object.fromEntries((cg.fields || []).map(f => [f.id, f]));
-      Ext.cognitio = cg.areas.filter(a => a && a.title).map(a => ({ app: 'cognitio', id: String(a.id), title: String(a.title).slice(0, 90), icon: (fields[a.fieldId] && fields[a.fieldId].icon) || '🧠' }))
+      const est = ['por começar', 'em estudo', 'dominada'];
+      Ext.cognitio = cg.areas.filter(a => a && a.title).map(a => ({ app: 'cognitio', id: String(a.id), title: String(a.title).slice(0, 90), icon: (fields[a.fieldId] && fields[a.fieldId].icon) || '🧠',
+        active: +a.status === 1, ctx: [fields[a.fieldId] ? String(fields[a.fieldId].title).slice(0, 40) : '', est[+a.status] || ''].filter(Boolean).join(' · ') }))
         .sort((a, b) => a.title.localeCompare(b.title));
     }
   } catch (e) {}
@@ -740,9 +761,11 @@ function calendarUrl(c) {
 }
 
 /* resumo para o Atrium ler (mesmo domínio) */
+const publicarResumoAudire = window.Lembre ? Lembre.agendar('audire', () => LS.get('audire.summary', null), 600) : () => {};
 function writeSummary() {
   const live = clips.filter(c => c.status !== 'archived');
   const actions = clips.filter(c => c.status === 'action');
+  publicarResumoAudire();                                   // contrato lembre-se (o localStorage fica por compatibilidade)
   LS.set('audire.summary', {
     version: 2,
     count: live.length, thoughts: live.filter(c => c.kind === 'thought').length, ideas: live.filter(c => c.kind === 'idea').length,
@@ -980,6 +1003,44 @@ function finishReview(stopped) {
 /* =============================================================
    CAMPOS DE AÇÃO (usados no editor e na revisão)
    ============================================================= */
+/* ---------- seletor "Sobre": busca, em andamento primeiro e o campo junto do nome ---------- */
+const fold = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function relRow(x, sel) {
+  const on = sel && sel.app === x.app && sel.id === x.id;
+  return `<button type="button" class="rel-opt${on ? ' on' : ''}" role="option" aria-selected="${on}" data-rel="${x.app}:${esc(x.id)}">
+    <span class="ri">${esc(x.icon || '')}</span><span class="rt"><b>${esc(x.title)}</b>${x.ctx ? `<small>${esc(x.ctx)}</small>` : ''}</span></button>`;
+}
+function renderRelList() {
+  const q = fold($('#relQ').value.trim()), sel = draft && draft.rel, all = [...Ext.volumen, ...Ext.cognitio];
+  let html = `<button type="button" class="rel-opt${!sel ? ' on' : ''}" role="option" aria-selected="${!sel}" data-rel=""><span class="ri">–</span><span class="rt"><b>Nenhum</b></span></button>`;
+  if (q) {
+    const hits = all.filter(x => fold(x.title + ' ' + x.ctx).includes(q)).sort((a, b) => (fold(b.title).startsWith(q) - fold(a.title).startsWith(q)) || (b.active - a.active)).slice(0, 40);
+    html += hits.length ? hits.map(x => relRow(x, sel)).join('') : '<p class="rel-empty">Nada encontrado com esse nome.</p>';
+  } else {
+    const sec = (t, list, max) => list.length ? `<p class="rel-h">${t}</p>` + list.slice(0, max).map(x => relRow(x, sel)).join('') + (list.length > max ? `<p class="rel-more">E mais ${list.length - max}. Digite para buscar.</p>` : '') : '';
+    html += sec('Em andamento', all.filter(x => x.active), 12) + sec('Volumen', Ext.volumen.filter(x => !x.active), 8) + sec('Cognitio', Ext.cognitio.filter(x => !x.active), 8);
+  }
+  $('#relList').innerHTML = html;
+}
+function renderRelCur() {
+  const r = draft && draft.rel, x = r && (Ext[r.app] || []).find(y => y.id === r.id);
+  $('#relCur').innerHTML = r ? `<span class="ri">${esc(r.icon || '')}</span><span class="rt"><b>${esc(r.title)}</b>${x && x.ctx ? `<small>${esc(x.ctx)}</small>` : ''}</span><span class="rc">Trocar</span>`
+    : `<span class="rt"><b class="muted">Nenhum</b><small>Ligar a um livro, curso ou área de estudo</small></span><span class="rc">Escolher</span>`;
+}
+function wireRelPicker() {
+  renderRelCur();
+  const panel = $('#relPanel'), cur = $('#relCur');
+  cur.onclick = () => { panel.hidden = !panel.hidden; cur.setAttribute('aria-expanded', !panel.hidden); if (!panel.hidden) { $('#relQ').value = ''; renderRelList(); $('#relQ').focus(); } };
+  $('#relQ').oninput = renderRelList;
+  $('#relQ').onkeydown = e => { if (e.key === 'Escape') { panel.hidden = true; cur.setAttribute('aria-expanded', 'false'); cur.focus(); } };
+  $('#relList').onclick = e => {
+    const b = e.target.closest('[data-rel]'); if (!b) return;
+    const v = b.dataset.rel;
+    if (!v) draft.rel = null;
+    else { const [app, ...rest] = v.split(':'), rid = rest.join(':'), x = (Ext[app] || []).find(y => y.id === rid); if (x) draft.rel = { app, id: x.id, title: x.title, icon: x.icon }; }
+    panel.hidden = true; cur.setAttribute('aria-expanded', 'false'); renderRelCur();
+  };
+}
 function relOptions(c) {
   const opt = (x) => `<option value="${x.app}:${esc(x.id)}" ${c.rel && c.rel.app === x.app && c.rel.id === x.id ? 'selected' : ''}>${esc(x.icon + ' ' + x.title)}</option>`;
   let html = `<option value="">Nenhum</option>`;
@@ -1055,8 +1116,14 @@ async function openEditor(c, isNew, opts = {}) {
       <div class="marks" id="edMarks"></div>
       <div class="inline"><button type="button" class="btn" id="addMark">${ICON.flag} Nota neste momento</button></div>
       <p class="hint">A nota fica presa ao ponto em que o áudio está tocando. Toque no tempo para ouvir dali.</p></div>
-    <div class="field"><label for="edRel">Sobre</label>
-      <select id="edRel">${relOptions(draft)}</select>
+    <div class="field"><label id="relLbl">Sobre</label>
+      <div class="relpick" id="relPick">
+        <button type="button" class="rel-cur" id="relCur" aria-labelledby="relLbl relCur" aria-expanded="false"></button>
+        <div class="rel-panel" id="relPanel" hidden>
+          <input id="relQ" type="search" placeholder="Buscar livro, curso ou área de estudo" autocomplete="off" aria-label="Buscar">
+          <div class="rel-list" id="relList" role="listbox" aria-labelledby="relLbl"></div>
+        </div>
+      </div>
       ${!Ext.volumen.length && !Ext.cognitio.length ? '<p class="hint">Os itens do Volumen e as áreas do Cognitio aparecem aqui quando eles estão instalados no mesmo endereço.</p>' : ''}</div>
     <div class="field"><label for="edTags">Tags</label>
       <input id="edTags" value="${esc(draft.tags.join(', '))}" placeholder="Separe por vírgula: trabalho, livro, projeto" autocomplete="off">
@@ -1103,6 +1170,7 @@ async function openEditor(c, isNew, opts = {}) {
     if (focusLast !== undefined) { const el = $(`input[data-i="${focusLast}"]`, box); if (el) el.focus(); }
   };
   renderMarks(); edRenderMarks = renderMarks;
+  wireRelPicker();
   $('#addMark').onclick = () => {
     const t = P.id === draft.id ? +audio.currentTime.toFixed(1) : 0;
     const m = { t, text: '' }; draft.marks.push(m); draft.marks.sort((a, b) => a.t - b.t);
@@ -1149,13 +1217,7 @@ async function saveDraft(isNew) {
   draft.fav = $('#edFav').checked;
   draft.marks = draft.marks.map(m => ({ t: m.t, text: m.text.trim() }));
   draft.transcript = $('#edTranscript').value.trim();
-  const relV = $('#edRel').value;
-  if (!relV) draft.rel = null;
-  else {
-    const [app, ...rest] = relV.split(':'), rid = rest.join(':');
-    const x = (Ext[app] || []).find(y => y.id === rid);
-    if (x) draft.rel = { app, id: x.id, title: x.title, icon: x.icon };
-  }
+  // draft.rel já vem escolhido pelo seletor "Sobre"
   const st = $('#edStatus [aria-pressed="true"]').dataset.s;
   setStatus(draft, st);
   if (st === 'action') readActionFields(draft);

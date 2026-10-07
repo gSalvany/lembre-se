@@ -1,7 +1,7 @@
 // Service worker do Audire: guarda o app para funcionar offline
 // e recebe áudios enviados pelo "Compartilhar" do Android (WhatsApp, gravador, arquivos).
 // Ao atualizar o index.html, aumente a versão abaixo para o celular baixar a nova versão.
-const CACHE = 'audire-v5';
+const CACHE = 'audire-v6';
 const SHARE = 'audire-share';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
