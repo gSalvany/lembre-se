@@ -11,6 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Atrium">
+<script src="../comum/lembre.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -683,8 +684,13 @@ async function readNative({ silent = false } = {}) {
   try {
     const c = JSON.parse(localStorage.getItem(NATIVE.cognitio.ls) || 'null');
     if (c && detect(c) === 'cognitio') { store.sources.cognitio = { importedAt: at, origin: 'direto', data: readCognitio(c) }; found.push('Cognitio'); }
-    const v = await nativeVolumen(); if (v) { store.sources.volumen = { importedAt: at, origin: 'direto', data: await readVolumen(v) }; found.push('Volumen'); }
-    const m = await nativeMemento(); if (m) { store.sources.memento = { importedAt: at, origin: 'direto', data: readMemento(m) }; found.push('Memento'); }
+    /* contrato lembre-se: primeiro o resumo que o próprio app publica; o leitor antigo fica de reserva
+       para quando o app ainda não foi aberto depois da atualização */
+    const R = window.Lembre ? await Lembre.lerTodos() : {};
+    if (R.volumen && R.volumen.dados && Array.isArray(R.volumen.dados.items)) { const dd = dedupe(R.volumen.dados.items); store.sources.volumen = { importedAt: at, origin: 'resumo', data: { exportedAt: null, items: dd.items, dups: dd.dups } }; found.push('Volumen'); }
+    else { const v = await nativeVolumen(); if (v) { store.sources.volumen = { importedAt: at, origin: 'direto', data: await readVolumen(v) }; found.push('Volumen'); } }
+    if (R.memento && R.memento.dados && Array.isArray(R.memento.dados.memories)) { store.sources.memento = { importedAt: at, origin: 'resumo', data: R.memento.dados }; found.push('Memento'); }
+    else { const m = await nativeMemento(); if (m) { store.sources.memento = { importedAt: at, origin: 'direto', data: readMemento(m) }; found.push('Memento'); } }
   } catch (e) { console.error(e); }
   if (!found.length) { if (!silent) toast('Nada encontrado neste endereço. A leitura direta só funciona com os apps publicados junto do Atrium.', true); return; }
   persist(); render(); if (!silent) toast(`Lido direto: ${found.join(', ')}`);
@@ -1141,7 +1147,7 @@ function renderFontes() {
   const card = app => {
     const s = store.sources[app], f = freshness(app);
     return `<section class="card src ${app.slice(0, 3)}"><h3>${NAMES[app]}</h3>
-      ${s ? `<p class="state">${f && f.stale ? '<span class="stale-t">⚠ Desatualizado</span> · ' : ''}Dados de <b>${f ? f.label : '–'}</b>${s.origin === 'direto' ? ' (leitura direta)' : ''}<br>Importado em ${fmtDT(s.importedAt)}</p><ul>${SUMS[app](s.data).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
+      ${s ? `<p class="state">${f && f.stale ? '<span class="stale-t">⚠ Desatualizado</span> · ' : ''}Dados de <b>${f ? f.label : '–'}</b>${s.origin === 'direto' ? ' (leitura direta)' : s.origin === 'resumo' ? ' (resumo publicado pelo app)' : ''}<br>Importado em ${fmtDT(s.importedAt)}</p><ul>${SUMS[app](s.data).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
         : `<p class="state">Nenhum backup importado.</p>`}
       <div><label for="url-${app}">Link para abrir o app (opcional)</label><input id="url-${app}" data-url="${app}" placeholder="https://… ou nome do arquivo .html" value="${esc(store.appUrls[app])}"></div>
       <div class="row"><button class="btn sm primary" data-import>Importar backup</button>${s ? `<button class="btn sm danger" data-clear="${app}">Remover</button>` : ''}</div></section>`;
@@ -1251,9 +1257,10 @@ $('#atriumIn').addEventListener('change', async e => {
     persist(); persistHistory(); render(); toast('Backup do Atrium restaurado');
   } catch { toast('Este arquivo não é um backup do Atrium.', true); }
 });
-if (USE_GITHUB_PAGES_ORIGIN) {
+if (USE_GITHUB_PAGES_ORIGIN || window.Lembre) {        // com a biblioteca comum, os apps estão no mesmo endereço: lê sozinho
   readNative({ silent: true });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') readNative({ silent: true }); });
+  if (window.Lembre) { let t = null; Lembre.ouvir(() => { clearTimeout(t); t = setTimeout(() => readNative({ silent: true }), 300); }); }   // outro app salvou: atualiza na hora
 }
 applyTheme();
 render();

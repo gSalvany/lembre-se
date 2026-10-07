@@ -1,9 +1,9 @@
 // Service worker do Atrium: guarda o app para funcionar offline.
 // Ao atualizar o index.html, aumente a versão abaixo (v1 -> v2) para o celular baixar a nova versão.
-const CACHE = 'atrium-v3';
+const CACHE = 'atrium-v4';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).then(() => c.add('../comum/lembre.js').catch(() => {}))).then(() => self.skipWaiting()));   // a biblioteca comum também funciona offline
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('atrium-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
