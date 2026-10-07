@@ -10,6 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Volumen">
+<script src="../comum/lembre.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -1669,6 +1670,7 @@ function load(){
 
 /** Salva e retorna true/false. Em caso de cota cheia, avisa o usuário. */
 function persist(){
+  publicarResumo();
   if (store.backend === 'idb'){ scheduleSave(); return true; }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -3831,6 +3833,61 @@ if (window.matchMedia){
 /* =========================================================
    INICIALIZAÇÃO
    ========================================================= */
+/* =========================================================
+   RESUMO PARA OS OUTROS APPS (contrato lembre-se, ver ../comum/lembre.js)
+   O Atrium, o Ludus e o Audire leem só este resumo, não os dados internos.
+   ========================================================= */
+const resumoThumbs = new Map();
+function resumoThumb(src){
+  if (!src) return Promise.resolve('');
+  if (/^https?:\/\//i.test(src)) return Promise.resolve(src.length < 600 ? src : '');
+  if (!/^data:image\//.test(src)) return Promise.resolve('');
+  const chave = src.length + ':' + src.slice(-40);
+  if (resumoThumbs.has(chave)) return Promise.resolve(resumoThumbs.get(chave));
+  return new Promise(res => {
+    const img = new Image(), done = v => { clearTimeout(t); resumoThumbs.set(chave, v); res(v); };
+    const t = setTimeout(() => done(''), 4000);
+    img.onload = () => {
+      try {
+        const w = 96, h = Math.round(w * (img.height / img.width || 1.45));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = Math.min(h, 160);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        done(cv.toDataURL('image/jpeg', 0.72));
+      } catch { done(''); }
+    };
+    img.onerror = () => done('');
+    img.src = src;
+  });
+}
+async function construirResumo(){
+  if (!state || !Array.isArray(state.items)) return null;
+  const n = v => Number.isFinite(+v) ? +v : 0;
+  const recentes = new Set(state.items.filter(i => i.status === 'done').sort((a, b) => n(b.updatedAt) - n(a.updatedAt)).slice(0, 8).map(i => i.id));
+  const items = [];
+  for (const r of state.items){
+    if (!r || !r.title) continue;
+    const comCapa = r.status === 'in_progress' || recentes.has(r.id);   // miniaturas só do que aparece nos outros apps
+    items.push({
+      id: String(r.id), type: r.type || 'book', title: String(r.title).slice(0, 200), author: String(r.author || '').slice(0, 120),
+      category: String(r.category || '').trim(), status: r.status || 'not_started',
+      current: n(r.progress?.current ?? r.current), total: n(r.progress?.total ?? r.total),
+      notes: Array.isArray(r.notes) ? r.notes.length : 0,
+      sessions: (r.sessions || []).filter(s => s && /^\d{4}-\d{2}-\d{2}$/.test(s.date)).map(s => ({ date: s.date, delta: n(s.delta) })),
+      updatedAt: n(r.updatedAt) || Date.now(),
+      thumb: comCapa ? await resumoThumb(r.cover) : ''
+    });
+  }
+  return { exportedAt: null, items };
+}
+const publicarResumo = window.Lembre ? Lembre.agendar('volumen', construirResumo, 900) : () => {};
+/* link direto vindo de outro app: ../volumen/?abrir=ID */
+function abrirPorLink(){
+  const qs = new URLSearchParams(location.search), id = qs.get('abrir');
+  if (!id) return;
+  try { history.replaceState(history.state, '', location.pathname); } catch {}
+  if (state.items.some(i => i.id === id)) setTimeout(() => openDetail(id), 150);
+}
+
 async function boot(){
   hydrateIcons();
   try { const src = $('#brandLogo').src; $('#favicon').href = src; document.querySelectorAll('.js-emblem').forEach(i => { i.src = src; }); } catch {}
@@ -3871,6 +3928,8 @@ async function boot(){
   backfillYouTubeCovers();
   refreshAfterLoad();
   if (notice) setTimeout(() => toast(notice[0], notice[1]), 400);
+  publicarResumo();
+  abrirPorLink();
 }
 boot();
 </script>

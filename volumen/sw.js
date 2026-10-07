@@ -1,9 +1,9 @@
 // Service worker do Volumen: guarda o app para funcionar offline.
 // Ao atualizar o index.html, aumente a versão abaixo (v1 -> v2) para o celular baixar a nova versão.
-const CACHE = 'volumen-v1';
+const CACHE = 'volumen-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).then(() => c.add('../comum/lembre.js').catch(() => {}))).then(() => self.skipWaiting()));   // a biblioteca comum também funciona offline
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('volumen-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
