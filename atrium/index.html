@@ -418,6 +418,28 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
 .fo-h{font-size:12px;font-weight:700;color:var(--faint);margin-top:8px}
 .fo-o{display:flex;gap:10px;align-items:center;text-align:left;padding:9px 10px;border-radius:12px;border:1px solid var(--line);width:100%}
 .fo-o b{display:block;color:var(--text);font-size:14px;font-weight:600}.fo-o small{font-size:12px;color:var(--faint)}
+
+/* ---------- missões compactas (como o esboço) ---------- */
+.mis-h{font-size:12.5px;font-weight:700;color:var(--faint);margin:14px 2px 0}
+.mis{gap:8px}
+.mr{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+.mr.off{opacity:.5}.mr .mi-t small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr .mi-t b{font-size:15.5px}
+.mi-chk.on{background:#22a35a;border-color:#22a35a}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);flex:none;color:#b9a6ff;background:rgba(124,92,255,.16)}
+.tag.vol{color:var(--vol);background:var(--vol-soft)}.tag.cog{color:var(--cog);background:var(--cog-soft)}.tag.mem{color:#b9a6ff;background:rgba(124,92,255,.16)}.tag.atr{color:var(--atr);background:color-mix(in srgb,var(--atr) 14%,transparent)}.tag.pec{color:#b9a6ff;background:rgba(124,92,255,.16)}
+.grp-a{color:var(--faint);font-size:12px;margin-left:-4px}
+.grp-l{display:flex;flex-direction:column;gap:8px;padding-left:14px;border-left:2px solid var(--line);margin-left:12px}
+.mx{padding:14px 16px;border:1.5px solid var(--atr)}
+.mx-h{display:flex;align-items:center;gap:12px;cursor:pointer}.mx-i{font-size:20px;width:28px;text-align:center;flex:none}
+.mx-h .mi-t small{display:block;font-size:12.5px;color:var(--muted)}
+.mx-t{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}.mx-t b{font-size:32px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}.mx-t span{font-size:13.5px;color:var(--muted)}
+.mx-b{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.mx-b .btn{padding:12px;font-size:14px;border-radius:14px}
+.mx-s{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px}
+.lnk{font-size:12.5px;color:var(--faint);text-decoration:underline;text-underline-offset:3px}
+.pecr .pec-b{flex-basis:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}.pecr .pec-b .btn{padding:11px;font-size:14px;border-radius:14px}
+.pec-n{flex-basis:100%;font-size:12px;color:var(--faint)}
+.mi-add{margin-top:12px}.mi-add .btn{padding:12px;font-size:14px;border-radius:14px}
 </style>
 </head>
 <body>
@@ -1411,6 +1433,7 @@ function fechamento(k) {
     if (!r && est === 'feita' && it.decidido) blocos.push({ categoria: cat, icone: ic, tipo: 'producao', minutos: it.decidido });
   });
   (d.desvios || []).forEach(x => { if (x.minutos > 0) blocos.push({ categoria: x.categoria, icone: x.icone || '', tipo: 'desvio', minutos: x.minutos }); });
+  if (k === today() || d.pecOk) { const P = k === today() ? pecunia() : null; if (P) notas.push(`Pecúnia: gastei ${brl(P.gastoHoje)} (média ${brl(P.media)})${P.salvoHoje ? ', guardei ' + brl(P.salvoHoje) : ''}${d.pecOk ? ', dentro do limite' : ''}.`); }
   const sintese = [String(d.sintese || '').trim(), ...notas].filter(Boolean).join('\n');
   return { preparadoEm: d.fechadoEm, acordou: d.acordou || '', habitos: habitos_, blocos, sintese, virada: !!d.virada };
 }
@@ -1436,29 +1459,84 @@ function folha(html, onAcao) {
 }
 
 /* ---------- tela ---------- */
+let foco = null, grupoHab = false;
+function subtitulo(m, it) {
+  const S = sources(), lk = abrirLink(m), bits = [];
+  if (m.tipo === 'habito') bits.push('Hábito');
+  else if (m.tipo === 'livre') bits.push('Missão livre');
+  else bits.push(m.tipo === 'volumen' ? 'Volumen' : 'Cognitio');
+  if (it.decidido) bits.push(fmtMin(it.decidido) + (m.estimado ? ' hoje' : ''));
+  if (m.estimado) bits.push('total estimado ~' + fmtMin(m.estimado));
+  const ref = m.tipo === 'habito' ? DIA.ligHab[m.habitoId] : m.ref;
+  if (ref && ref.app === 'volumen' && S.volumen) { const v = S.volumen.items.find(x => x.id === ref.id); if (v) { if (m.tipo === 'habito') bits.push(clip(v.title, 28)); if (v.total) bits.push(`${v.type === 'book' ? 'p. ' : ''}${v.current} de ${v.total}`); } }
+  if (ref && ref.app === 'cognitio' && S.cognitio) {
+    if (m.tipo === 'habito') bits.push(clip(ref.title || '', 28));
+    const now = Date.now(); let due = 0;
+    S.cognitio.decks.filter(k => k.areaId === ref.id).forEach(k => k.items.forEach(x => { if (x.seen && x.due && Date.parse(x.due) <= now) due++; }));
+    if (due) bits.push(pl(due, 'pílula vencida', 'pílulas vencidas'));
+  }
+  if (it.estado === 'imprevisto') bits.push('imprevisto' + (it.motivo ? ': ' + it.motivo : ''));
+  if (it.estado === 'adiada') bits.push('passou para amanhã');
+  if (it.estado === 'fora') bits.push('fora de hoje');
+  return bits.filter(Boolean).join(' · ');
+}
+function diaDaMissao(m, k) {
+  if (!m.estimado) return '';
+  const dias = Object.keys(DIA.dias).filter(x => x <= k && DIA.dias[x].itens.some(i => i.mid === m.id && (realMs(i) > 0 || x === k))).length;
+  const dec = (DIA.dias[k].itens.find(i => i.mid === m.id) || {}).decidido || 60;
+  return `dia ${Math.max(1, dias)} de ~${Math.max(1, Math.ceil(m.estimado / dec))}`;
+}
+function checkHtml(it, d, k, ok) {
+  const pode = k === today() && !d.fechadoEm && ativo(it);
+  return pode ? `<button class="mi-chk${ok ? ' on' : ''}" data-m="fiz" data-id="${esc(it.mid)}" aria-label="${ok ? 'Desmarcar' : 'Marcar como feito'}">✓</button>`
+    : `<span class="mi-chk${ok ? ' on' : ''}" aria-hidden="true">${ok ? '✓' : ''}</span>`;
+}
 function itemHtml(it, d, k) {
   const m = missao(it.mid); if (!m) return '';
   const [cls, lbl] = CHIP[m.tipo] || CHIP.livre, isHoje = k === today(), fechado = !!d.fechadoEm;
   const rodando = isHoje && d.timer && d.timer.mid === it.mid;
-  const r = realMs(it) + (rodando ? Date.now() - d.timer.de : 0), rm = Math.round(r / 60000);
-  const est = it.estado, fin = estadoFinal(it), pct = it.decidido ? Math.min(100, Math.round(rm / it.decidido * 100)) : 0;
-  const lk = abrirLink(m), tot = m.estimado ? feitoTotal(m.id) : 0;
-  const sub = [it.decidido ? fmtMin(it.decidido) + ' hoje' : '', lk && lk.title ? clip(lk.title, 34) : '', m.estimado ? `${fmtMin(tot)} de ~${fmtMin(m.estimado)} na missão` : ''].filter(Boolean).join(' · ');
-  const tag = est === 'imprevisto' ? `<p class="mi-note">Imprevisto${it.motivo ? ': ' + esc(it.motivo) : ''}</p>` : est === 'adiada' ? `<p class="mi-note">Passou para amanhã${it.motivo ? ': ' + esc(it.motivo) : ''}</p>` : '';
-  const ok = fin === 'feita' && est !== 'imprevisto';
-  const acts = !isHoje || fechado || !ativo(it) ? '' : `<div class="mi-act">
-      ${rodando ? `<button class="btn primary" data-m="pausar" data-id="${esc(it.mid)}">❚❚ Pausar</button>` : `<button class="btn" data-m="iniciar" data-id="${esc(it.mid)}">▶ Começar</button>`}
-      <button class="btn sm" data-m="mais15" data-id="${esc(it.mid)}" title="Fiz sem cronômetro">+15 min</button>
-      ${lk ? `<a class="btn sm" href="${lk.href}">${lk.txt}</a>` : ''}
-      <a class="btn sm" href="${AUDIRE_URL}?gravar=1" title="Gravar um relato de campo no Audire">🎙 Relato</a></div>`;
-  return `<article class="card mi${rodando ? ' run' : ''}${ok ? ' ok' : ''}${!ativo(it) ? ' off' : ''}">
-    <div class="mi-top">
-      ${isHoje && !fechado && ativo(it) ? `<button class="mi-chk${ok ? ' on' : ''}" data-m="fiz" data-id="${esc(it.mid)}" aria-label="${ok ? 'Desmarcar' : 'Marcar como feito'}">✓</button>` : `<span class="mi-chk${ok ? ' on' : ''}" aria-hidden="true">${ok ? '✓' : ''}</span>`}
-      <div class="mi-t"><b>${esc(m.icone ? m.icone + ' ' : '')}${esc(m.titulo)}</b><small><span class="chip ${cls}">${lbl}</span> ${esc(sub)}</small></div>
-      ${fechado ? '' : `<button class="mi-more" data-m="menu" data-id="${esc(it.mid)}" aria-label="Opções de ${esc(m.titulo)}">⋯</button>`}
-    </div>
-    ${isHoje && ativo(it) ? `<div class="mi-bar"><i style="width:${pct}%"></i></div><p class="mi-time">${rodando ? `<b data-tick>${relogio(r)}</b> rodando desde ${hm(d.timer.de)}` : rm ? `${fmtMin(rm)} feitos` : 'Ainda não começou'}${it.decidido ? ` de ${fmtMin(it.decidido)}` : ''}</p>` : ''}
-    ${tag}${acts}</article>`;
+  const ok = estadoFinal(it) === 'feita' && it.estado !== 'imprevisto';
+  const tagApp = m.tipo === 'habito' ? (DIA.ligHab[m.habitoId] ? (DIA.ligHab[m.habitoId].app === 'volumen' ? ['vol', 'Volumen'] : ['cog', 'Cognitio']) : ['mem', 'Memento']) : [cls, lbl];
+  const aberto = isHoje && !fechado && ativo(it) && (rodando || foco === it.mid);
+  if (!aberto) return `<article class="card mr${ok ? ' ok' : ''}${!ativo(it) ? ' off' : ''}" data-m="foco" data-id="${esc(it.mid)}">
+      ${checkHtml(it, d, k, ok)}<div class="mi-t"><b>${esc(m.icone ? m.icone + ' ' : '')}${esc(m.titulo)}</b><small>${esc(subtitulo(m, it))}</small></div>
+      <span class="tag ${tagApp[0]}">${tagApp[1]}</span></article>`;
+  const r = realMs(it) + (rodando ? Date.now() - d.timer.de : 0), rm = Math.round(r / 60000), lk = abrirLink(m);
+  const pct = it.decidido ? Math.min(100, Math.round(rm / it.decidido * 100)) : 0, dm = diaDaMissao(m, k);
+  return `<article class="card mx${rodando ? ' run' : ''}">
+    <div class="mx-h" data-m="foco" data-id="${esc(it.mid)}"><span class="mx-i">${esc(m.icone || (m.tipo === 'habito' ? '◎' : m.tipo === 'volumen' ? '📖' : m.tipo === 'cognitio' ? '🧠' : '◆'))}</span>
+      <div class="mi-t"><b>${esc(m.titulo)}</b><small>${esc(subtitulo(m, it))}</small></div>
+      <button class="mi-more" data-m="menu" data-id="${esc(it.mid)}" aria-label="Opções de ${esc(m.titulo)}">⋯</button></div>
+    <div class="mx-t"><b ${rodando ? 'data-tick' : ''}>${relogio(r)}</b><span>${dm || (it.decidido ? 'de ' + fmtMin(it.decidido) : '')}</span></div>
+    <div class="mi-bar"><i style="width:${pct}%"></i></div>
+    <div class="mx-b"><a class="btn" href="${AUDIRE_URL}?gravar=1">🎙 Relato de campo</a>
+      ${rodando ? `<button class="btn primary" data-m="pausar" data-id="${esc(it.mid)}">❚❚ Pausar</button>` : `<button class="btn primary" data-m="iniciar" data-id="${esc(it.mid)}">▶ ${rm ? 'Continuar' : 'Começar'}</button>`}</div>
+    <div class="mx-s"><button class="lnk" data-m="mais15" data-id="${esc(it.mid)}">+15 min sem cronômetro</button>${lk ? `<a class="lnk" href="${lk.href}">${lk.txt}</a>` : ''}<button class="lnk" data-m="fiz" data-id="${esc(it.mid)}">${ok ? 'Desmarcar' : 'Marcar feito'}</button></div>
+  </article>`;
+}
+function grupoHabitosHtml(d, k) {
+  const hs = d.itens.filter(i => String(i.mid).startsWith('h:'));
+  if (!hs.length) return '';
+  const vivos = hs.filter(ativo), feitos = vivos.filter(i => estadoFinal(i) === 'feita' && i.estado !== 'imprevisto').length;
+  const rodando = k === today() && d.timer && String(d.timer.mid).startsWith('h:');
+  const abre = grupoHab || rodando || (foco && String(foco).startsWith('h:'));
+  const tudo = vivos.length && feitos === vivos.length;
+  return `<article class="card mr grp${tudo ? ' ok' : ''}" data-m="grupo">
+      <span class="mi-chk${tudo ? ' on' : ''}" aria-hidden="true">${tudo ? '✓' : ''}</span>
+      <div class="mi-t"><b>Hábitos ideais</b><small>Memento · ${feitos} de ${vivos.length}${rodando ? ' · um em andamento' : ''}</small></div>
+      <span class="tag mem">Memento</span><span class="grp-a">${abre ? '▴' : '▾'}</span></article>
+    ${abre ? `<div class="grp-l">${hs.map(i => itemHtml(i, d, k)).join('')}</div>` : ''}`;
+}
+function pecuniaHtml(d) {
+  const P = pecunia(); if (!P) return '';
+  const ok = !!d.pecOk;
+  return `<article class="card mr pecr${ok ? ' ok' : ''}">
+      ${d.fechadoEm ? `<span class="mi-chk${ok ? ' on' : ''}" aria-hidden="true">${ok ? '✓' : ''}</span>` : `<button class="mi-chk${ok ? ' on' : ''}" data-m="pecok" aria-label="Marcar o dia como dentro do limite">✓</button>`}
+      <div class="mi-t"><b>Gastar menos, guardar mais</b><small>Hoje ${brl(P.gastoHoje)} · sua média ${brl(P.media)}${P.salvoHoje ? ' · guardado ' + brl(P.salvoHoje) : ''}</small></div>
+      <span class="tag pec">Pecúnia</span>
+      <div class="pec-b"><a class="btn" href="${MEM_URL}?ficha=hoje">Escolha consciente</a><a class="btn" href="${MEM_URL}?ficha=hoje">Registrar gasto</a></div>
+      ${P.meta ? `<p class="pec-n">${esc(P.meta.name)}: ${brl(P.meta.saved)} de ${brl(P.meta.value)}${P.hora && P.gastoHoje ? ` · o gasto de hoje custou ${fmtMin(P.gastoHoje / P.hora * 60)} da sua vida` : ''}</p>` : ''}
+    </article>`;
 }
 function renderHoje(S) {
   const k = diaKey(), d = dia(k), isHoje = k === today(), m = S.memento;
@@ -1487,11 +1565,18 @@ function renderHoje(S) {
   const ontemAberto = ontem && !ontem.fechadoEm && ontem.itens.some(i => realMs(i) > 0 || i.estado);
   const seg = `<div class="seg dseg">${diaSel === 'ontem' || ontemAberto ? `<button data-m="ver" data-v="ontem" aria-pressed="${diaSel === 'ontem'}">Ontem</button>` : ''}<button data-m="ver" data-v="hoje" aria-pressed="${isHoje}">Hoje</button><button data-m="ver" data-v="amanha" aria-pressed="${diaSel === 'amanha'}">Amanhã</button></div>`;
   const avisoOntem = isHoje && ontemAberto && h < 12 ? `<button class="card weekline fim-b" data-m="ver" data-v="ontem"><span>Ontem</span><b>O dia de ontem ainda não foi fechado. Fechar agora</b><em>›</em></button>` : '';
-  const itens = d.itens.map(i => itemHtml(i, d, k)).join('') || `<p class="muted mi-empty">${plano() ? 'Nenhuma missão ainda.' : 'Abra o Memento uma vez para os hábitos ideais aparecerem aqui.'}</p>`;
-  const add = d.fechadoEm ? '' : `<div class="mi-add"><button class="btn" data-m="add">＋ Missão</button>${isHoje ? '<button class="btn" data-m="desvio">Perdi tempo</button>' : ''}</div>`;
+  const rodaMid = isHoje && d.timer ? d.timer.mid : null;
+  const outros = d.itens.filter(i => !String(i.mid).startsWith('h:'));
+  outros.sort((a, b) => (b.mid === rodaMid) - (a.mid === rodaMid) || ativo(b) - ativo(a));
+  const topo = rodaMid && !String(rodaMid).startsWith('h:') ? outros.filter(i => i.mid === rodaMid) : [];
+  const resto = outros.filter(i => !topo.includes(i));
+  const lista = topo.map(i => itemHtml(i, d, k)).join('') + grupoHabitosHtml(d, k) + resto.map(i => itemHtml(i, d, k)).join('') + (isHoje ? pecuniaHtml(d) : '');
+  const itens = lista || `<p class="muted mi-empty">${plano() ? 'Nenhuma missão ainda.' : 'Abra o Memento uma vez para os hábitos ideais aparecerem aqui.'}</p>`;
+  const podeF = k <= today() && !d.fechadoEm && d.itens.length && !fechando;
+  const add = d.fechadoEm ? '' : `<div class="mi-add"><button class="btn" data-m="add">＋ Missão</button>${podeF ? '<button class="btn" data-m="fechar">☾ Fechar o dia</button>' : ''}</div>`;
 
   const P = isHoje ? pecunia() : null;
-  const pec = P ? `<section class="card pec"><div class="pec-h"><p class="eyebrow">Pecúnia</p><a class="btn sm" href="${MEM_URL}?ficha=hoje">Abrir no Memento</a></div>
+  const pec = '', _pecAntigo = P ? `<section class="card pec"><div class="pec-h"><p class="eyebrow">Pecúnia</p><a class="btn sm" href="${MEM_URL}?ficha=hoje">Abrir no Memento</a></div>
     <div class="pec-g"><div><small>Gasto hoje</small><b class="${P.media && P.gastoHoje > P.media ? 'bad' : ''}">${brl(P.gastoHoje)}</b><small>média ${brl(P.media)}</small></div>
     <div><small>Guardado hoje</small><b class="good">${brl(P.salvoHoje)}</b><small>escolhas conscientes</small></div></div>
     ${P.hora && P.gastoHoje ? `<p class="bd-n">O gasto de hoje custou ${fmtMin(P.gastoHoje / P.hora * 60)} da sua vida.</p>` : ''}
@@ -1504,11 +1589,10 @@ function renderHoje(S) {
   if (podeFechar && d.fechadoEm) fim = `<section class="card fim done"><p class="eyebrow">${isHoje ? 'Dia fechado' : 'Ontem fechado'} às ${hm(d.fechadoEm)}</p><p>O Memento vai oferecer preencher a Ficha de Consciência com o que foi medido aqui. Lá você revisa e registra a verdade.</p>
       <div class="act-row"><a class="btn primary" href="${MEM_URL}?ficha=${k}">Revisar no Memento</a>${isHoje ? '<button class="btn" data-m="ver" data-v="amanha">Planejar amanhã</button>' : '<button class="btn" data-m="ver" data-v="hoje">Ir para hoje</button>'}<button class="btn sm" data-m="reabrir">Reabrir</button></div></section>`;
   else if (podeFechar && fechando) fim = fechamentoHtml(d);
-  else if (podeFechar && d.itens.length) fim = `<button class="card weekline fim-b" data-m="fechar"><span>Lembrar-se</span><b>Fechar o dia: o que você decidiu e o que aconteceu</b><em>›</em></button>`;
 
   const wk = weekKey();
   const wkLine = `<button class="card weekline" data-go="semana"><span>Semana ${wk.split('-S')[1]}</span><b>Ver a semana</b><em>›</em></button>`;
-  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${avisoOntem}${acordou}${seg}${budget}<div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
+  view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${avisoOntem}${acordou}${seg}${budget}<p class="mis-h">Missões de ${isHoje ? 'hoje' : k < today() ? 'ontem' : 'amanhã'}</p><div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
   if (fechando && podeFechar) { const ta = $('#fxSint'); ta && ta.addEventListener('input', () => { d.sintese = ta.value; salvarDia(); }); }
 }
 function fechamentoHtml(d) {
@@ -1545,10 +1629,12 @@ function folhaAdd() {
       <label>A missão toda leva<select id="foE"><option value="0">Cabe em hoje</option>${[120, 180, 240, 360, 480, 600, 900, 1200].map(v => `<option value="${v}">~${fmtMin(v)}</option>`).join('')}</select></label></div>
       <label>Card no Memento<select id="foC"><option value="">O próprio nome da missão</option>${cards.map(c => `<option value="${esc(c.name)}">${esc((c.icon ? c.icon + ' ' : '') + c.name)}</option>`).join('')}</select></label>
       <button class="btn primary" data-s="livre">Adicionar missão</button></div>
+    ${k === today() ? '<button class="btn" data-s="desvio">Perdi tempo (registrar um desvio)</button>' : ''}
     ${abertas.length ? `<p class="fo-h">Missões em aberto</p>${abertas.map(m => opt('aberta', m.id, m.icone || '◆', m.titulo, m.estimado ? `${fmtMin(feitoTotal(m.id))} de ~${fmtMin(m.estimado)}` : '')).join('')}` : ''}
     ${vols.length ? `<p class="fo-h">Do Volumen, em andamento</p>${vols.slice(0, 8).map(i => opt('vol', i.id, TYPE_ICON[i.type] || '📖', i.title, i.author || '')).join('')}` : ''}
     ${areas.length ? `<p class="fo-h">Do Cognitio</p>${areas.map(a => opt('cog', a.id, (flds[a.fieldId] && flds[a.fieldId].icon) || '🧠', a.title, [flds[a.fieldId] && flds[a.fieldId].title, +a.status === 1 ? 'em estudo' : 'por começar'].filter(Boolean).join(' · '))).join('')}` : ''}`,
   (acao, b) => {
+    if (acao === 'desvio') { setTimeout(folhaDesvio, 50); return; }
     let m = null, dec = +$('#foD').value || 60;
     if (acao === 'livre') {
       const t = $('#foT').value.trim(); if (!t) { toast('Dê um nome à missão.', true); $('#foT').focus(); return false; }
@@ -1640,7 +1726,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-m]'); if (!b || b.closest('dialog')) return;
   const a = b.dataset.m, id = b.dataset.id, d = dia(diaKey()), it = id ? d.itens.find(i => i.mid === id) : null;
   if (a === 'ver') { diaSel = b.dataset.v; fechando = false; tab = 'hoje'; render(); window.scrollTo({ top: 0 }); return; }
-  if (a === 'iniciar') return iniciar(id);
+  if (a === 'iniciar') { foco = id; return iniciar(id); }
   if (a === 'pausar') { pararTimer(dia(today())); salvarDia(); render(); return; }
   if (a === 'mais15' && it) { it.extra = (it.extra || 0) + 15; if (it.estado === 'nao') it.estado = null; salvarDia(); render(); toast('+15 min anotados'); return; }
   if (a === 'fiz' && it) {
@@ -1650,6 +1736,9 @@ document.addEventListener('click', e => {
     salvarDia(); render(); return;
   }
   if (a === 'menu') return folhaMenu(id);
+  if (a === 'foco') { foco = foco === id ? null : id; render(); return; }
+  if (a === 'grupo') { grupoHab = !grupoHab; if (!grupoHab && foco && String(foco).startsWith('h:')) foco = null; render(); return; }
+  if (a === 'pecok') { d.pecOk = !d.pecOk; salvarDia(); render(); return; }
   if (a === 'add') return folhaAdd();
   if (a === 'desvio') return folhaDesvio();
   if (a === 'rmdesvio') { d.desvios.splice(+b.dataset.i, 1); salvarDia(); render(); return; }
