@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0e12">
+<title>Arca — backup de todos os apps</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0e12'/%3E%3Crect x='12' y='24' width='40' height='26' rx='3' fill='%23b8945a'/%3E%3Cpath d='M12 24c0-8 9-12 20-12s20 4 20 12z' fill='%23d4b47a'/%3E%3Crect x='28' y='30' width='8' height='10' rx='2' fill='%230d0e12'/%3E%3C/svg%3E">
+<script>
+try { const t = localStorage.getItem('arca.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+</script>
+<style>
+:root{
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"EB Garamond",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-xl:22px; --r-lg:16px; --r-md:12px; --pill:999px; --ease:cubic-bezier(.2,.8,.2,1);
+  --mem:#d9705e; --vol:#6b9be0; --cog:#e3a940; --aud:#a487e6; --atr:#4fb3a8; --lud:#8fa9e6;
+}
+html[data-theme="dark"]{
+  --bg:#0d0e12; --card:#161821; --card-2:#1b1e28; --card-3:#232734; --line:#242835; --line-2:#333949;
+  --text:#ece6d8; --muted:#a3a19a; --faint:#6b6f78; --gold:#d4b47a; --gold-soft:rgba(212,180,122,.12);
+  --ok:#58c49a; --warn:#e3a940; --danger:#ff6b5e; --backdrop:rgba(4,5,7,.72); --shadow:none;
+}
+html[data-theme="light"]{
+  --bg:#f5f0e6; --card:#fff; --card-2:#faf7f1; --card-3:#efe9dd; --line:#e7e0d2; --line-2:#d6ccba;
+  --text:#1f1b14; --muted:#5e584d; --faint:#958d7f; --gold:#8a6526; --gold-soft:rgba(138,101,38,.10);
+  --ok:#1f8a63; --warn:#a8760a; --danger:#c8392f; --backdrop:rgba(40,32,20,.35);
+  --shadow:0 1px 2px rgba(60,45,20,.05),0 10px 24px -16px rgba(60,45,20,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--muted);font-family:var(--sans);font-size:15px;line-height:1.5;min-height:100vh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:var(--gold)}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:6px}
+.wrap{max-width:640px;margin:0 auto;padding:24px 18px 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:24px}
+.top h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,10vw,52px);line-height:.95;color:var(--text);letter-spacing:-.02em}
+.top h1 span{color:var(--gold)}
+.top p{font-family:var(--serif);font-style:italic;font-size:16px;margin-top:8px}
+.icon-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);color:var(--text);flex-shrink:0}
+.icon-btn svg{width:19px;height:19px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--faint);text-decoration:none;margin-bottom:14px}
+.back:hover{color:var(--text)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:20px}
+.card+.card{margin-top:14px}
+.card h2{font-family:var(--serif);font-weight:500;font-size:24px;color:var(--text);margin-bottom:4px}
+.card .sub{font-size:13.5px;color:var(--faint);margin-bottom:14px}
+.status{display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--card-2);margin-bottom:14px}
+.status .dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--faint)}
+.status.ok .dot{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
+.status.warn .dot{background:var(--warn);box-shadow:0 0 0 4px color-mix(in srgb,var(--warn) 20%,transparent)}
+.status b{display:block;color:var(--text);font-size:15px}
+.status small{font-size:13px}
+.apps{list-style:none;display:flex;flex-direction:column;gap:6px;margin:4px 0 16px}
+.apps li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);background:var(--card-2);border:1px solid var(--line);font-size:14px}
+.apps li i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c,var(--faint))}
+.apps li b{color:var(--text);font-weight:600;flex:1}
+.apps li span{font-size:12.5px;color:var(--faint);text-align:right}
+.apps li.off{opacity:.55}
+.apps label{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer}
+.apps input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:var(--pill);border:1px solid var(--line);background:var(--card);font-size:14.5px;font-weight:600;color:var(--text)}
+.btn:hover{border-color:var(--line-2)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:#17130c}
+html[data-theme="light"] .btn.primary{color:#fff}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:progress}
+.btn svg{width:17px;height:17px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .btn{flex:1;min-width:150px}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text);margin:4px 0 12px;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--gold);flex:none}
+.check small{display:block;color:var(--faint);font-size:12.5px}
+.pw{display:flex;flex-direction:column;gap:8px;margin:-4px 0 14px}
+.pw input{width:100%;padding:11px 13px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--card-2);color:var(--text);font-size:15px}
+.pw input:focus{outline:none;border-color:var(--gold)}
+.note{font-size:12.5px;line-height:1.5;color:var(--faint)}
+.note b{color:var(--muted)}
+.warnbox{border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 9%,transparent);border-radius:var(--r-md);padding:11px 13px;font-size:13px;color:var(--muted);margin-bottom:14px}
+.progress{height:6px;border-radius:var(--pill);background:var(--card-3);overflow:hidden;margin:12px 0 6px}
+.progress i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.msg{font-size:13px;color:var(--muted);min-height:1.2em}
+.msg.err{color:var(--danger)} .msg.ok{color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0));transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;padding:10px 16px;border-radius:var(--pill);transition:.25s var(--ease);pointer-events:none;max-width:90vw;text-align:center;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--danger);color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Todos os apps</a>
+  <header class="top">
+    <div><h1>Arca<span>.</span></h1><p>O backup de todos os seus apps, num arquivo só</p></div>
+    <button class="icon-btn" id="themeBtn" aria-label="Alternar tema"></button>
+  </header>
+
+  <section class="card" aria-labelledby="hSave">
+    <h2 id="hSave">Guardar</h2>
+    <p class="sub">Copia tudo o que os apps guardam neste aparelho: textos, fichas, anexos, áudios e preferências.</p>
+    <div class="status" id="status"><span class="dot"></span><div><b id="stTitle">Verificando…</b><small id="stSub"></small></div></div>
+    <ul class="apps" id="appsNow" aria-label="O que existe neste aparelho"></ul>
+    <label class="check"><input type="checkbox" id="usePw"><span>Proteger com senha<small>O arquivo fica cifrado. Sem a senha, ninguém consegue ler, nem você: não há como recuperar uma senha esquecida.</small></span></label>
+    <div class="pw" id="pwBox" hidden>
+      <input type="password" id="pw1" placeholder="Senha" autocomplete="new-password">
+      <input type="password" id="pw2" placeholder="Repita a senha" autocomplete="new-password">
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btnSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Baixar backup</button>
+      <button class="btn" id="btnShare" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Enviar para o Drive</button>
+    </div>
+    <div class="progress" id="pSave" hidden><i></i></div>
+    <p class="msg" id="mSave"></p>
+    <p class="note">Guarde o arquivo num lugar privado, como o seu Google Drive. <b>Sem senha, ele pode ser lido por quem tiver acesso a ele.</b></p>
+  </section>
+
+  <section class="card" aria-labelledby="hRestore">
+    <h2 id="hRestore">Restaurar</h2>
+    <p class="sub">Volta os apps ao estado de um backup da Arca. Use num aparelho novo ou depois de perder dados.</p>
+    <div class="warnbox"><b>Antes de restaurar, feche os outros apps</b> (Memento, Volumen, Cognitio, Audire, Atrium e Ludus). Abertos, eles podem gravar por cima do que a Arca restaurar.</div>
+    <input type="file" id="file" accept=".json,application/json,text/json,text/plain" hidden>
+    <button class="btn" id="btnPick" style="width:100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Escolher arquivo de backup</button>
+    <div id="restoreBox" hidden>
+      <p class="sub" id="bkInfo" style="margin:16px 0 8px"></p>
+      <div class="pw" id="pwInBox" hidden><input type="password" id="pwIn" placeholder="Senha deste backup" autocomplete="current-password"><button class="btn" id="btnUnlock">Abrir backup</button></div>
+      <ul class="apps" id="appsBk" aria-label="O que restaurar"></ul>
+      <label class="check"><input type="checkbox" id="safety" checked><span>Baixar antes uma cópia do estado atual<small>Se algo der errado, você ainda tem como voltar.</small></span></label>
+      <button class="btn primary" id="btnRestore" style="width:100%">Restaurar os apps marcados</button>
+    </div>
+    <div class="progress" id="pRest" hidden><i></i></div>
+    <p class="msg" id="mRest"></p>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LAST_KEY = 'arca.ultimo';
+const fmtMB = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(b > 104857600 ? 0 : 1).replace('.', ',') + ' MB';
+function toast(m, err) { const t = $('#toast'); t.textContent = m; t.className = 'toast show' + (err ? ' err' : ''); clearTimeout(toast.t); toast.t = setTimeout(() => t.className = 'toast', 3200); }
+function quando(t) {
+  const d = Math.floor((Date.now() - t) / 864e5);
+  return d <= 0 ? 'hoje' : d === 1 ? 'ontem' : `há ${d} dias`;
+}
+
+/* =============================================================
+   QUAL APP É DONO DE CADA DADO
+   Só serve para mostrar e escolher o que restaurar: a cópia em si
+   é do armazenamento inteiro, sem depender do formato de cada app.
+   ============================================================= */
+const APPS = [
+  { id: 'memento',  nome: 'Memento',  cor: 'var(--mem)', dbs: ['memento'],        ls: k => k.startsWith('memento_') || k.startsWith('memento.') },
+  { id: 'volumen',  nome: 'Volumen',  cor: 'var(--vol)', dbs: ['volumen'],        ls: k => k === 'my_mediatheca_v2' || k === 'mediaList' || k.startsWith('volumen') || k === 'theme' },
+  { id: 'cognitio', nome: 'Cognitio', cor: 'var(--cog)', dbs: ['cognitio-files'], ls: k => k.startsWith('cognitio') },
+  { id: 'audire',   nome: 'Audire',   cor: 'var(--aud)', dbs: ['audire'],         ls: k => k.startsWith('audire') },
+  { id: 'atrium',   nome: 'Atrium',   cor: 'var(--atr)', dbs: ['atrium'],         ls: k => k.startsWith('atrium') },
+  { id: 'ludus',    nome: 'Ludus',    cor: 'var(--lud)', dbs: ['ludus'],          ls: k => k.startsWith('ludus') },
+];
+const OUTROS = { id: 'outros', nome: 'Outros ajustes', cor: 'var(--faint)', dbs: [], ls: () => true };
+const appOfKey = k => APPS.find(a => a.ls(k)) || OUTROS;
+const appOfDb = n => APPS.find(a => a.dbs.includes(n)) || OUTROS;
+const SKIP_LS = k => k === LAST_KEY || k === 'arca.theme';          // o próprio registro da Arca não entra no backup
+
+/* =============================================================
+   INDEXEDDB: ler e escrever qualquer banco, sem conhecer o formato
+   ============================================================= */
+const req = r => new Promise((ok, no) => { r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+const txDone = tx => new Promise((ok, no) => { tx.oncomplete = () => ok(); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error || new Error('abortada')); });
+async function dbNames() {
+  if (indexedDB.databases) { try { return (await indexedDB.databases()).map(d => d.name).filter(Boolean); } catch (e) {} }
+  return APPS.flatMap(a => a.dbs);                                    // navegador sem a lista: tenta os bancos conhecidos
+}
+function openExisting(name) {
+  return new Promise(res => {
+    let r; try { r = indexedDB.open(name); } catch (e) { return res(null); }
+    r.onupgradeneeded = () => { try { r.transaction.abort(); } catch (e) {} };   // nunca cria um banco que não existia
+    r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+    r.onblocked = () => res(null);
+  });
+}
+
+/* Blobs, arquivos e datas viram texto no JSON e voltam ao que eram na restauração */
+function blobB64(b) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(r.error); r.readAsDataURL(b); }); }
+function b64Blob(s, type) { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: type || '' }); }
+async function enc(v, stats) {
+  if (v === null || typeof v !== 'object') return v;
+  if (v instanceof Blob) {
+    stats.bytes += v.size; stats.blobs++;
+    const o = { __arca: 'blob', type: v.type, data: await blobB64(v) };
+    if (typeof File !== 'undefined' && v instanceof File) { o.name = v.name; o.lastModified = v.lastModified; }
+    return o;
+  }
+  if (v instanceof Date) return { __arca: 'date', v: v.toISOString() };
+  if (v instanceof ArrayBuffer) return { __arca: 'buf', data: await blobB64(new Blob([v])) };
+  if (ArrayBuffer.isView(v)) return { __arca: 'view', kind: v.constructor.name, data: await blobB64(new Blob([v])) };
+  if (Array.isArray(v)) { const out = []; for (const x of v) out.push(await enc(x, stats)); return out; }
+  const out = {}; for (const k of Object.keys(v)) out[k] = await enc(v[k], stats); return out;
+}
+function dec(v) {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(dec);
+  if (v.__arca === 'blob') { const b = b64Blob(v.data, v.type); return v.name != null && typeof File !== 'undefined' ? new File([b], v.name, { type: v.type, lastModified: v.lastModified || Date.now() }) : b; }
+  if (v.__arca === 'date') return new Date(v.v);
+  if (v.__arca === 'buf') { const bin = atob(v.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
+  if (v.__arca === 'view') { const bin = atob(v.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); const C = self[v.kind]; return C && C !== Uint8Array ? new C(u.buffer) : u; }
+  const out = {}; for (const k of Object.keys(v)) out[k] = dec(v[k]); return out;
+}
+
+async function dumpDb(name, stats) {
+  const db = await openExisting(name); if (!db) return null;
+  const out = { name, version: db.version, stores: [] };
+  try {
+    for (const sn of [...db.objectStoreNames]) {
+      const tx = db.transaction(sn, 'readonly'), st = tx.objectStore(sn);
+      const [keys, vals] = await Promise.all([req(st.getAllKeys()), req(st.getAll())]);
+      const records = [];
+      for (let i = 0; i < keys.length; i++) records.push([await enc(keys[i], stats), await enc(vals[i], stats)]);
+      out.stores.push({ name: sn, keyPath: st.keyPath, autoIncrement: st.autoIncrement,
+        indexes: [...st.indexNames].map(n => { const ix = st.index(n); return { name: n, keyPath: ix.keyPath, unique: ix.unique, multiEntry: ix.multiEntry }; }),
+        records });
+      stats.records += records.length;
+    }
+  } finally { db.close(); }
+  return out;
+}
+
+/* =============================================================
+   GUARDAR
+   ============================================================= */
+async function snapshot(onStep) {
+  const stats = { bytes: 0, blobs: 0, records: 0 };
+  const ls = {};
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!SKIP_LS(k)) ls[k] = localStorage.getItem(k); }
+  const names = await dbNames(), dbs = [];
+  for (let i = 0; i < names.length; i++) { onStep && onStep(i / Math.max(1, names.length), names[i]); const d = await dumpDb(names[i], stats); if (d) dbs.push(d); }
+  onStep && onStep(1);
+  return { app: 'lembre-se', tipo: 'arca', versao: 1, criadoEm: new Date().toISOString(), origem: location.origin, localStorage: ls, indexedDB: dbs, stats };
+}
+
+/* senha opcional: AES-GCM com chave derivada da senha (PBKDF2) */
+const te = new TextEncoder(), td = new TextDecoder();
+async function keyFrom(pw, salt) {
+  const base = await crypto.subtle.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+const u8b64 = u => blobB64(new Blob([u]));
+const b64u8 = s => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+async function lock(json, pw) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyFrom(pw, salt), te.encode(json));
+  return JSON.stringify({ app: 'lembre-se', tipo: 'arca-cifrada', versao: 1, criadoEm: new Date().toISOString(), salt: await u8b64(salt), iv: await u8b64(iv), data: await u8b64(new Uint8Array(ct)) });
+}
+async function unlock(box, pw) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64u8(box.iv) }, await keyFrom(pw, b64u8(box.salt)), b64u8(box.data));
+  return JSON.parse(td.decode(pt));
+}
+
+function fileName(tag) { const d = new Date(), p = n => String(n).padStart(2, '0'); return `arca-${tag ? tag + '-' : ''}${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`; }
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+}
+async function buildFile(pw, tag, bar) {
+  const snap = await snapshot((f, n) => { if (bar) bar.style.width = Math.round(f * 85) + '%'; if (n) $('#mSave').textContent = `Copiando ${appOfDb(n).nome}…`; });
+  const json = JSON.stringify(snap);
+  const text = pw ? await lock(json, pw) : json;
+  if (bar) bar.style.width = '100%';
+  return { file: new File([text], fileName(tag), { type: 'application/json' }), snap };
+}
+function readPw() {
+  if (!$('#usePw').checked) return '';
+  const a = $('#pw1').value, b = $('#pw2').value;
+  if (a.length < 6) throw new Error('Use uma senha de pelo menos 6 caracteres.');
+  if (a !== b) throw new Error('As duas senhas não são iguais.');
+  return a;
+}
+async function save(share) {
+  let pw; try { pw = readPw(); } catch (e) { $('#mSave').className = 'msg err'; $('#mSave').textContent = e.message; return; }
+  const btns = [$('#btnSave'), $('#btnShare')]; btns.forEach(b => b.disabled = true);
+  const pb = $('#pSave'), bar = pb.querySelector('i'); pb.hidden = false; bar.style.width = '2%';
+  $('#mSave').className = 'msg'; $('#mSave').textContent = 'Preparando…';
+  try {
+    const { file, snap } = await buildFile(pw, '', bar);
+    if (share) {
+      try { await navigator.share({ files: [file], title: 'Backup da Arca' }); }
+      catch (e) { if (e && e.name === 'AbortError') { $('#mSave').textContent = 'Envio cancelado.'; return; } throw e; }
+    } else download(file, file.name);
+    try { localStorage.setItem(LAST_KEY, JSON.stringify({ em: Date.now(), tamanho: file.size, cifrado: !!pw })); } catch (e) {}
+    $('#mSave').className = 'msg ok';
+    $('#mSave').textContent = `Backup ${share ? 'enviado' : 'baixado'}: ${fmtMB(file.size)}, ${snap.stats.records} registros${snap.stats.blobs ? `, ${snap.stats.blobs} arquivos e áudios` : ''}${pw ? ', protegido com senha' : ''}.`;
+    renderStatus();
+  } catch (e) {
+    console.error(e); $('#mSave').className = 'msg err'; $('#mSave').textContent = 'Não foi possível criar o backup: ' + (e && e.message || e);
+  } finally { btns.forEach(b => b.disabled = false); setTimeout(() => { pb.hidden = true; }, 600); }
+}
+
+/* =============================================================
+   RESTAURAR
+   ============================================================= */
+let loaded = null;                                                    // backup aberto (já sem a senha)
+function deleteDb(name) {
+  return new Promise((ok, no) => {
+    const r = indexedDB.deleteDatabase(name);
+    r.onsuccess = () => ok(); r.onerror = () => no(r.error);
+    r.onblocked = () => no(Object.assign(new Error('blocked'), { blocked: true }));
+  });
+}
+function createDb(d) {
+  return new Promise((ok, no) => {
+    const r = indexedDB.open(d.name, Math.max(1, d.version || 1));
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      d.stores.forEach(s => {
+        if (db.objectStoreNames.contains(s.name)) return;
+        const st = db.createObjectStore(s.name, { ...(s.keyPath != null ? { keyPath: s.keyPath } : {}), autoIncrement: !!s.autoIncrement });
+        (s.indexes || []).forEach(ix => st.createIndex(ix.name, ix.keyPath, { unique: !!ix.unique, multiEntry: !!ix.multiEntry }));
+      });
+    };
+    r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error);
+    r.onblocked = () => no(Object.assign(new Error('blocked'), { blocked: true }));
+  });
+}
+async function restoreDb(d) {
+  let db = await openExisting(d.name);
+  const same = db && db.version === d.version && d.stores.every(s => db.objectStoreNames.contains(s.name));
+  if (!same) { if (db) db.close(); await deleteDb(d.name); db = await createDb(d); }   // esquema diferente: recria do zero com o do backup
+  try {
+    const names = d.stores.map(s => s.name).filter(n => db.objectStoreNames.contains(n));
+    if (!names.length) return;
+    const tx = db.transaction(names, 'readwrite');
+    d.stores.forEach(s => {
+      if (!names.includes(s.name)) return;
+      const st = tx.objectStore(s.name);
+      st.clear();
+      s.records.forEach(([k, v]) => { const key = dec(k), val = dec(v); s.keyPath != null ? st.put(val) : st.put(val, key); });
+    });
+    await txDone(tx);
+  } finally { db.close(); }
+}
+function summarize(snap) {
+  const g = {};
+  const add = (app, n, bytes) => { const x = g[app.id] || (g[app.id] = { app, itens: 0, bytes: 0 }); x.itens += n; x.bytes += bytes; };
+  Object.entries(snap.localStorage || {}).forEach(([k, v]) => add(appOfKey(k), 1, String(v).length));
+  (snap.indexedDB || []).forEach(d => add(appOfDb(d.name), d.stores.reduce((t, s) => t + s.records.length, 0),
+    JSON.stringify(d.stores).length * 0.75));
+  return [...APPS, OUTROS].map(a => g[a.id]).filter(Boolean);
+}
+function renderBackup() {
+  const s = summarize(loaded), when = new Date(loaded.criadoEm);
+  $('#bkInfo').textContent = `Backup de ${when.toLocaleDateString('pt-BR')} às ${when.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Marque o que restaurar:`;
+  $('#appsBk').innerHTML = s.map(x => `<li style="--c:${x.app.cor}"><label><input type="checkbox" data-app="${x.app.id}" checked><i></i><b>${esc(x.app.nome)}</b></label><span>${x.itens} ${x.itens === 1 ? 'item' : 'itens'}, ~${fmtMB(x.bytes)}</span></li>`).join('')
+    || '<li class="off"><b>Este backup está vazio.</b></li>';
+  $('#appsBk').hidden = false; $('#btnRestore').hidden = !s.length; $('#safety').closest('label').hidden = !s.length;
+}
+async function openFile(f) {
+  loaded = null; $('#restoreBox').hidden = true; $('#mRest').className = 'msg'; $('#mRest').textContent = 'Lendo o arquivo…';
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || d.app !== 'lembre-se' || (d.tipo !== 'arca' && d.tipo !== 'arca-cifrada')) {
+      $('#mRest').className = 'msg err';
+      $('#mRest').textContent = 'Este arquivo não é um backup da Arca. Backups de um app só (como o do Memento) continuam sendo importados dentro do próprio app.';
+      return;
+    }
+    $('#restoreBox').hidden = false; $('#mRest').textContent = '';
+    if (d.tipo === 'arca-cifrada') {
+      $('#pwInBox').hidden = false; $('#appsBk').hidden = true; $('#btnRestore').hidden = true; $('#safety').closest('label').hidden = true;
+      $('#bkInfo').textContent = 'Este backup está protegido com senha.'; $('#pwIn').value = ''; $('#pwIn').focus();
+      $('#btnUnlock').onclick = async () => {
+        $('#btnUnlock').disabled = true;
+        try { loaded = await unlock(d, $('#pwIn').value); $('#pwInBox').hidden = true; renderBackup(); }
+        catch (e) { $('#mRest').className = 'msg err'; $('#mRest').textContent = 'Senha incorreta, ou o arquivo foi alterado.'; }
+        finally { $('#btnUnlock').disabled = false; }
+      };
+    } else { $('#pwInBox').hidden = true; loaded = d; renderBackup(); }
+  } catch (e) { $('#mRest').className = 'msg err'; $('#mRest').textContent = 'Não foi possível ler o arquivo. Ele pode estar incompleto.'; }
+}
+async function restore() {
+  if (!loaded) return;
+  const ids = new Set([...document.querySelectorAll('#appsBk [data-app]:checked')].map(i => i.dataset.app));
+  if (!ids.size) { toast('Marque pelo menos um app.', true); return; }
+  const nomes = [...APPS, OUTROS].filter(a => ids.has(a.id)).map(a => a.nome).join(', ');
+  if (!confirm(`Restaurar ${nomes}? Os dados atuais desses apps neste aparelho serão substituídos pelos do backup.`)) return;
+  const btn = $('#btnRestore'); btn.disabled = true;
+  const pb = $('#pRest'), bar = pb.querySelector('i'); pb.hidden = false; bar.style.width = '3%';
+  const msg = t => { $('#mRest').className = 'msg'; $('#mRest').textContent = t; };
+  try {
+    if ($('#safety').checked) { msg('Baixando uma cópia do estado atual…'); const { file } = await buildFile('', 'antes-de-restaurar'); download(file, file.name); }
+    const dbs = (loaded.indexedDB || []).filter(d => ids.has(appOfDb(d.name).id));
+    for (let i = 0; i < dbs.length; i++) { msg(`Restaurando ${appOfDb(dbs[i].name).nome}…`); await restoreDb(dbs[i]); bar.style.width = Math.round(10 + (i + 1) / Math.max(1, dbs.length) * 80) + '%'; }
+    const keep = k => !ids.has(appOfKey(k).id) || SKIP_LS(k);
+    const atuais = []; for (let i = 0; i < localStorage.length; i++) atuais.push(localStorage.key(i));
+    atuais.filter(k => !keep(k)).forEach(k => localStorage.removeItem(k));
+    Object.entries(loaded.localStorage || {}).forEach(([k, v]) => { if (ids.has(appOfKey(k).id)) localStorage.setItem(k, v); });
+    bar.style.width = '100%';
+    $('#mRest').className = 'msg ok';
+    $('#mRest').textContent = `Pronto: ${nomes} restaurados. Abra cada app de novo para ver os dados.`;
+    toast('Restauração concluída.'); renderStatus();
+  } catch (e) {
+    console.error(e);
+    $('#mRest').className = 'msg err';
+    $('#mRest').textContent = e && e.blocked
+      ? 'Algum app ainda está aberto e travou a restauração. Feche todos os apps (inclusive nas janelas recentes) e tente de novo.'
+      : 'A restauração parou no meio: ' + (e && e.message || e) + '. Use a cópia de segurança baixada para voltar ao estado anterior.';
+  } finally { btn.disabled = false; setTimeout(() => { pb.hidden = true; }, 600); }
+}
+
+/* =============================================================
+   SITUAÇÃO ATUAL
+   ============================================================= */
+async function renderStatus() {
+  let last = null; try { last = JSON.parse(localStorage.getItem(LAST_KEY)); } catch (e) {}
+  const st = $('#status'), dias = last ? Math.floor((Date.now() - last.em) / 864e5) : null;
+  st.className = 'status ' + (last && dias < 7 ? 'ok' : 'warn');
+  $('#stTitle').textContent = !last ? 'Nenhum backup completo feito neste aparelho' : `Último backup ${quando(last.em)}`;
+  let extra = last ? `${fmtMB(last.tamanho)}${last.cifrado ? ', com senha' : ''}.` : 'Faça o primeiro agora.';
+  if (last && dias >= 7) extra += ' Já passou de uma semana: vale fazer outro.';
+  try {
+    const persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null;
+    if (persisted === false) extra += ' O armazenamento ainda não é persistente: instale os apps para protegê-lo.';
+  } catch (e) {}
+  $('#stSub').textContent = ' ' + extra;
+  // o que existe agora, por app
+  const g = {}, add = (a, n, b) => { const x = g[a.id] || (g[a.id] = { a, n: 0, b: 0 }); x.n += n; x.b += b; };
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!SKIP_LS(k)) add(appOfKey(k), 1, (localStorage.getItem(k) || '').length); }
+  for (const n of await dbNames()) {
+    const db = await openExisting(n); if (!db) continue;
+    try { let c = 0; for (const sn of db.objectStoreNames) c += await req(db.transaction(sn, 'readonly').objectStore(sn).count()); add(appOfDb(n), c, 0); } catch (e) {} finally { db.close(); }
+  }
+  let uso = '';
+  try { const e = navigator.storage && navigator.storage.estimate && await navigator.storage.estimate(); if (e) uso = `${fmtMB(e.usage || 0)} usados no total`; } catch (e) {}
+  $('#appsNow').innerHTML = APPS.map(a => { const x = g[a.id]; return `<li class="${x ? '' : 'off'}" style="--c:${a.cor}"><i></i><b>${a.nome}</b><span>${x ? `${x.n} ${x.n === 1 ? 'item' : 'itens'}` : 'sem dados aqui'}</span></li>`; }).join('')
+    + (uso ? `<li class="off" style="justify-content:flex-end"><span>${uso}</span></li>` : '');
+}
+
+/* =============================================================
+   TELA
+   ============================================================= */
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>';
+function applyTheme() { const t = document.documentElement.dataset.theme; $('#themeBtn').innerHTML = t === 'dark' ? SUN : MOON; document.querySelector('meta[name="theme-color"]').content = t === 'dark' ? '#0d0e12' : '#f5f0e6'; }
+$('#themeBtn').onclick = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('arca.theme', t); } catch (e) {} applyTheme(); };
+$('#usePw').onchange = e => { $('#pwBox').hidden = !e.target.checked; if (e.target.checked) $('#pw1').focus(); };
+$('#btnSave').onclick = () => save(false);
+$('#btnShare').onclick = () => save(true);
+try { if (navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'a.json', { type: 'application/json' })] })) $('#btnShare').hidden = false; } catch (e) {}
+$('#btnPick').onclick = () => $('#file').click();
+$('#file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) openFile(f); };
+$('#btnRestore').onclick = restore;
+$('#pwIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnUnlock').click(); });
+applyTheme();
+renderStatus();
+})();
+</script>
+</body>
+</html>
