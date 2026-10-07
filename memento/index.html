@@ -9,7 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Memento">
-<script>
+<script src="../comum/lembre.js"></script>
+  <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
@@ -5531,9 +5532,61 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
       window.appStorage = api;
     })();
 
+    /* ==========================================================
+       RESUMO PARA OS OUTROS APPS (contrato lembre-se, ver ../comum/lembre.js)
+       O Atrium e o Ludus leem só este resumo, não as chaves internas do Memento.
+       As imagens das memórias não entram: ficam só aqui.
+       ========================================================== */
+    (function resumoMemento() {
+      if (!window.Lembre) return;
+      const num = v => Number.isFinite(+v) ? +v : 0;
+      const clip = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; };
+      const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const ler = (k, d) => { const v = appStorage.getItem(k); if (v == null) return d; try { return JSON.parse(v); } catch (e) { return v; } };
+      function construir() {
+        const memorias = ler('memento_memories', []), nascimento = appStorage.getItem('memento_birth') || '';
+        if (!nascimento && !(Array.isArray(memorias) && memorias.length)) return null;   // Memento ainda vazio neste aparelho
+        const memories = (Array.isArray(memorias) ? memorias : []).map(m => ({ ts: num(m.timestamp) || num(m.id), scope: m.scope || 'Dia', wk: m.weekKey || '', monthYear: m.monthYear || '', date: m.date || '',
+          title: clip(m.title, 120), text: clip(String(m.text || '').replace(/^#+\s*/gm, '').replace(/\*\*/g, ''), 500), mood: m.mood || '', hasImage: !!m.image }))
+          .filter(m => m.ts).sort((a, b) => b.ts - a.ts);
+        const cats = ler('memento_activity_cats', []), catList = Array.isArray(cats) ? cats : [];
+        const kindOf = name => {
+          const c = catList.find(x => norm(x.name) === norm(name)); if (c) return c.kind === 'producao' ? 'prod' : c.kind === 'desvio' ? 'desvio' : 'outro';
+          if (/tv|filme|serie|rede|insta|youtube|tiktok|jogo|game|transi/i.test(norm(name))) return 'desvio';
+          if (/dev|projet|estud|leitura|trabalho|curso|memento|volumen|cognitio/i.test(norm(name))) return 'prod';
+          return 'outro';
+        };
+        const mins = b => { if (num(b.minutes)) return num(b.minutes); const f = /^(\d\d):(\d\d)$/.exec(b.from || ''), t = /^(\d\d):(\d\d)$/.exec(b.to || ''); if (!f || !t) return 0; let m = (+t[1] * 60 + +t[2]) - (+f[1] * 60 + +f[2]); if (m < 0) m += 1440; return m; };
+        const daylogRaw = ler('memento_pecunia_daylog', []);
+        const daylog = (Array.isArray(daylogRaw) ? daylogRaw : []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date)).map(x => {
+          const ck = x.checklist && typeof x.checklist === 'object' ? Object.values(x.checklist) : [];
+          return { date: x.date, score: typeof x.executionScore === 'number' ? x.executionScore : null, drift: num(x.driftMinutes),
+            checkDone: ck.filter(v => v === 'done').length, checkTotal: ck.length,
+            blocks: (x.blocks || []).map(b => ({ cat: b.category || 'Sem categoria', min: mins(b), kind: kindOf(b.category) })).filter(b => b.min > 0) };
+        }).sort((a, b) => a.date < b.date ? 1 : -1);
+        const distractions = [];
+        Object.entries(ler('memento_pecunia_distractions', {}) || {}).forEach(([date, o]) => Object.entries(o || {}).forEach(([cat, m]) => distractions.push({ date, cat, min: num(m) })));
+        const quotes = ler('memento_quotes', []), expenses = ler('memento_pecunia_expenses', []), reviews = ler('memento_week_reviews', {});
+        return {
+          exportedAt: null, name: appStorage.getItem('memento_user_name') || '', birth: nascimento,
+          quotes: (Array.isArray(quotes) ? quotes : []).filter(q => q && q.text).map(q => ({ text: q.text, author: q.author || '' })),
+          memories, daylog, distractions,
+          expenses: (Array.isArray(expenses) ? expenses : []).map(e => ({ date: e.date, cat: e.category || 'Outros', value: num(e.value) })).filter(e => e.value),
+          weekReviews: reviews && typeof reviews === 'object' ? reviews : {}
+        };
+      }
+      const publicar = Lembre.agendar('memento', construir, 1000);
+      const ignorar = k => /^memento_(ui_|presentation_|backup_reminded|last_backup|coin_pair)/.test(k);
+      const set = appStorage.setItem.bind(appStorage), del = appStorage.removeItem.bind(appStorage);
+      appStorage.setItem = (k, v) => { const r = set(k, v); if (typeof k === 'string' && k.startsWith('memento_') && !ignorar(k)) publicar(); return r; };
+      appStorage.removeItem = k => { const r = del(k); if (typeof k === 'string' && k.startsWith('memento_') && !ignorar(k)) publicar(); return r; };
+      window.__mementoPublicarResumo = publicar;
+    })();
+
     // o app só começa depois que os dados foram carregados
     (async function boot() {
       try { await appStorage.init(); } catch (e) { console.error(e); }
+      if (window.__mementoPublicarResumo) window.__mementoPublicarResumo();
       const s = document.createElement('script');
       s.textContent = document.getElementById('appCode').textContent;
       document.body.appendChild(s);
