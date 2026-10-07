@@ -158,10 +158,11 @@ function quando(t) {
 const APPS = [
   { id: 'memento',  nome: 'Memento',  cor: 'var(--mem)', dbs: ['memento'],        ls: k => k.startsWith('memento_') || k.startsWith('memento.') },
   { id: 'volumen',  nome: 'Volumen',  cor: 'var(--vol)', dbs: ['volumen'],        ls: k => k === 'my_mediatheca_v2' || k === 'mediaList' || k.startsWith('volumen') || k === 'theme' },
-  { id: 'cognitio', nome: 'Cognitio', cor: 'var(--cog)', dbs: ['cognitio-files'], ls: k => k.startsWith('cognitio') },
+  { id: 'cognitio', nome: 'Cognitio', cor: 'var(--cog)', dbs: ['cognitio', 'cognitio-files'], ls: k => k.startsWith('cognitio') },
   { id: 'audire',   nome: 'Audire',   cor: 'var(--aud)', dbs: ['audire'],         ls: k => k.startsWith('audire') },
   { id: 'atrium',   nome: 'Atrium',   cor: 'var(--atr)', dbs: ['atrium'],         ls: k => k.startsWith('atrium') },
   { id: 'ludus',    nome: 'Ludus',    cor: 'var(--lud)', dbs: ['ludus'],          ls: k => k.startsWith('ludus') },
+  { id: 'comum',    nome: 'Resumos entre apps', cor: 'var(--faint)', dbs: ['lembre-se'], ls: () => false },   // refeitos sozinhos quando cada app abre
 ];
 const OUTROS = { id: 'outros', nome: 'Outros ajustes', cor: 'var(--faint)', dbs: [], ls: () => true };
 const appOfKey = k => APPS.find(a => a.ls(k)) || OUTROS;
