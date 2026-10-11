@@ -888,6 +888,12 @@ dialog.viewer{background:var(--bg)}
 .v-hint + .v-frame{height:calc(100% - 40px)}
 .v-nav{display:flex;justify-content:space-between;align-items:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card);font-size:12.5px}
 .v-nav .btn[disabled]{opacity:.35;pointer-events:none}
+.gp-bar{display:flex;gap:8px;flex-wrap:wrap}
+.gp-list{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto;padding-right:2px}
+.gp-it{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.gp-it input{margin-top:3px;flex:none;width:18px;height:18px}
+.gp-it b{display:block;font-size:14px;font-weight:600;line-height:1.35}.gp-it small{display:block;font-size:12.5px;opacity:.7;margin-top:2px;line-height:1.35}
+.ap-btns{display:flex;gap:6px}
 </style>
 </head>
 <body>
@@ -1590,7 +1596,7 @@ function renderReader() {
       ${cover ? `<img class="ch-cover" src="${esc(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>
       ${attachHtml(n)}
-      <div class="ch-actions"><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
+      <div class="ch-actions"><button data-gen-pills="note:${n.id}">✦ Gerar pílulas</button><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
     </section>`;
   };
   $('#reader').innerHTML = `<div class="reader" style="--h:${f.hue}">
@@ -2270,7 +2276,7 @@ function renderAreaPage(editOpen) {
         : `<div class="empty"><p>Este caderno ainda está em branco.</p><button class="btn primary" data-compose="${a.id}">+ Escrever a primeira ficha</button></div>`}
     </section>
     <section class="ap-sec">
-      <div class="ap-sec-h"><h3>Questões <small>${own.length + field.length ? [...own, ...field].reduce((t, k) => t + k.items.length, 0) : 0}</small></h3><button class="btn sm" data-new-deck-field="${f.id}">+ Banco</button></div>
+      <div class="ap-sec-h"><h3>Questões <small>${own.length + field.length ? [...own, ...field].reduce((t, k) => t + k.items.length, 0) : 0}</small></h3><span class="ap-btns">${notes.length ? `<button class="btn sm" data-gen-pills="area:${a.id}">✦ Das fichas</button>` : ''}<button class="btn sm" data-new-deck-field="${f.id}">+ Banco</button></span></div>
       ${own.length || field.length ? `<div class="q-list">${own.map(k => deckRow(k)).join('')}${field.map(k => deckRow(k, true)).join('')}</div>`
         : `<p class="no-notes">Nenhum banco de questões para esta área ainda. Questões transformam leitura em domínio: crie um banco e pratique o que o caderno ensina.</p>`}
     </section>
@@ -2312,7 +2318,7 @@ function renderFicha() {
       ${cover ? `<img class="ch-cover" src="${esc(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>
       ${attachHtml(n)}
-      <div class="ch-actions"><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
+      <div class="ch-actions"><button data-gen-pills="note:${n.id}">✦ Gerar pílulas</button><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
     </section></article>
     ${practice ? `<div class="f-practice"><div><b>Praticar ${esc(a.title)}</b><small>${esc(practice.title)}: ${deckLine(practice)}</small></div><button class="btn sm primary" data-pill-deck="${practice.id}">Praticar</button></div>` : ''}
     <nav class="pager" aria-label="Fichas do caderno">
@@ -2322,6 +2328,94 @@ function renderFicha() {
   </div>`;
   hydrateThumbs($('#viewFicha'));
 }
+
+/* ---------- fichas → pílulas ----------
+   Lê cada ficha e propõe perguntas de lembrar (recordação ativa):
+   "**Termo:** definição" e "**Termo** = definição" viram "O que é Termo?";
+   cada ==destaque== vira uma frase para completar. Você revisa e escolhe. */
+const genStrip = t => String(t || '').replace(/==([^=]+)==/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\s+/g, ' ').trim();
+function genContexto(h) { return genStrip(h).replace(/^(ciclo|unidade|aula|m[oó]dulo|parte|cap[ií]tulo)\s*\d+\s*[—–:\-]\s*/i, '').replace(/^\d+[\.\)]\s*/, '').trim(); }
+function propostasDe(note) {
+  const out = [], vistos = new Set(); let ctx = '';
+  const add = (q, a, tipo) => {
+    const key = note.id + '|' + genStrip(q).toLowerCase();
+    if (vistos.has(key) || genStrip(a).length < 4) return; vistos.add(key);
+    out.push({ text: q, answer: a, key, tipo, noteId: note.id });
+  };
+  String(note.body || '').replace(/\r/g, '').split('\n').forEach(raw => {
+    const l = raw.trim(); if (!l) return;
+    if (/^#{1,3}\s/.test(l)) { ctx = genContexto(l.replace(/^#+\s*/, '')); return; }
+    if (/^\*\*[^*]+\*\*$/.test(l)) { const c = genContexto(l); if (c.length >= 3) ctx = c; return; }
+    const corpo = l.replace(/^[-•>]\s*/, '');
+    // **Termo:** definição (vários na mesma linha) e **Termo** = definição
+    const rx = /\*\*([^*]{2,60}?)(?::\*\*|\*\*\s*[:=])\s*([\s\S]*?)(?=\s\*\*[^*]{2,60}?(?::\*\*|\*\*\s*[:=])|$)/g;
+    let m;
+    while ((m = rx.exec(corpo))) {
+      const termo = genStrip(m[1]).replace(/[:=]$/, '').trim(), def = genStrip(m[2]).replace(/^[:=\s]+/, '');
+      if (!termo || termo.length > 60 || def.length < 4) continue;
+      add(`O que é “${termo}”?${ctx && norm(ctx) !== norm(termo) ? ` (${ctx})` : ''}`, `**${termo}:** ${def}${ctx ? `\n\n*${ctx}*` : ''}`, 'termo');
+    }
+    // ==destaques== viram frases para completar
+    const hs = [...corpo.matchAll(/==([^=]{1,80})==/g)];
+    hs.forEach((h, i) => {
+      let k = 0;
+      const frase = corpo.replace(/==([^=]{1,80})==/g, (_, x) => (k++ === i ? '_____' : x));
+      const q = genStrip(frase);
+      if (q.length < 12) return;
+      add(`Complete: ${q}${ctx ? ` (${ctx})` : ''}`, `**${genStrip(h[1])}**\n\n${genStrip(corpo)}`, 'lacuna');
+    });
+  });
+  return out;
+}
+function deckDeFichas(a) {
+  let k = state.decks.find(x => x.auto === 'fichas' && x.areaId === a.id);
+  if (!k) {
+    k = { id: uid(), title: `Fichas · ${a.title}`, unit: 'pílulas', fieldId: a.fieldId, areaId: a.id, source: '', order: 'seq', principle: 'retrieval', items: [], createdAt: new Date().toISOString(), auto: 'fichas' };
+    state.decks.push(k);
+  }
+  return k;
+}
+function abrirGerador(alvo) {
+  const [tipo, id] = alvo.split(':');
+  const notes = tipo === 'note' ? state.notes.filter(n => n.id === id) : notesOf(id).sort(byDateAsc);
+  if (!notes.length) return;
+  const a = areaById(notes[0].areaId); if (!a) return;
+  const existente = state.decks.find(x => x.auto === 'fichas' && x.areaId === a.id);
+  const ja = new Set(existente ? existente.items.map(i => i.key).filter(Boolean) : []);
+  const props = notes.flatMap(propostasDe).filter(p => !ja.has(p.key));
+  const nT = props.filter(p => p.tipo === 'termo').length, nL = props.length - nT;
+  $('#formTitle').textContent = 'Pílulas a partir das fichas';
+  $('#formSub').textContent = props.length
+    ? `${plural(props.length, 'pergunta encontrada', 'perguntas encontradas')}${notes.length > 1 ? ` em ${plural(notes.length, 'ficha', 'fichas')}` : ''}: ${nT} de termos e ${nL} de completar. Desmarque o que não serve.`
+    : '';
+  $('#formBody').innerHTML = props.length ? `
+    <div class="gp-bar"><button type="button" class="btn sm" id="gpAll">Marcar todas</button><button type="button" class="btn sm" id="gpNone">Desmarcar todas</button></div>
+    <div class="gp-list">${props.map((p, i) => `<label class="gp-it"><input type="checkbox" data-gp="${i}" checked>
+      <span><b>${esc(p.text)}</b><small>${esc(genStrip(p.answer).slice(0, 160))}</small></span></label>`).join('')}</div>
+    <p class="hint">Elas entram no banco “Fichas · ${esc(a.title)}”, ligado a esta área, e voltam no tempo certo para revisar. Gerar de novo depois não duplica.</p>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="gpOk">Criar ${props.length} pílulas</button></div>`
+    : `<p class="no-notes">${ja.size ? 'Todas as perguntas destas fichas já estão no banco de pílulas.' : 'Não encontrei termos nem destaques para virar pergunta.'}</p>
+      <p class="hint">O gerador procura linhas como <b>**Termo:** definição</b> ou <b>**Termo** = definição</b>, e trechos marcados com <b>==destaque==</b>.</p>
+      <div style="display:flex;justify-content:flex-end"><button class="btn" data-close>Fechar</button></div>`;
+  const body = $('#formBody'), conta = () => { const n = body.querySelectorAll('[data-gp]:checked').length; const b = $('#gpOk'); if (b) b.textContent = n ? `Criar ${n} ${n === 1 ? 'pílula' : 'pílulas'}` : 'Nada marcado'; };
+  body.querySelectorAll('[data-gp]').forEach(c => c.addEventListener('change', conta));
+  $('#gpAll')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = true; }); conta(); });
+  $('#gpNone')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = false; }); conta(); });
+  $('#gpOk')?.addEventListener('click', () => {
+    const escolhidas = [...body.querySelectorAll('[data-gp]:checked')].map(c => props[+c.dataset.gp]);
+    if (!escolhidas.length) { toast('Marque pelo menos uma pergunta.', true); return; }
+    const k = deckDeFichas(a);
+    escolhidas.forEach(p => k.items.push({ ...makeItem({ type: 'open', text: p.text, answer: p.answer }), key: p.key, noteId: p.noteId }));
+    persist(); render(); $('#dlgForm').close();
+    toast(`${plural(escolhidas.length, 'pílula criada', 'pílulas criadas')} em “${k.title}”`);
+  });
+  if (!$('#dlgForm').open) $('#dlgForm').showModal();
+}
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-gen-pills]'); if (!g) return;
+  e.stopImmediatePropagation(); abrirGerador(g.dataset.genPills);
+}, true);
+
 document.addEventListener('click', e => {
   const t = e.target;
   const fi = t.closest('[data-ficha]');
