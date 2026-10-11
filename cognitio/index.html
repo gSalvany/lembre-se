@@ -924,6 +924,10 @@ dialog.viewer{background:var(--bg)}
 .rev-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:16px}
 .rev-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left}
 .rev-main b{font-size:15.5px}.rev-main small{font-size:12.5px;color:var(--faint);line-height:1.4}
+.map-tools{display:flex;gap:8px;justify-content:flex-end;margin:0 0 10px}.map-tools .btn{display:inline-flex;align-items:center;gap:6px}
+#btnOrganizar[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+.ord{display:inline-flex;gap:4px;margin-right:6px}.ord .icon-btn,.row-actions [data-mover-caderno]{font-size:16px;font-weight:700}
+.icon-btn[disabled]{opacity:.3}
 </style>
 </head>
 <body>
@@ -979,19 +983,20 @@ dialog.viewer{background:var(--bg)}
 
   <nav class="tabs" role="tablist" aria-label="Visões">
     <button class="tab" role="tab" id="tab-map" aria-controls="viewMap" aria-selected="true" data-tab="map"><span class="long">Mapa de Conhecimento</span><span class="short">Mapa</span><span class="count" id="cFields"></span></button>
-    <button class="tab" role="tab" id="tab-notes" aria-controls="viewNotes" aria-selected="false" data-tab="notes"><span class="long">Todos os Cadernos</span><span class="short">Cadernos</span><span class="count" id="cNotes"></span></button>
     <button class="tab" role="tab" id="tab-pills" aria-controls="viewPills" aria-selected="false" data-tab="pills"><span class="long">Revisar</span><span class="short">Revisar</span><span class="count" id="cPills"></span></button>
   </nav>
 
   <!-- Visão 1: mapa (oculta por completo quando a outra aba está ativa) -->
   <section id="viewMap" role="tabpanel" aria-labelledby="tab-map">
+    <div class="map-tools"><button class="btn sm" data-tab="notes"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Buscar fichas</button><button class="btn sm" id="btnOrganizar" aria-pressed="false">⇅ Organizar</button></div>
     <div id="challenge"></div>
     <div class="fields" id="fields"></div>
   </section>
 
   <!-- Visão 2: todos os cadernos -->
-  <section id="viewNotes" role="tabpanel" aria-labelledby="tab-notes" hidden>
+  <section id="viewNotes" role="tabpanel" aria-label="Buscar fichas" hidden>
     <div id="bookList">
+    <div class="crumbs"><button class="btn sm" data-tab="map">‹ Mapa</button><span class="crumb-pos">Buscar fichas</span></div>
     <div class="searchbar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input class="search" id="search" type="search" placeholder="Buscar fichas por título ou #tag" aria-label="Buscar fichas" autocomplete="off">
@@ -1429,9 +1434,9 @@ function construirResumoCognitio() {
   return {
     exportedAt: null,
     fields: state.fields.map(f => ({ id: f.id, title: f.title, icon: f.icon || '📚', posture: f.posture || 'ultra' })),
-    areas: state.areas.map(a => ({ id: a.id, fieldId: a.fieldId, title: a.title, status: [0, 1, 2].includes(+a.status) ? +a.status : 0 })),
-    notes: state.notes.map(n => ({ id: n.id, areaId: n.areaId, title: clip(n.title, 120), tags: Array.isArray(n.tags) ? n.tags.slice(0, 8) : [], createdAt: n.createdAt })),
-    decks: state.decks.map(k => ({ id: k.id, title: k.title, fieldId: k.fieldId, areaId: k.areaId || null,
+    areas: state.areas.map(a => ({ id: a.id, fieldId: a.fieldId, title: a.title, status: [0, 1, 2].includes(+a.status) ? +a.status : 0, ...(a.simulados ? { simulados: true } : {}) })),
+    notes: state.notes.map(n => ({ id: n.id, areaId: n.areaId, title: clip(n.title, 120), tags: Array.isArray(n.tags) ? n.tags.slice(0, 8) : [], createdAt: n.createdAt, ...(n.kind === 'simulado' ? { kind: 'simulado' } : {}) })),
+    decks: state.decks.map(k => ({ id: k.id, title: k.title, fieldId: k.fieldId, areaId: k.areaId || null, noteId: k.noteId || null,
       items: k.items.map(i => ({ id: i.id, last: i.lastAt || null, t: clip(i.text, 160), due: i.due || null, g: typeof i.lastGrade === 'number' ? i.lastGrade : -1, seen: !!i.seen, done: !!i.done })) })),
     pillLog: state.pillLog.slice(-500).map(l => ({ deckId: l.deckId, t: clip(l.text, 120), minutes: num(l.minutes), grade: l.grade, at: l.at })),
     pillOfDay: state.pillOfDay || null
@@ -1455,7 +1460,17 @@ let current = null, editingNoteId = null, draftFiles = [];
 /* ============ Consultas ============ */
 const fieldById = id => state.fields.find(f => f.id === id);
 const areaById = id => state.areas.find(a => a.id === id);
-const areasOf = fid => state.areas.filter(a => a.fieldId === fid);
+const porOrdem = (lista) => lista.map((x, i) => [x, i]).sort((a, b) => ((a[0].ordem ?? a[1]) - (b[0].ordem ?? b[1])) || a[1] - b[1]).map(p => p[0]);
+const areasOf = fid => porOrdem(state.areas.filter(a => a.fieldId === fid));
+const camposOrdenados = () => porOrdem(state.fields);
+let organizando = false;
+function mover(lista, id, dir) {
+  const i = lista.findIndex(x => x.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= lista.length) return false;
+  [lista[i], lista[j]] = [lista[j], lista[i]];
+  lista.forEach((x, k) => { x.ordem = k; });
+  return true;
+}
 const notesOf = aid => state.notes.filter(n => n.areaId === aid);
 function stats(list) {
   const dom = list.filter(a => a.status === 2).length, study = list.filter(a => a.status === 1).length;
@@ -1544,7 +1559,7 @@ function nextStep(p) {
 function provocation(g) {
   const today = state.pillLog.filter(l => isToday(l.at)).reduce((t, l) => t + l.minutes, 0);
   if (!g.total) return { head: 'Um mapa vazio não acumula nada.', sub: 'Comece por um campo e pela sua rota de estudos.' };
-  const head = `<em>${g.study} ${pl(g.study, 'território', 'territórios')} em estudo</em>, ${today} min de Ultralearning resgatados hoje.`;
+  const head = `<em>${g.study} ${pl(g.study, 'território', 'territórios')} em estudo</em>, ${minCurto(today)} de prática resgatados hoje.`;
   const e = engineStats();
   let sub;
   if (!state.decks.length) sub = 'A teoria só se consolida na prática direta. Crie o primeiro banco de treino.';
@@ -1567,7 +1582,7 @@ function renderSummary() {
   $('#dMode').dataset.m = g.mode;
   $('#dMode').innerHTML = `${MODE_LABEL[g.mode]} <b>${g.score}</b>`;
   $('#dMode').title = `Postura de aprendizagem: ${g.score} de 100`;
-  $('#dPctS').textContent = g.pct + '%'; $('#dMinS').textContent = today;
+  $('#dPctS').textContent = g.pct + '%'; $('#dMinS').textContent = today > 0 && today < 1 ? Math.round(today * 60) + ' s' : Math.round(today); $('#dMinS').nextSibling && ($('#dMinS').nextSibling.textContent = today > 0 && today < 1 ? ' hoje' : ' min hoje');
   const pv = provocation(g); $('#dProvoke').innerHTML = pv.head; $('#dSub').textContent = pv.sub;
   $('#dDomPct').textContent = `${g.pct}%`;
   const [n, st, d] = $('#dBar').children;
@@ -1606,7 +1621,7 @@ function renderSummary() {
       <p class="hint">A nota soma cinco sinais dos últimos 7 dias: prática (30), constância (20), recuperação ativa (20), fila em dia (15) e síntese (15). A partir de 35 é transição; a partir de 60, Ultralearning.</p>
     </details>`;
   $('#cFields').textContent = state.fields.length;
-  $('#cNotes').textContent = state.areas.filter(a => notesOf(a.id).length).length;
+
   $('#cPills').textContent = state.decks.reduce((t, k) => t + dueCount(k), 0) || '';
 }
 
@@ -1623,7 +1638,8 @@ function renderMap() {
     el.innerHTML = `<div class="empty"><p>O mapa está vazio. Comece por um campo de estudo.</p><button class="btn primary" data-new="field">+ Novo campo</button></div>`;
     return;
   }
-  el.innerHTML = state.fields.map(f => {
+  const camposMapa = camposOrdenados();
+  el.innerHTML = camposMapa.map((f, fi) => {
     const list = areasOf(f.id), p = stats(list), open = expanded.has(f.id);
     return `<article class="field-card card${open ? ' open' : ''}" style="--h:${f.hue}">
       <button class="field-head" data-toggle="${f.id}" aria-expanded="${open}" aria-controls="panel-${f.id}">
@@ -1634,22 +1650,23 @@ function renderMap() {
       </button>
       ${segbar(list)}
       <div class="field-sub">
+        ${organizando ? `<span class="ord"><button class="icon-btn" data-mover-campo="${f.id}" data-dir="-1" aria-label="Subir ${esc(f.title)}"${fi === 0 ? ' disabled' : ''}>↑</button><button class="icon-btn" data-mover-campo="${f.id}" data-dir="1" aria-label="Descer ${esc(f.title)}"${fi === camposMapa.length - 1 ? ' disabled' : ''}>↓</button></span>` : ''}
         ${fieldPills(f)}
       </div>
       ${fieldSlipLine(f)}
       <div class="panel" id="panel-${f.id}"><div><div class="panel-inner">
         ${f.description ? `<p class="field-desc">${esc(f.description)}</p>` : ''}
-        ${list.length ? list.map(a => {
+        ${list.length ? list.map((a, ai) => {
           const n = notesOf(a.id).length;
           return `<div class="area-row">
             <button class="pill" data-s="${a.status}" data-cycle="${a.id}" title="Toque para mudar o estado">${STATUS[a.status]}</button>
             <button class="area-name" data-area-card="${a.id}"><b>${esc(a.title)}</b><small>${n ? plural(n, 'ficha', 'fichas') : 'Caderno em branco'}</small></button>
-            <div class="row-actions">
+            ${organizando ? `<div class="row-actions"><button class="icon-btn" data-mover-caderno="${a.id}" data-dir="-1" aria-label="Subir ${esc(a.title)}"${ai === 0 ? ' disabled' : ''}>↑</button><button class="icon-btn" data-mover-caderno="${a.id}" data-dir="1" aria-label="Descer ${esc(a.title)}"${ai === list.length - 1 ? ' disabled' : ''}>↓</button></div>` : `<div class="row-actions">
               <button class="icon-btn" data-book="${a.id}" aria-label="Abrir caderno de ${esc(a.title)}" title="Abrir caderno">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5zM4 19.5A2 2 0 0 1 6 18h12M9 7h6"/></svg></button>
               <button class="icon-btn" data-compose="${a.id}" aria-label="Nova ficha em ${esc(a.title)}" title="Nova ficha">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-            </div>
+            </div>`}
           </div>`;
         }).join('') : `<p class="no-areas">Nenhum caderno neste campo ainda.</p>`}
         <div class="panel-foot">
@@ -2657,6 +2674,18 @@ document.addEventListener('click', e => {
   const c = e.target.closest('[data-abrir-caderno]'); if (!c) return;
   e.stopImmediatePropagation(); go({ v: 'area', areaId: c.dataset.abrirCaderno, from: 'pills' }, 'push');
 }, true);
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('#btnOrganizar')) {
+    organizando = !organizando; $('#btnOrganizar').setAttribute('aria-pressed', organizando); $('#btnOrganizar').textContent = organizando ? '✓ Pronto' : '⇅ Organizar';
+    if (organizando) state.fields.forEach(f => expanded.add(f.id));
+    renderMap(); if (organizando) toast('Use ↑ e ↓ para pôr campos e cadernos na ordem que quiser.'); return;
+  }
+  const mc = t.closest('[data-mover-campo]');
+  if (mc) { e.stopImmediatePropagation(); const l = camposOrdenados(); if (mover(l, mc.dataset.moverCampo, +mc.dataset.dir)) { persist(); renderMap(); } return; }
+  const ma = t.closest('[data-mover-caderno]');
+  if (ma) { e.stopImmediatePropagation(); const a = areaById(ma.dataset.moverCaderno); if (!a) return; const l = areasOf(a.fieldId); if (mover(l, a.id, +ma.dataset.dir)) { persist(); renderMap(); } return; }
+}, true);
 document.addEventListener('change', e => { if (e.target && e.target.id === 'revCampo') { revCampo = e.target.value; renderPillsTab(); } });
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-gen-pills]'); if (!g) return;
@@ -2749,7 +2778,7 @@ document.addEventListener('click', e => {
 /* Setas esquerda/direita alternam as abas (padrão ARIA) */
 $('.tabs').addEventListener('keydown', e => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-  const keys = Object.keys(TABS), i = keys.indexOf(tab);
+  const keys = ['map', 'pills'], i = Math.max(0, keys.indexOf(tab));
   setTab(keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length]); document.querySelector(`[data-tab="${tab}"]`).focus();
 });
 document.addEventListener('submit', e => {
@@ -2798,8 +2827,10 @@ const deckDone = k => k.items.filter(i => i.done).length;
 const lastActivity = k => Math.max(0, ...state.pillLog.filter(l => l.deckId === k.id).map(l => Date.parse(l.at)));
 const postureOf = () => 'ultra';                               // todos os campos pesam igual na pílula do dia
 const fmtClock = ms => { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
-const minsOf = ms => Math.max(1, Math.round(ms / MIN));
-const minLabel = m => `${m} ${pl(m, 'minuto', 'minutos')}`;
+const minsOf = ms => Math.max(1, Math.round(ms / 1000)) / 60;     // minutos com fração: 10 s = 0,17 min
+const minLabel = m => { const sg = Math.round(m * 60); if (sg < 60) return `${sg} ${pl(sg, 'segundo', 'segundos')}`; const mm = Math.round(m); return `${mm} ${pl(mm, 'minuto', 'minutos')}`; };
+const resgatadoPl = m => (Math.round(m * 60) < 60 ? Math.round(m * 60) : Math.round(m)) === 1 ? 'resgatado' : 'resgatados';
+const minCurto = t => t > 0 && t < 1 ? `${Math.round(t * 60)} s` : `${Math.round(t)} min`;
 const isWeak = i => i.seen && i.lastGrade <= 1;
 const isDue = i => i.seen && i.due && Date.parse(i.due) <= Date.now();
 const dueCount = k => k.items.filter(isDue).length;
@@ -3334,10 +3365,10 @@ function renderFocus() {
   body.innerHTML = top + `<div class="f-main f-done">
     <div>
       <p class="f-kicker">Concluído em ${minLabel(m)}</p>
-      <h2><em>${minLabel(m)}</em> ${pl(m, 'resgatado', 'resgatados')} da inércia.</h2>
+      <h2><em>${minLabel(m)}</em> ${resgatadoPl(m)} da inércia.</h2>
       <p class="f-sub">O conhecimento acumula nos pequenos intervalos.</p>
       <p class="f-grade" data-g="${g}">${msg}</p>
-      <p class="f-stats">Hoje: <b>${today.length}</b> ${pl(today.length, 'pílula', 'pílulas')}, <b>${today.reduce((t, l) => t + l.minutes, 0)}</b> min. ${esc(k.title)}: <b>${deckDone(k)}/${k.items.length}</b> resolvidas${acc.n ? `, <b>${acc.ok}/${acc.n}</b> acertos na múltipla escolha` : ''}.</p>
+      <p class="f-stats">Hoje: <b>${today.length}</b> ${pl(today.length, 'pílula', 'pílulas')}, <b>${minCurto(today.reduce((t, l) => t + l.minutes, 0))}</b>. ${esc(k.title)}: <b>${deckDone(k)}/${k.items.length}</b> resolvidas${acc.n ? `, <b>${acc.ok}/${acc.n}</b> acertos na múltipla escolha` : ''}.</p>
     </div>
     <div class="f-actions row"><button class="btn primary" data-f="again">${inDeck ? 'Próxima questão' : 'Mais uma pílula'}</button><button class="btn" data-f="close">Fechar</button></div>
     <details class="more f-reflect-box"${session.attempt && !isMc ? ' open' : ''}><summary>Reflexão, fichamento rápido ou Memento</summary><div class="more-body">
@@ -3353,7 +3384,7 @@ function gradeRow(it) {
 }
 function reflectionText() {
   const k = deckById(session.deckId), it = k.items.find(i => i.id === session.itemId), r = $('#fReflect').value.trim();
-  return { k, it, r, text: `[Cognitio] ${new Date().toLocaleDateString('pt-BR')}: ${minLabel(session.minutes)} ${pl(session.minutes, 'resgatado', 'resgatados')} da inércia (${GRADES[session.grade].label}).\n${k.title}: ${it.text}${r ? `\nReflexão: ${r}` : ''}` };
+  return { k, it, r, text: `[Cognitio] ${new Date().toLocaleDateString('pt-BR')}: ${minLabel(session.minutes)} ${resgatadoPl(session.minutes)} da inércia (${GRADES[session.grade].label}).\n${k.title}: ${it.text}${r ? `\nReflexão: ${r}` : ''}` };
 }
 async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; }
