@@ -889,14 +889,14 @@ dialog.viewer{background:var(--bg)}
 .v-nav{display:flex;justify-content:space-between;align-items:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card);font-size:12.5px}
 .v-nav .btn[disabled]{opacity:.35;pointer-events:none}
 .gp-bar{display:flex;gap:8px;flex-wrap:wrap}
-.gp-list{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto;padding-right:2px}
+.gp-list{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
 .gp-it{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
 .gp-it input{margin-top:3px;flex:none;width:18px;height:18px}
 .gp-it b{display:block;font-size:14px;font-weight:600;line-height:1.35}.gp-it small{display:block;font-size:12.5px;opacity:.7;margin-top:2px;line-height:1.35}
 .ap-btns{display:flex;gap:6px}
 .gp-tag{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(245,158,11,.15);color:#f59e0b;margin-bottom:3px}
 .gp-t{display:block;font-style:normal;font-size:11px;font-weight:700;letter-spacing:.02em;opacity:.6;margin-bottom:2px}
-.gp-ia{margin-top:4px}
+.gp-ia{margin-top:4px;flex-shrink:0}.gp-lido{font-size:13px;font-weight:700;color:var(--mint,#3ecf8e);margin-top:6px}
 
 /* ---------- estrutura Campo → Caderno → Ficha → Questionário ---------- */
 .due-t{color:var(--amber);font-weight:700}
@@ -2594,8 +2594,9 @@ Resposta: a resposta modelo, com os pontos que não podem faltar.
 TEXTO:
 ${texto}`;
 }
-let genFormato = 'ambas';
-function abrirGerador(alvo, extras = []) {
+let genFormato = 'ambas', genIaAberta = false, genLido = '';
+function abrirGerador(alvo, extras = [], manterIa = false) {
+  if (!manterIa) { genIaAberta = false; genLido = ''; }
   const [tipo, id] = alvo.split(':');
   const notes = (tipo === 'note' ? state.notes.filter(n => n.id === id) : notesOf(id).sort(byDateAsc)).filter(n => n.kind !== 'simulado');
   if (!notes.length) return;
@@ -2624,11 +2625,12 @@ function abrirGerador(alvo, extras = []) {
       <button type="button" data-f="ambas" aria-pressed="${genFormato === 'ambas'}">As duas</button>
       <button type="button" data-f="mc" aria-pressed="${genFormato === 'mc'}">Objetivas</button>
       <button type="button" data-f="open" aria-pressed="${genFormato === 'open'}">Dissertativas</button></div>
+    ${genLido ? `<p class="gp-lido">${genLido}</p>` : ''}
     ${props.length ? `<div class="gp-bar"><button type="button" class="btn sm" id="gpAll">Marcar todas</button><button type="button" class="btn sm" id="gpNone">Desmarcar todas</button></div>
       <div class="gp-list">${props.map(item).join('')}</div>`
       : `<p class="no-notes">${ja.size ? 'Tudo o que estas fichas renderiam já está no banco de pílulas.' : 'Não encontrei termos, destaques nem questões escritas nesta ficha.'}</p>
         <p class="hint">O gerador procura <b>**Termo:** definição</b>, <b>**Termo** = definição</b>, <b>==destaque==</b> e uma seção <b># Questões</b> com questões no formato da importação. As objetivas precisam de pelo menos 4 termos na área, para ter alternativas.</p>`}
-    <details class="more gp-ia"><summary>✦ Pedir questões a uma IA (Gemini, ChatGPT…)</summary><div class="more-body">
+    <details class="more gp-ia"${genIaAberta ? ' open' : ''}><summary>✦ Pedir questões a uma IA (Gemini, ChatGPT…)</summary><div class="more-body">
       <p class="hint">1. Copie o pedido, que já leva o texto ${notes.length > 1 ? 'das fichas' : 'da ficha'}. 2. Cole no app da IA. 3. Cole a resposta aqui embaixo.</p>
       <div class="gen-row"><input class="input" id="gpNObj" type="number" min="0" max="40" value="6" inputmode="numeric" aria-label="Objetivas"><span class="hint">objetivas</span><input class="input" id="gpNDis" type="number" min="0" max="40" value="3" inputmode="numeric" aria-label="Dissertativas"><span class="hint">dissertativas</span><button type="button" class="btn sm" id="gpCopy">Copiar pedido</button></div>
       <textarea class="textarea small mono" id="gpCola" rows="6" placeholder="Cole aqui a resposta da IA"></textarea>
@@ -2636,9 +2638,10 @@ function abrirGerador(alvo, extras = []) {
     ${antigasNovas.length ? `<label class="check gp-troca"><input type="checkbox" id="gpTroca" checked><span>Trocar ${antigasNovas.length} ${pl(antigasNovas.length, 'pergunta antiga', 'perguntas antigas')} (“O que é…?”) ainda não ${pl(antigasNovas.length, 'respondida', 'respondidas')} pelas novas</span></label>` : ''}
     <p class="hint">Cada pergunta entra no questionário da sua ficha e volta no tempo certo para revisar. Gerar de novo não duplica.</p>
     <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-close>Cancelar</button>${props.length ? `<button class="btn primary" id="gpOk">Criar ${props.length} pílulas</button>` : ''}</div>`;
-  const body = $('#formBody'), conta = () => { const n = body.querySelectorAll('[data-gp]:checked').length; const b = $('#gpOk'); if (b) b.textContent = n ? `Criar ${n} ${n === 1 ? 'pílula' : 'pílulas'}` : 'Nada marcado'; };
+  const body = $('#formBody'), conta = () => { const n = body.querySelectorAll('[data-gp]:checked').length; const b = $('#gpOk'); if (b) b.textContent = n ? `Criar ${n} ${n === 1 ? 'pílula' : 'pílulas'}` : 'Marque ao menos uma'; };
   body.querySelectorAll('[data-gp]').forEach(c => c.addEventListener('change', conta));
-  $('#gpFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; genFormato = b.dataset.f; abrirGerador(alvo, extras); });
+  $('#gpFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; genFormato = b.dataset.f; abrirGerador(alvo, extras, true); });
+  $('.gp-ia').addEventListener('toggle', e => { genIaAberta = e.target.open; });
   $('#gpAll')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = true; }); conta(); });
   $('#gpNone')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = false; }); conta(); });
   $('#gpCopy').addEventListener('click', async () => {
@@ -2646,17 +2649,23 @@ function abrirGerador(alvo, extras = []) {
     try { await navigator.clipboard.writeText(t); toast('Pedido copiado. Cole no app da IA.'); }
     catch (e) { $('#gpCola').value = t; $('#gpCola').select(); toast('Não deu para copiar sozinho: o pedido está na caixa, copie de lá.', true); }
   });
-  $('#gpLer').addEventListener('click', () => {
+  const lerColadas = (silencioso) => {
     const txt = $('#gpCola').value.trim();
-    if (!txt) { toast('Cole primeiro a resposta da IA.', true); return; }
-    const { items, warns } = parseBlock(txt.replace(/\*\*/g, ''));
-    if (!items.length) { toast('Não encontrei questões nesse texto. Confira se veio no formato pedido.', true); return; }
+    if (!txt) { if (!silencioso) toast('Cole primeiro a resposta da IA.', true); return; }
+    const lido = parseBlock(txt), warns = lido.warns, items = lido.items.filter(q => q.type === 'mc' || (q.answer || '').trim());
+    if (!items.length) { if (!silencioso) toast('Não encontrei questões nesse texto. Confira se veio no formato pedido.', true); return; }
     const novas = items.map(q => ({ ...q, key: notes[0].id + '|ia|' + q.type + '|' + genStrip(q.text).toLowerCase(), tipo: 'ia', noteId: notes[0].id }));
     const seen = new Set(extras.map(x => x.key));
-    abrirGerador(alvo, [...extras, ...novas.filter(x => !seen.has(x.key))]);
-    const lista = document.querySelector('.gp-list'); if (lista) { lista.scrollTop = 0; lista.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    toast(`${plural(items.length, 'questão lida', 'questões lidas')} da IA: estão no topo da lista, já marcadas${warns.length ? `. Atenção: ${warns[0]}` : ''}`, !!warns.length);
-  });
+    const mcN = items.filter(q => q.type === 'mc').length;
+    genLido = `✓ ${plural(items.length, 'questão lida', 'questões lidas')} (${mcN} ${pl(mcN, 'objetiva', 'objetivas')}, ${items.length - mcN} ${pl(items.length - mcN, 'dissertativa', 'dissertativas')}). Estão no topo da lista, já marcadas.`;
+    genIaAberta = false;
+    abrirGerador(alvo, [...extras, ...novas.filter(x => !seen.has(x.key))], true);
+    const lista = document.querySelector('.gp-list'); if (lista) lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast(genLido.replace('✓ ', '') + (warns.length ? ` Atenção: ${warns[0]}` : ''), !!warns.length);
+  };
+  $('#gpLer').addEventListener('click', () => lerColadas(false));
+  let tCola = null;
+  $('#gpCola').addEventListener('input', () => { clearTimeout(tCola); tCola = setTimeout(() => { const v = $('#gpCola').value; if (v.length > 60 && /(^|\n)\s*(?:[*\-•]\s*)?(?:[A-E]\)|resposta\s*:|gabarito\s*:)/i.test(v)) lerColadas(true); }, 900); });
   $('#gpOk')?.addEventListener('click', () => {
     const escolhidas = [...body.querySelectorAll('[data-gp]:checked')].map(c => props[+c.dataset.gp]);
     if (!escolhidas.length) { toast('Marque pelo menos uma pergunta.', true); return; }
@@ -3003,7 +3012,13 @@ const RX_OPT = /^\(?([A-Ea-e])\s*[\)\.\-–:]\s+(.+)$/;
 const RX_KEY = /^(gabarito|resposta correta|resposta|correta|alternativa correta)\s*[:\-–]\s*(.*)$/i;
 const RX_EXP = /^(coment[aá]rio|explica[cç][aã]o|justificativa|solu[cç][aã]o)\s*[:\-–]\s*(.*)$/i;
 function parseBlock(text) {
-  text = String(text || '').replace(/\*\*/g, '').replace(/^\s*#{1,6}\s+/gm, '');   // a IA às vezes devolve negrito e títulos
+  // a IA às vezes devolve markdown: negrito, títulos, listas ("* ", "- ", "• "), citações e recuos
+  text = String(text || '').replace(/\r/g, '').replace(/\*\*|__/g, '').replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/^[ \t]*(?:[*\-•+][ \t]+|>[ \t]?)+/gm, '').replace(/^[ \t]+/gm, '')
+    .replace(/^(quest[aã]o\s*\d+)\s*[:\-–.]?\s*$/gim, '')                       // linha só com "Questão 3"
+    .replace(/^(?:parte\s+\w+\s*[:\-–]?\s*)?(?:quest[oõ]es|perguntas)?\s*(?:objetivas|dissertativas|abertas|discursivas|de m[uú]ltipla escolha)\s*:?\s*$/gim, '')   // títulos de seção
+    .replace(/^(?:aqui est[aã]o|segue[m]?|claro|com certeza|abaixo)\b[^\n]*$/gim, '');  // frase de abertura da IA
+  // "Gabarito: B) texto" ou "Resposta correta: letra B" continuam valendo
   const items = [], warns = []; let cur = null;
   const start = () => { cur = { q: [], opts: [], key: null, exp: [], ans: [], last: null, gap: false }; };
   const finish = () => {
