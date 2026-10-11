@@ -2578,9 +2578,9 @@ function pedidoIA(notes, nObj, nDis) {
 
 Faça ${nObj} questões objetivas e ${nDis} dissertativas, cobrindo os conceitos mais importantes, com alternativas erradas plausíveis.
 
-Use EXATAMENTE este formato, sem markdown, sem negrito e sem títulos, e separe cada questão com uma linha em branco:
+Use EXATAMENTE este formato, sem markdown, sem negrito e sem títulos. Numere cada questão (1., 2., 3.…) e separe cada uma com uma linha em branco:
 
-Enunciado da questão objetiva?
+1. Enunciado da questão objetiva?
 A) alternativa
 B) alternativa
 C) alternativa
@@ -2588,7 +2588,7 @@ D) alternativa
 Gabarito: B
 Comentário: por que a B é a correta.
 
-Enunciado da questão dissertativa?
+2. Enunciado da questão dissertativa?
 Resposta: a resposta modelo, com os pontos que não podem faltar.
 
 TEXTO:
@@ -2611,7 +2611,7 @@ function abrirGerador(alvo, extras = []) {
   let pool = juntar(notesOf(a.id));
   if (pool.termos.length < 4) pool = juntar(state.notes.filter(n => { const x = areaById(n.areaId); return x && x.fieldId === a.fieldId; }));
   const fmt = { ambas: 'both', open: 'open', mc: 'mc' }[genFormato] || 'both';
-  const props = [...propostasDe(notes, fmt, pool), ...extras].filter(p => !ja.has(p.key))
+  const props = [...extras, ...propostasDe(notes, fmt, pool)].filter(p => !ja.has(p.key))     // o que veio da IA aparece primeiro
     .filter(p => !(p.type === 'open' && /^Explique: “(.+?)”/.test(p.text) && antigasResp.has(p.noteId + '|' + norm(p.text.match(/^Explique: “(.+?)”/)[1]))));
   const nMc = props.filter(p => p.type === 'mc').length, nOp = props.length - nMc;
   $('#formTitle').textContent = 'Pílulas a partir das fichas';
@@ -2654,7 +2654,8 @@ function abrirGerador(alvo, extras = []) {
     const novas = items.map(q => ({ ...q, key: notes[0].id + '|ia|' + q.type + '|' + genStrip(q.text).toLowerCase(), tipo: 'ia', noteId: notes[0].id }));
     const seen = new Set(extras.map(x => x.key));
     abrirGerador(alvo, [...extras, ...novas.filter(x => !seen.has(x.key))]);
-    toast(`${plural(items.length, 'questão lida', 'questões lidas')}${warns.length ? `. Atenção: ${warns[0]}` : ''}`, !!warns.length);
+    const lista = document.querySelector('.gp-list'); if (lista) { lista.scrollTop = 0; lista.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    toast(`${plural(items.length, 'questão lida', 'questões lidas')} da IA: estão no topo da lista, já marcadas${warns.length ? `. Atenção: ${warns[0]}` : ''}`, !!warns.length);
   });
   $('#gpOk')?.addEventListener('click', () => {
     const escolhidas = [...body.querySelectorAll('[data-gp]:checked')].map(c => props[+c.dataset.gp]);
@@ -3023,8 +3024,17 @@ function parseBlock(text) {
     }
     cur = null;
   };
-  for (const raw of text.replace(/\r/g, '').split('\n')) {
-    const l = raw.trim();
+  const linhas = text.replace(/\r/g, '').split('\n');
+  // começo de questão mesmo sem linha em branco (o app do Gemini apaga as linhas vazias ao copiar):
+  // termina em "?" ou ":", vem numerada, ou a próxima linha já é uma alternativa ou "Resposta:"
+  const abre = idx => {
+    const l = linhas[idx].trim();
+    if (/^(quest[aã]o\s*)?\d+\s*[\.\)\-–:]\s+\S/i.test(l) || /[?:]$/.test(l)) return true;
+    for (let j = idx + 1; j < linhas.length; j++) { const n = linhas[j].trim(); if (!n) continue; return RX_OPT.test(n) || /^(resposta|gabarito)\s*[:\-–]/i.test(n); }
+    return false;
+  };
+  for (let li = 0; li < linhas.length; li++) {
+    const raw = linhas[li], l = raw.trim();
     if (!l) { if (cur) { if (['key', 'exp', 'ans'].includes(cur.last)) finish(); else cur.gap = true; } continue; }
     let m;
     if ((m = l.match(RX_KEY))) { if (!cur) start(); cur.key = m[2]; cur.last = 'key'; cur.gap = false; continue; }
@@ -3038,7 +3048,7 @@ function parseBlock(text) {
       if (a.trim()) items.push({ type: 'open', text: a.trim(), answer: b.join('::').trim() });
       continue;
     }
-    if (cur && (cur.gap || (cur.last === 'key' && cur.opts.length))) { finish(); }
+    if (cur && (cur.gap || (cur.last === 'key' && cur.opts.length) || (['key', 'exp', 'ans'].includes(cur.last) && abre(li)))) { finish(); }
     if (cur && cur.last === 'opt') { cur.opts[cur.opts.length - 1].t += ' ' + l; continue; }
     if (cur && cur.last === 'key') { cur.ans.push(l); cur.last = 'ans'; continue; }
     if (cur && (cur.last === 'exp' || cur.last === 'ans')) { (cur.last === 'exp' ? cur.exp : cur.ans).push(l); continue; }
