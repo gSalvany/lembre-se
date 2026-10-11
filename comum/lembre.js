@@ -15,7 +15,9 @@
               + plano: { ideal, activityCats, expenseCats, goals, savings, fichas, sleepIntent, wakeIntent, hourlyRate }
      volumen  → { items: [{ id, type, title, author, category, status, current, total, notes, sessions, updatedAt, thumb }] }
      cognitio → { fields, areas, notes (sem o texto), decks, pillLog, pillOfDay }
-     audire   → o mesmo resumo de 'audire.summary' (version 2)
+     audire   → o mesmo resumo de 'audire.summary' (version 2), com relatos (de campo, por missão do Atrium)
+                e diario (áudios levados ao diário, que o Memento oferece trazer para a Existência)
+     memento  → também audireImportados: ids dos áudios que já viraram memória
      atrium   → { dias: { 'AAAA-MM-DD': { preparadoEm, acordou, dormiu, habitos: { idDoHabito: { minutos, estado } },
                   blocos: [{ categoria, icone, tipo: 'producao'|'desvio', de, ate, minutos }], sintese, virada } }, ... }
                 O Memento lê 'dias' e OFERECE preencher a Ficha de Consciência; quem registra é você.
