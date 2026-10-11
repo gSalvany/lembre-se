@@ -894,6 +894,9 @@ dialog.viewer{background:var(--bg)}
 .gp-it input{margin-top:3px;flex:none;width:18px;height:18px}
 .gp-it b{display:block;font-size:14px;font-weight:600;line-height:1.35}.gp-it small{display:block;font-size:12.5px;opacity:.7;margin-top:2px;line-height:1.35}
 .ap-btns{display:flex;gap:6px}
+.gp-tag{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(245,158,11,.15);color:#f59e0b;margin-bottom:3px}
+.gp-t{display:block;font-style:normal;font-size:11px;font-weight:700;letter-spacing:.02em;opacity:.6;margin-bottom:2px}
+.gp-ia{margin-top:4px}
 </style>
 </head>
 <body>
@@ -2330,39 +2333,84 @@ function renderFicha() {
 }
 
 /* ---------- fichas → pílulas ----------
-   Lê cada ficha e propõe perguntas de lembrar (recordação ativa):
-   "**Termo:** definição" e "**Termo** = definição" viram "O que é Termo?";
-   cada ==destaque== vira uma frase para completar. Você revisa e escolhe. */
+   Lê as fichas e propõe pílulas de recordação ativa:
+   - "**Termo:** definição" e "**Termo** = definição" viram "O que é Termo?" (dissertativa)
+     ou "Qual alternativa define Termo?" (objetiva, com as outras definições da área como alternativas);
+   - cada ==destaque== vira uma frase para completar (dissertativa ou objetiva);
+   - questões escritas na própria ficha, numa seção "Questões", entram como estão;
+   - e dá para pedir questões a uma IA e colar a resposta aqui. Você revisa e escolhe. */
 const genStrip = t => String(t || '').replace(/==([^=]+)==/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\s+/g, ' ').trim();
 function genContexto(h) { return genStrip(h).replace(/^(ciclo|unidade|aula|m[oó]dulo|parte|cap[ií]tulo)\s*\d+\s*[—–:\-]\s*/i, '').replace(/^\d+[\.\)]\s*/, '').trim(); }
-function propostasDe(note) {
-  const out = [], vistos = new Set(); let ctx = '';
-  const add = (q, a, tipo) => {
-    const key = note.id + '|' + genStrip(q).toLowerCase();
-    if (vistos.has(key) || genStrip(a).length < 4) return; vistos.add(key);
-    out.push({ text: q, answer: a, key, tipo, noteId: note.id });
-  };
+const RX_QSEC = /^(quest[oõ]es|exerc[ií]cios|simulado|perguntas|teste|quiz)\b/i;
+/* matéria-prima de uma ficha: termos, lacunas e questões escritas */
+function materiaDe(note) {
+  const termos = [], lacunas = [], escritas = []; let ctx = '', emQuestoes = false, bloco = [];
+  const fechaBloco = () => { if (bloco.length) { escritas.push(...parseBlock(bloco.join('\n')).items); bloco = []; } };
   String(note.body || '').replace(/\r/g, '').split('\n').forEach(raw => {
-    const l = raw.trim(); if (!l) return;
-    if (/^#{1,3}\s/.test(l)) { ctx = genContexto(l.replace(/^#+\s*/, '')); return; }
+    const l = raw.trim();
+    if (/^#{1,3}\s/.test(l)) { fechaBloco(); const h = l.replace(/^#+\s*/, ''); emQuestoes = RX_QSEC.test(genStrip(h)); if (!emQuestoes) ctx = genContexto(h); return; }
+    if (emQuestoes) { bloco.push(raw); return; }
+    if (!l) return;
     if (/^\*\*[^*]+\*\*$/.test(l)) { const c = genContexto(l); if (c.length >= 3) ctx = c; return; }
     const corpo = l.replace(/^[-•>]\s*/, '');
-    // **Termo:** definição (vários na mesma linha) e **Termo** = definição
     const rx = /\*\*([^*]{2,60}?)(?::\*\*|\*\*\s*[:=])\s*([\s\S]*?)(?=\s\*\*[^*]{2,60}?(?::\*\*|\*\*\s*[:=])|$)/g;
     let m;
     while ((m = rx.exec(corpo))) {
       const termo = genStrip(m[1]).replace(/[:=]$/, '').trim(), def = genStrip(m[2]).replace(/^[:=\s]+/, '');
-      if (!termo || termo.length > 60 || def.length < 4) continue;
-      add(`O que é “${termo}”?${ctx && norm(ctx) !== norm(termo) ? ` (${ctx})` : ''}`, `**${termo}:** ${def}${ctx ? `\n\n*${ctx}*` : ''}`, 'termo');
+      if (termo && termo.length <= 60 && def.length >= 4) termos.push({ termo, def, ctx });
     }
-    // ==destaques== viram frases para completar
     const hs = [...corpo.matchAll(/==([^=]{1,80})==/g)];
     hs.forEach((h, i) => {
       let k = 0;
-      const frase = corpo.replace(/==([^=]{1,80})==/g, (_, x) => (k++ === i ? '_____' : x));
-      const q = genStrip(frase);
-      if (q.length < 12) return;
-      add(`Complete: ${q}${ctx ? ` (${ctx})` : ''}`, `**${genStrip(h[1])}**\n\n${genStrip(corpo)}`, 'lacuna');
+      const frase = genStrip(corpo.replace(/==([^=]{1,80})==/g, (_, x) => (k++ === i ? '_____' : x)));
+      if (frase.length >= 12) lacunas.push({ frase, resp: genStrip(h[1]), linha: genStrip(corpo), ctx });
+    });
+  });
+  fechaBloco();
+  return { termos, lacunas, escritas };
+}
+/* embaralha de forma estável (a mesma pergunta sempre com a mesma ordem) */
+function genMistura(arr, semente) {
+  let h = 0; for (const c of semente) h = (h * 31 + c.charCodeAt(0)) | 0;
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { h = (h * 1103515245 + 12345) | 0; const j = Math.abs(h) % (i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function genObjetiva(texto, certa, erradas, semente, explicacao, perto = []) {
+  // alternativas erradas: primeiro as do mesmo tema (mais difíceis), depois o resto da área
+  const ok = x => norm(x) !== norm(certa);
+  const prox = genMistura([...new Set(perto.filter(ok))], semente + '#p');
+  const dist = [...new Set([...prox, ...genMistura([...new Set(erradas.filter(ok))], semente + '#d')])].slice(0, 3);
+  if (dist.length < 3) return null;
+  const corte = t => t.length > 150 ? t.slice(0, 148).trim() + '…' : t;
+  const ops = genMistura([certa, ...dist], semente).map((t, i) => ({ k: LETTERS[i], t: corte(t) }));
+  return { type: 'mc', text: texto, options: ops, correct: LETTERS[ops.findIndex(o => o.t === corte(certa))], explanation: explicacao || '' };
+}
+function propostasDe(notes, formato, pool) {
+  const out = [], vistos = new Set();
+  const add = (q, note, tipo) => {
+    if (!q) return;
+    const key = note.id + '|' + q.type + '|' + genStrip(q.text).toLowerCase();
+    if (vistos.has(key)) return; vistos.add(key);
+    out.push({ ...q, key, tipo, noteId: note.id });
+  };
+  const defsPool = pool.termos.map(t => t.def), termosPool = pool.termos.map(t => t.termo), respPool = [...pool.lacunas.map(l => l.resp), ...termosPool];
+  notes.forEach(note => {
+    const M = materiaDe(note), ctxTxt = c => c ? ` (${c})` : '';
+    M.escritas.forEach(q => add(q, note, 'escrita'));
+    M.termos.forEach((t, i) => {
+      if (formato !== 'mc') add({ type: 'open', text: `Explique: “${t.termo}”.${t.ctx && norm(t.ctx) !== norm(t.termo) ? ctxTxt(t.ctx) : ''}`, answer: `**${t.termo}:** ${t.def}${t.ctx ? `\n\n*${t.ctx}*` : ''}` }, note, 'termo');
+      if (formato !== 'open') {
+        const expl = `${t.termo}: ${t.def}`;
+        const q = i % 2 === 0
+          ? genObjetiva(`Qual alternativa corresponde a “${t.termo}”?${ctxTxt(t.ctx)}`, t.def, defsPool, note.id + t.termo, expl, pool.termos.filter(x => x.ctx === t.ctx).map(x => x.def))
+          : genObjetiva(`A qual termo se refere: “${t.def.length > 160 ? t.def.slice(0, 158) + '…' : t.def}”?`, t.termo, termosPool, note.id + t.termo, expl, pool.termos.filter(x => x.ctx === t.ctx).map(x => x.termo));
+        add(q, note, 'termo');
+      }
+    });
+    M.lacunas.forEach(l => {
+      if (formato !== 'mc') add({ type: 'open', text: `Complete: ${l.frase}${ctxTxt(l.ctx)}`, answer: `**${l.resp}**\n\n${l.linha}` }, note, 'lacuna');
+      if (formato !== 'open') add(genObjetiva(`Complete: ${l.frase}${ctxTxt(l.ctx)}`, l.resp, respPool, note.id + l.frase, l.linha), note, 'lacuna');
     });
   });
   return out;
@@ -2375,37 +2423,89 @@ function deckDeFichas(a) {
   }
   return k;
 }
-function abrirGerador(alvo) {
+function pedidoIA(notes, nObj, nDis) {
+  const texto = notes.map(n => `# ${n.title}\n${n.body || ''}`).join('\n\n').slice(0, 24000);
+  return `Crie questões de estudo a partir do texto abaixo, para revisar para uma prova de graduação.
+
+Faça ${nObj} questões objetivas e ${nDis} dissertativas, cobrindo os conceitos mais importantes, com alternativas erradas plausíveis.
+
+Use EXATAMENTE este formato, sem markdown, sem negrito e sem títulos, e separe cada questão com uma linha em branco:
+
+Enunciado da questão objetiva?
+A) alternativa
+B) alternativa
+C) alternativa
+D) alternativa
+Gabarito: B
+Comentário: por que a B é a correta.
+
+Enunciado da questão dissertativa?
+Resposta: a resposta modelo, com os pontos que não podem faltar.
+
+TEXTO:
+${texto}`;
+}
+let genFormato = 'ambas';
+function abrirGerador(alvo, extras = []) {
   const [tipo, id] = alvo.split(':');
   const notes = tipo === 'note' ? state.notes.filter(n => n.id === id) : notesOf(id).sort(byDateAsc);
   if (!notes.length) return;
   const a = areaById(notes[0].areaId); if (!a) return;
   const existente = state.decks.find(x => x.auto === 'fichas' && x.areaId === a.id);
   const ja = new Set(existente ? existente.items.map(i => i.key).filter(Boolean) : []);
-  const props = notes.flatMap(propostasDe).filter(p => !ja.has(p.key));
-  const nT = props.filter(p => p.tipo === 'termo').length, nL = props.length - nT;
+  // alternativas erradas vêm de toda a área (e do campo, se a área for pequena)
+  const juntar = ns => ns.map(materiaDe).reduce((t, m) => ({ termos: t.termos.concat(m.termos), lacunas: t.lacunas.concat(m.lacunas) }), { termos: [], lacunas: [] });
+  let pool = juntar(notesOf(a.id));
+  if (pool.termos.length < 4) pool = juntar(state.notes.filter(n => { const x = areaById(n.areaId); return x && x.fieldId === a.fieldId; }));
+  const fmt = { ambas: 'both', open: 'open', mc: 'mc' }[genFormato] || 'both';
+  const props = [...propostasDe(notes, fmt, pool), ...extras].filter(p => !ja.has(p.key));
+  const nMc = props.filter(p => p.type === 'mc').length, nOp = props.length - nMc;
   $('#formTitle').textContent = 'Pílulas a partir das fichas';
-  $('#formSub').textContent = props.length
-    ? `${plural(props.length, 'pergunta encontrada', 'perguntas encontradas')}${notes.length > 1 ? ` em ${plural(notes.length, 'ficha', 'fichas')}` : ''}: ${nT} de termos e ${nL} de completar. Desmarque o que não serve.`
-    : '';
-  $('#formBody').innerHTML = props.length ? `
-    <div class="gp-bar"><button type="button" class="btn sm" id="gpAll">Marcar todas</button><button type="button" class="btn sm" id="gpNone">Desmarcar todas</button></div>
-    <div class="gp-list">${props.map((p, i) => `<label class="gp-it"><input type="checkbox" data-gp="${i}" checked>
-      <span><b>${esc(p.text)}</b><small>${esc(genStrip(p.answer).slice(0, 160))}</small></span></label>`).join('')}</div>
-    <p class="hint">Elas entram no banco “Fichas · ${esc(a.title)}”, ligado a esta área, e voltam no tempo certo para revisar. Gerar de novo depois não duplica.</p>
-    <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="gpOk">Criar ${props.length} pílulas</button></div>`
-    : `<p class="no-notes">${ja.size ? 'Todas as perguntas destas fichas já estão no banco de pílulas.' : 'Não encontrei termos nem destaques para virar pergunta.'}</p>
-      <p class="hint">O gerador procura linhas como <b>**Termo:** definição</b> ou <b>**Termo** = definição</b>, e trechos marcados com <b>==destaque==</b>.</p>
-      <div style="display:flex;justify-content:flex-end"><button class="btn" data-close>Fechar</button></div>`;
+  $('#formSub').textContent = props.length ? `${plural(props.length, 'pergunta encontrada', 'perguntas encontradas')}${notes.length > 1 ? ` em ${plural(notes.length, 'ficha', 'fichas')}` : ''}: ${nMc} ${nMc === 1 ? 'objetiva' : 'objetivas'} e ${nOp} ${nOp === 1 ? 'dissertativa' : 'dissertativas'}. Desmarque o que não serve.` : '';
+  const item = (p, i) => `<label class="gp-it"><input type="checkbox" data-gp="${i}" checked>
+      <span><em class="gp-t">${p.type === 'mc' ? 'Objetiva' : 'Dissertativa'}${p.tipo === 'escrita' ? ' · da ficha' : p.tipo === 'ia' ? ' · da IA' : ''}</em><b>${esc(p.text)}</b>
+      ${p.type === 'mc' ? `<small>${p.options.map(o => `${o.k === p.correct ? '✓ ' : ''}${o.k}) ${esc(o.t)}`).join('<br>')}</small>` : `<small>${esc(genStrip(p.answer).slice(0, 160))}</small>`}</span></label>`;
+  $('#formBody').innerHTML = `
+    <div class="seg three" id="gpFmt" role="group" aria-label="Formato">
+      <button type="button" data-f="ambas" aria-pressed="${genFormato === 'ambas'}">As duas</button>
+      <button type="button" data-f="mc" aria-pressed="${genFormato === 'mc'}">Objetivas</button>
+      <button type="button" data-f="open" aria-pressed="${genFormato === 'open'}">Dissertativas</button></div>
+    ${props.length ? `<div class="gp-bar"><button type="button" class="btn sm" id="gpAll">Marcar todas</button><button type="button" class="btn sm" id="gpNone">Desmarcar todas</button></div>
+      <div class="gp-list">${props.map(item).join('')}</div>`
+      : `<p class="no-notes">${ja.size ? 'Tudo o que estas fichas renderiam já está no banco de pílulas.' : 'Não encontrei termos, destaques nem questões escritas nesta ficha.'}</p>
+        <p class="hint">O gerador procura <b>**Termo:** definição</b>, <b>**Termo** = definição</b>, <b>==destaque==</b> e uma seção <b># Questões</b> com questões no formato da importação. As objetivas precisam de pelo menos 4 termos na área, para ter alternativas.</p>`}
+    <details class="more gp-ia"><summary>✦ Pedir questões a uma IA (Gemini, ChatGPT…)</summary><div class="more-body">
+      <p class="hint">1. Copie o pedido, que já leva o texto ${notes.length > 1 ? 'das fichas' : 'da ficha'}. 2. Cole no app da IA. 3. Cole a resposta aqui embaixo.</p>
+      <div class="gen-row"><input class="input" id="gpNObj" type="number" min="0" max="40" value="6" inputmode="numeric" aria-label="Objetivas"><span class="hint">objetivas</span><input class="input" id="gpNDis" type="number" min="0" max="40" value="3" inputmode="numeric" aria-label="Dissertativas"><span class="hint">dissertativas</span><button type="button" class="btn sm" id="gpCopy">Copiar pedido</button></div>
+      <textarea class="textarea small mono" id="gpCola" rows="6" placeholder="Cole aqui a resposta da IA"></textarea>
+      <button type="button" class="btn sm" id="gpLer">Ler questões coladas</button></div></details>
+    <p class="hint">Entram no banco “Fichas · ${esc(a.title)}”, ligado a esta área, e voltam no tempo certo para revisar. Gerar de novo não duplica.</p>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-close>Cancelar</button>${props.length ? `<button class="btn primary" id="gpOk">Criar ${props.length} pílulas</button>` : ''}</div>`;
   const body = $('#formBody'), conta = () => { const n = body.querySelectorAll('[data-gp]:checked').length; const b = $('#gpOk'); if (b) b.textContent = n ? `Criar ${n} ${n === 1 ? 'pílula' : 'pílulas'}` : 'Nada marcado'; };
   body.querySelectorAll('[data-gp]').forEach(c => c.addEventListener('change', conta));
+  $('#gpFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; genFormato = b.dataset.f; abrirGerador(alvo, extras); });
   $('#gpAll')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = true; }); conta(); });
   $('#gpNone')?.addEventListener('click', () => { body.querySelectorAll('[data-gp]').forEach(c => { c.checked = false; }); conta(); });
+  $('#gpCopy').addEventListener('click', async () => {
+    const t = pedidoIA(notes, Math.max(0, +$('#gpNObj').value || 0), Math.max(0, +$('#gpNDis').value || 0));
+    try { await navigator.clipboard.writeText(t); toast('Pedido copiado. Cole no app da IA.'); }
+    catch (e) { $('#gpCola').value = t; $('#gpCola').select(); toast('Não deu para copiar sozinho: o pedido está na caixa, copie de lá.', true); }
+  });
+  $('#gpLer').addEventListener('click', () => {
+    const txt = $('#gpCola').value.trim();
+    if (!txt) { toast('Cole primeiro a resposta da IA.', true); return; }
+    const { items, warns } = parseBlock(txt.replace(/\*\*/g, ''));
+    if (!items.length) { toast('Não encontrei questões nesse texto. Confira se veio no formato pedido.', true); return; }
+    const novas = items.map(q => ({ ...q, key: notes[0].id + '|ia|' + q.type + '|' + genStrip(q.text).toLowerCase(), tipo: 'ia', noteId: notes[0].id }));
+    const seen = new Set(extras.map(x => x.key));
+    abrirGerador(alvo, [...extras, ...novas.filter(x => !seen.has(x.key))]);
+    toast(`${plural(items.length, 'questão lida', 'questões lidas')}${warns.length ? `. Atenção: ${warns[0]}` : ''}`, !!warns.length);
+  });
   $('#gpOk')?.addEventListener('click', () => {
     const escolhidas = [...body.querySelectorAll('[data-gp]:checked')].map(c => props[+c.dataset.gp]);
     if (!escolhidas.length) { toast('Marque pelo menos uma pergunta.', true); return; }
     const k = deckDeFichas(a);
-    escolhidas.forEach(p => k.items.push({ ...makeItem({ type: 'open', text: p.text, answer: p.answer }), key: p.key, noteId: p.noteId }));
+    escolhidas.forEach(p => k.items.push({ ...makeItem(p), key: p.key, noteId: p.noteId }));
     persist(); render(); $('#dlgForm').close();
     toast(`${plural(escolhidas.length, 'pílula criada', 'pílulas criadas')} em “${k.title}”`);
   });
@@ -2718,6 +2818,7 @@ const RX_OPT = /^\(?([A-Ea-e])\s*[\)\.\-–:]\s+(.+)$/;
 const RX_KEY = /^(gabarito|resposta correta|resposta|correta|alternativa correta)\s*[:\-–]\s*(.*)$/i;
 const RX_EXP = /^(coment[aá]rio|explica[cç][aã]o|justificativa|solu[cç][aã]o)\s*[:\-–]\s*(.*)$/i;
 function parseBlock(text) {
+  text = String(text || '').replace(/\*\*/g, '').replace(/^\s*#{1,6}\s+/gm, '');   // a IA às vezes devolve negrito e títulos
   const items = [], warns = []; let cur = null;
   const start = () => { cur = { q: [], opts: [], key: null, exp: [], ans: [], last: null, gap: false }; };
   const finish = () => {
@@ -2851,6 +2952,7 @@ Explique a falseabilidade de Popper.
 Resposta: uma teoria é científica se puder ser testada e refutada."></textarea>
       <p class="hint">Separe as questões com uma linha em branco. Múltipla escolha: alternativas A) a E) e “Gabarito: letra”. Dissertativa: enunciado e “Resposta: …” (ou “pergunta :: resposta” numa linha).</p>
       <div class="qpreview" id="qPreview"></div>
+      <div class="gen-row"><span class="hint">Vai pedir a uma IA?</span><button type="button" class="btn sm" id="dAskAI">Copiar pedido no formato certo</button></div>
       <div class="gen-row"><span class="hint">Sem enunciados?</span><input class="input" id="dCount" type="number" min="1" max="500" inputmode="numeric" placeholder="Qtd."><input class="input" id="dLabel" placeholder="Rótulo (Exercício)"><button type="button" class="btn sm" id="dGen">Gerar numeradas</button></div>`;
     const upd = () => {
       const v = $('#qImport').value;
@@ -2865,6 +2967,11 @@ Resposta: uma teoria é científica se puder ser testada e refutada."></textarea
       $('#qAdd')?.addEventListener('click', () => { workItems.push(...items.map(makeItem)); $('#qImport').value = ''; upd(); renderQList(); toast(`${items.length} ${pl(items.length, 'questão adicionada', 'questões adicionadas')}`); });
     };
     $('#qImport').addEventListener('input', upd);
+    $('#dAskAI')?.addEventListener('click', async () => {
+      const t = pedidoIA([{ title: 'Conteúdo', body: '[cole aqui o texto, o resumo da aula ou o PDF]' }], 8, 4);
+      try { await navigator.clipboard.writeText(t); toast('Pedido copiado. Cole na IA junto com o conteúdo e traga a resposta para cá.'); }
+      catch (e) { $('#qImport').value = t; toast('Não deu para copiar sozinho: o pedido está na caixa.', true); }
+    });
     $('#dGen').addEventListener('click', () => {
       const n = Math.min(500, Math.max(0, parseInt($('#dCount').value) || 0)); if (!n) { $('#dCount').focus(); return; }
       const label = $('#dLabel').value.trim() || 'Exercício', base = workItems.length;
