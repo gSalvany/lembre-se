@@ -897,6 +897,33 @@ dialog.viewer{background:var(--bg)}
 .gp-tag{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(245,158,11,.15);color:#f59e0b;margin-bottom:3px}
 .gp-t{display:block;font-style:normal;font-size:11px;font-weight:700;letter-spacing:.02em;opacity:.6;margin-bottom:2px}
 .gp-ia{margin-top:4px}
+
+/* ---------- estrutura Campo → Caderno → Ficha → Questionário ---------- */
+.due-t{color:var(--amber);font-weight:700}
+.ap-bar{margin-top:10px}
+.ap-prat{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.ap-mix{font-size:12.5px;color:var(--faint);margin-top:6px}
+.sim-tag{display:inline-block;font-family:var(--sans,system-ui);font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--amber-soft);color:var(--amber);vertical-align:middle;margin-left:4px}
+.fi-bar{display:block;height:4px;border-radius:2px;background:var(--input);overflow:hidden;margin:6px 0 2px;max-width:220px}.fi-bar i{display:block;height:100%;background:var(--mint,#3ecf8e)}
+.sim-desc{font-size:14px;color:var(--faint);margin:8px 0}.sim-desc a{color:var(--amber)}
+.quest{margin:18px 0 8px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card,transparent)}
+.qs-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.qs-h h3{font-family:var(--serif,Georgia);font-weight:500;font-size:20px}.qs-h span{font-size:13px;color:var(--faint);font-weight:700}
+.quest .dbar{margin-top:8px}
+.qs-meta{font-size:13px;color:var(--faint);margin-top:8px;line-height:1.5}
+.qs-go{width:100%;margin-top:12px;justify-content:center}
+.qs-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.qs-list{margin-top:12px}.qs-list summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--faint)}
+.qs-list ul{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column}
+.qs-list li{display:flex;gap:10px;align-items:baseline;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--line);line-height:1.4}
+.qd{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block;background:var(--line-strong)}
+.qd[data-e="ok"]{background:var(--mint,#3ecf8e)}.qd[data-e="revisar"]{background:var(--amber)}.qd[data-e="gargalo"]{background:#e5534b}
+.qs-leg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12px;color:var(--faint);margin-top:8px}.qs-leg .qd{margin-right:-6px}
+.gp-troca{margin-top:4px;font-size:13px}
+.rev-f{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}.rev-f .select{flex:1;min-width:150px}
+.rev-list{display:flex;flex-direction:column;gap:8px}
+.rev-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:16px}
+.rev-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left}
+.rev-main b{font-size:15.5px}.rev-main small{font-size:12.5px;color:var(--faint);line-height:1.4}
 </style>
 </head>
 <body>
@@ -953,7 +980,7 @@ dialog.viewer{background:var(--bg)}
   <nav class="tabs" role="tablist" aria-label="Visões">
     <button class="tab" role="tab" id="tab-map" aria-controls="viewMap" aria-selected="true" data-tab="map"><span class="long">Mapa de Conhecimento</span><span class="short">Mapa</span><span class="count" id="cFields"></span></button>
     <button class="tab" role="tab" id="tab-notes" aria-controls="viewNotes" aria-selected="false" data-tab="notes"><span class="long">Todos os Cadernos</span><span class="short">Cadernos</span><span class="count" id="cNotes"></span></button>
-    <button class="tab" role="tab" id="tab-pills" aria-controls="viewPills" aria-selected="false" data-tab="pills"><span class="long">Pílulas de Aprendizado</span><span class="short">Pílulas</span><span class="count" id="cPills"></span></button>
+    <button class="tab" role="tab" id="tab-pills" aria-controls="viewPills" aria-selected="false" data-tab="pills"><span class="long">Revisar</span><span class="short">Revisar</span><span class="count" id="cPills"></span></button>
   </nav>
 
   <!-- Visão 1: mapa (oculta por completo quando a outra aba está ativa) -->
@@ -980,7 +1007,7 @@ dialog.viewer{background:var(--bg)}
   <section id="viewPills" role="tabpanel" aria-labelledby="tab-pills" hidden></section>
 
   <!-- Página da área (Mapa → Área) e leitura de uma ficha (Área → Ficha) -->
-  <section id="viewArea" aria-label="Área de estudo" hidden></section>
+  <section id="viewArea" aria-label="Caderno" hidden></section>
   <section id="viewFicha" aria-label="Ficha" hidden></section>
 </div>
 
@@ -1064,8 +1091,8 @@ dialog.viewer{background:var(--bg)}
       <section class="w-section">
         <h3>O Cognitio permite que você…</h3>
         <ul class="w-list">
-        <li class="w-item"><span class="w-ico" style="--c:var(--amber)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><b>Mapeie disciplinas e subáreas em 3 níveis</b><p>Campos de estudo, áreas e fichamentos, do macro ao detalhe.</p></div></li>
-        <li class="w-item"><span class="w-ico" style="--c:var(--teal)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><div><b>Acompanhe o progresso calculado sozinho</b><p>Cada área dominada ou em estudo move a barra do seu campo.</p></div></li>
+        <li class="w-item"><span class="w-ico" style="--c:var(--amber)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><b>Mapeie disciplinas e subáreas em 3 níveis</b><p>Campos de estudo, cadernos e fichas, do macro ao detalhe.</p></div></li>
+        <li class="w-item"><span class="w-ico" style="--c:var(--teal)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><div><b>Acompanhe o progresso calculado sozinho</b><p>Cada caderno dominado ou em estudo move a barra do seu campo.</p></div></li>
         <li class="w-item"><span class="w-ico" style="--c:var(--amber)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5zM4 19.5A2 2 0 0 1 6 18h12M9 7h6M9 11h4"/></svg></span><div><b>Escreva fichamentos com links e referências</b><p>Formato limpo, tags, capas e PDFs vinculados a cada área.</p></div></li>
         <li class="w-item"><span class="w-ico" style="--c:var(--teal)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-35 12 12)"/><path d="M9.7 8.7l4.6 6.6"/></svg></span><div><b>Treine com pílulas de Ultralearning</b><p>Tente antes de ver a solução, avalie-se e deixe a revisão espaçada decidir quando cada desafio volta.</p></div></li>
         <li class="w-item"><span class="w-ico" style="--c:var(--teal)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/><path d="M19 2v3M17.5 3.5h3"/></svg></span><div><b>Alterne entre Obsidian e Papel</b><p>Modo escuro para a noite, modo claro para ler de dia.</p></div></li>
@@ -1233,6 +1260,96 @@ function isValid(d) {
       && d.notes.every(n => ok(n) && typeof n.areaId === 'string');
 }
 /* Completa campos novos sem descartar nada que já existia */
+/* ============ Estrutura: Campo → Caderno → Ficha → Questionário ============
+   Cada questão pertence a uma ficha: o questionário da ficha é um banco com noteId.
+   Simulados que não vêm de uma ficha viram fichas do tipo "simulado" (sem texto).
+   A migração é genérica (lê o que estiver salvo, sem nenhum nome fixo) e idempotente:
+   roda a cada carga e só mexe no que ainda não está na estrutura nova. */
+function reestruturar(d) {
+  const noteById = new Map(d.notes.map(n => [n.id, n])), areaById_ = new Map(d.areas.map(a => [a.id, a]));
+  const deckDaNota = new Map();
+  d.decks.forEach(k => { if (k.noteId && noteById.has(k.noteId) && !deckDaNota.has(k.noteId)) deckDaNota.set(k.noteId, k); });
+  const pendentes = d.decks.filter(k => !(k.noteId && deckDaNota.get(k.noteId) === k));
+  if (!pendentes.length) { sincronizarDecks(d); return false; }
+  const agora = new Date().toISOString(), saida = d.decks.filter(k => !pendentes.includes(k));
+  const deckDe = (n, base) => {
+    let k = deckDaNota.get(n.id);
+    if (!k) {
+      const a = areaById_.get(n.areaId);
+      k = { id: uid(), title: n.title, unit: 'pílulas', fieldId: a.fieldId, areaId: a.id, source: '', order: base ? base.order : 'seq', principle: base ? base.principle : 'retrieval', items: [], createdAt: agora, noteId: n.id };
+      deckDaNota.set(n.id, k); saida.push(k);
+    }
+    return k;
+  };
+  const cadernoDeSimulados = fieldId => {
+    let a = d.areas.find(x => x.fieldId === fieldId && x.simulados);
+    if (!a) { a = { id: uid(), fieldId, title: 'Simulados', status: 1, simulados: true, createdAt: agora }; d.areas.push(a); areaById_.set(a.id, a); }
+    return a;
+  };
+  pendentes.forEach(k => {
+    let itens = k.items;
+    if (k.noteId && !noteById.has(k.noteId)) delete k.noteId;              // ficha apagada: vira simulado
+    if (k.auto === 'fichas' || itens.some(i => i.noteId && noteById.has(i.noteId))) {
+      const resto = [];
+      itens.forEach(i => { const n = i.noteId && noteById.get(i.noteId); if (n) deckDe(n, k).items.push(i); else resto.push(i); });
+      if (!resto.length) return;                                           // tudo foi para as fichas certas
+      itens = resto;
+    }
+    const a = (k.areaId && areaById_.get(k.areaId)) || cadernoDeSimulados(k.fieldId);
+    const n = { id: uid(), areaId: a.id, title: k.auto === 'fichas' ? 'Questões soltas' : k.title, body: '', tags: [], refs: safeUrl(k.source) ? [k.source] : [], files: [], cover: '', createdAt: k.createdAt || agora, kind: 'simulado' };
+    d.notes.push(n); noteById.set(n.id, n);
+    Object.assign(k, { items: itens, noteId: n.id, areaId: a.id, fieldId: a.fieldId, title: n.title }); delete k.auto;
+    deckDaNota.set(n.id, k); saida.push(k);
+  });
+  d.decks = saida;
+  // o histórico e a pílula do dia seguem a questão para o banco novo
+  const deckDoItem = new Map(); d.decks.forEach(k => k.items.forEach(i => deckDoItem.set(i.id, k.id)));
+  d.pillLog.forEach(l => { const nk = deckDoItem.get(l.itemId); if (nk) l.deckId = nk; });
+  if (d.pillOfDay) { const nk = deckDoItem.get(d.pillOfDay.itemId); if (nk) d.pillOfDay.deckId = nk; else d.pillOfDay = null; }
+  sincronizarDecks(d);
+  return true;
+}
+/* o questionário acompanha a ficha: título, caderno e campo */
+function sincronizarDecks(d) {
+  const notes = new Map(d.notes.map(n => [n.id, n])), areas = new Map(d.areas.map(a => [a.id, a]));
+  d.decks.forEach(k => {
+    const n = k.noteId && notes.get(k.noteId), a = n && areas.get(n.areaId);
+    if (!a) return;
+    k.areaId = a.id; k.fieldId = a.fieldId;
+    if (n.kind !== 'simulado') k.title = n.title;
+  });
+}
+const deckDaFicha = n => n && state.decks.find(k => k.noteId === n.id) || null;
+function criarDeckDaFicha(n) {
+  let k = deckDaFicha(n); if (k) return k;
+  const a = areaById(n.areaId);
+  k = { id: uid(), title: n.title, unit: 'pílulas', fieldId: a.fieldId, areaId: a.id, source: '', order: 'seq', principle: 'retrieval', items: [], createdAt: new Date().toISOString(), noteId: n.id };
+  state.decks.push(k); return k;
+}
+/* banco criado pelo formulário: ganha a sua ficha "Simulado" no caderno escolhido */
+function garantirFichaDoBanco(k) {
+  if (k.noteId && state.notes.some(n => n.id === k.noteId)) return;
+  let a = k.areaId && areaById(k.areaId);
+  if (!a) { a = state.areas.find(x => x.fieldId === k.fieldId && x.simulados); if (!a) { a = { id: uid(), fieldId: k.fieldId, title: 'Simulados', status: 1, simulados: true, createdAt: new Date().toISOString() }; state.areas.push(a); } }
+  const n = { id: uid(), areaId: a.id, title: k.title, body: '', tags: [], refs: safeUrl(k.source) ? [k.source] : [], files: [], cover: '', createdAt: k.createdAt || new Date().toISOString(), kind: 'simulado' };
+  state.notes.push(n); k.noteId = n.id; k.areaId = a.id;
+}
+const fichaDominio = k => k ? { total: k.items.length, done: deckDone(k), due: dueCount(k), novas: newCount(k), weak: weakCount(k) } : { total: 0, done: 0, due: 0, novas: 0, weak: 0 };
+/* sorteio dentro de um escopo (caderno ou campo): gargalos vencidos, vencidas, novas; intercalando fichas */
+function escopoPick(escopo, excludeId, avoidDeck) {
+  const ks = state.decks.filter(k => k.items.length && (escopo.areaId ? k.areaId === escopo.areaId : escopo.fieldId ? k.fieldId === escopo.fieldId : true));
+  const cands = ks.map(k => ({ deck: k, item: nextItem(k, excludeId) })).filter(x => x.item);
+  if (cands.length) {
+    const nota = x => isDue(x.item) ? (isWeak(x.item) ? 0 : 1) : 2;
+    const melhor = Math.min(...cands.map(nota));
+    let top = cands.filter(x => nota(x) === melhor);
+    const outros = top.filter(x => x.deck.id !== avoidDeck); if (outros.length) top = outros;
+    return top[Math.floor(Math.random() * top.length)];
+  }
+  const ex = ks.map(k => ({ deck: k, item: extraItem(k, excludeId) })).filter(x => x.item);
+  return ex.length ? { ...ex[Math.floor(Math.random() * ex.length)], extra: true } : null;
+}
+
 function normalize(d) {
   const fieldIds = new Set(d.fields.map(f => f.id));
   d.fields.forEach(f => {
@@ -1275,14 +1392,28 @@ function normalize(d) {
   });
   const pillLog = (Array.isArray(d.pillLog) ? d.pillLog : []).filter(l => l && !isNaN(Date.parse(l.at)));
   const pillOfDay = d.pillOfDay && typeof d.pillOfDay === 'object' ? d.pillOfDay : null;
-  return { version: 4, fields: d.fields, areas: d.areas, notes: d.notes, decks, pillLog, pillOfDay };
+  const out = { version: 5, fields: d.fields, areas: d.areas, notes: d.notes, decks, pillLog, pillOfDay };
+  if (reestruturar(out)) out.reestruturadoEm = new Date().toISOString();
+  return out;
 }
 function load() {
-  try { const raw = CogStore.get(); if (raw) { const d = JSON.parse(raw); if (isValid(d)) return normalize(d); } }
+  try {
+    const raw = CogStore.get();
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (isValid(d)) {
+        const antes = d.version, out = normalize(d);
+        if (out.reestruturadoEm && (antes || 0) < 5 && CogStore.guardarCopia) CogStore.guardarCopia('state-antes-cadernos', raw);
+        if (out.reestruturadoEm) { delete out.reestruturadoEm; setTimeout(() => { persist(); toast('Cognitio reorganizado: agora cada ficha tem o seu questionário.'); }, 400); }
+        return out;
+      }
+    }
+  }
   catch (e) { console.warn('Falha ao ler os dados salvos', e); }
   const d = normalize(seed()); persist(d); return d;
 }
 function persist(d = state) {
+  try { sincronizarDecks(d); } catch (e) {}
   try { CogStore.set(JSON.stringify(d)); }
   catch (e) { toast('Não foi possível salvar no navegador. Exporte um backup.', true); }
   try { if (d === state) publicarResumo(); } catch (e) {}      // na primeira carga o estado ainda não existe
@@ -1448,7 +1579,7 @@ function renderSummary() {
   const withNotes = state.areas.filter(a => notesOf(a.id).length).length, ratio = g.total ? state.notes.length / g.total : 0;
   $('#dDens').textContent = `${ratio.toFixed(1).replace('.', ',')} ${pl(ratio, 'síntese', 'sínteses')} por área`;
   $('#dDensBar').style.width = (g.total ? withNotes / g.total * 100 : 0) + '%';
-  $('#dDensTxt').innerHTML = `<b>${withNotes} de ${g.total}</b> áreas têm pelo menos uma síntese escrita.`;
+  $('#dDensTxt').innerHTML = `<b>${withNotes} de ${g.total}</b> cadernos têm pelo menos uma ficha escrita.`;
   $('#dEngine').innerHTML = `<div><b>${e.due}</b><small>${pl(e.due, 'vencida', 'vencidas')}</small></div><div class="w"><b>${e.weak}</b><small>🎯 ${pl(e.weak, 'gargalo', 'gargalos')}</small></div>
     <div><b>${e.fresh}</b><small>${pl(e.fresh, 'nova', 'novas')}</small></div><div class="r"><b>${g.mins7}</b><small>min em 7 dias</small></div>`;
   const reading = {
@@ -1476,7 +1607,7 @@ function renderSummary() {
     </details>`;
   $('#cFields').textContent = state.fields.length;
   $('#cNotes').textContent = state.areas.filter(a => notesOf(a.id).length).length;
-  $('#cPills').textContent = queueTotal();
+  $('#cPills').textContent = state.decks.reduce((t, k) => t + dueCount(k), 0) || '';
 }
 
 function segbar(list) {
@@ -1498,12 +1629,11 @@ function renderMap() {
       <button class="field-head" data-toggle="${f.id}" aria-expanded="${open}" aria-controls="panel-${f.id}">
         <div class="ficon" aria-hidden="true">${esc(f.icon)}</div>
         <div><h2>${esc(f.title)}</h2>
-          <div class="meta"><b>${p.dom}/${p.total}</b> áreas dominadas${p.study ? `, <em>${p.study} em estudo</em>` : ''}</div></div>
+          <div class="meta"><b>${p.dom}/${p.total}</b> ${pl(p.total, 'caderno dominado', 'cadernos dominados')}${p.study ? `, <em>${p.study} em estudo</em>` : ''}</div></div>
         <div class="pct"><strong>${p.pct}%</strong><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
       </button>
       ${segbar(list)}
       <div class="field-sub">
-        <button class="ptag" data-posture="${f.id}" data-p="${f.posture}" title="Toque para alternar a postura">${f.posture === 'ultra' ? '⚡ Ultralearning' : '📚 Tradicional'}</button>
         ${fieldPills(f)}
       </div>
       ${fieldSlipLine(f)}
@@ -1521,10 +1651,10 @@ function renderMap() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
             </div>
           </div>`;
-        }).join('') : `<p class="no-areas">Nenhuma área neste campo ainda.</p>`}
+        }).join('') : `<p class="no-areas">Nenhum caderno neste campo ainda.</p>`}
         <div class="panel-foot">
           <form class="quick-add" data-quick="${f.id}">
-            <input name="t" placeholder="Nova área em ${esc(f.title)}" aria-label="Nome da nova área" autocomplete="off">
+            <input name="t" placeholder="Novo caderno em ${esc(f.title)}" aria-label="Nome do novo caderno" autocomplete="off">
             <button class="btn sm primary" type="submit">Adicionar</button>
           </form>
           <button class="btn sm" data-edit-field="${f.id}">Editar campo</button>
@@ -1568,7 +1698,7 @@ function renderBookList() {
   if (!books.length) {
     g.innerHTML = state.notes.length || query
       ? `<div class="empty"><p>Nenhum caderno corresponde à busca.</p><button class="btn" id="clearSearch">Limpar busca</button></div>`
-      : `<div class="empty"><p>Os cadernos nascem das áreas do mapa. Abra uma área e escreva a primeira ficha.</p><button class="btn primary" data-tab="map">Ir para o mapa</button></div>`;
+      : `<div class="empty"><p>Os cadernos nascem no mapa. Abra um caderno e escreva a primeira ficha.</p><button class="btn primary" data-tab="map">Ir para o mapa</button></div>`;
     $('#clearSearch')?.addEventListener('click', () => { query = ''; fieldFilter = ''; $('#search').value = ''; renderNotes(); });
     return;
   }
@@ -1599,7 +1729,7 @@ function renderReader() {
       ${cover ? `<img class="ch-cover" src="${esc(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>
       ${attachHtml(n)}
-      <div class="ch-actions"><button data-gen-pills="note:${n.id}">✦ Gerar pílulas</button><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
+      <div class="ch-actions"><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
     </section>`;
   };
   $('#reader').innerHTML = `<div class="reader" style="--h:${f.hue}">
@@ -1645,17 +1775,17 @@ function renderAreaCard(editOpen = false) {
   $('#areaBody').innerHTML = `
     <div class="seg three status" id="aStatus" role="group" aria-label="Estado de estudo">${STATUS.map((s, i) => `<button type="button" data-v="${i}" aria-pressed="${a.status === i}">${s}</button>`).join('')}</div>
     <div class="quick-metrics">
-      <div><b>${n}</b><small>${pl(n, 'fichamento', 'fichamentos')}</small></div>
+      <div><b>${n}</b><small>${pl(n, 'ficha', 'fichas')}</small></div>
       <div><b>${p}</b><small>${pl(p, 'pílula ativa', 'pílulas ativas')}</small></div>
     </div>
     ${masteryDoubt(a)}
-    <button class="btn primary go-book" data-book="${a.id}">📖 Ir para o Caderno de ${esc(a.title)}</button>
-    <div class="card-links"><button class="link" data-compose="${a.id}">+ Nova ficha</button><button class="link" id="aEditToggle" aria-expanded="${editOpen}">Editar área</button></div>
+    <button class="btn primary go-book" data-book="${a.id}">📖 Abrir o caderno ${esc(a.title)}</button>
+    <div class="card-links"><button class="link" data-compose="${a.id}">+ Nova ficha</button><button class="link" id="aEditToggle" aria-expanded="${editOpen}">Editar caderno</button></div>
     <div class="area-edit" id="aEdit"${editOpen ? '' : ' hidden'}>
-      <div class="fld"><label for="aTitle">Nome da área</label><input class="input" id="aTitle" value="${esc(a.title)}"></div>
+      <div class="fld"><label for="aTitle">Nome do caderno</label><input class="input" id="aTitle" value="${esc(a.title)}"></div>
       <div class="fld"><label for="aField">Campo de estudo</label><select class="select" id="aField">
         ${state.fields.map(x => `<option value="${x.id}"${x.id === a.fieldId ? ' selected' : ''}>${esc(x.title)}</option>`).join('')}</select></div>
-      <button class="btn sm danger" id="aDelete" style="align-self:flex-start">Excluir área e caderno</button>
+      <button class="btn sm danger" id="aDelete" style="align-self:flex-start">Excluir caderno e fichas</button>
     </div>`;
   const commit = () => { persist(); render(); renderAreaCard(!$('#aEdit').hidden); };
   $('#aStatus').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; a.status = +b.dataset.v; commit(); });
@@ -1663,13 +1793,13 @@ function renderAreaCard(editOpen = false) {
   $('#aTitle').addEventListener('change', e => { const v = e.target.value.trim(); if (v) { a.title = v; commit(); } else e.target.value = a.title; });
   $('#aField').addEventListener('change', e => { a.fieldId = e.target.value; expanded.add(a.fieldId); commit(); });
   $('#aDelete').addEventListener('click', () => {
-    if (!confirm(`Excluir a área "${a.title}"${n ? ` e ${plural(n, 'fichamento', 'fichamentos')}` : ''}? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Excluir o caderno "${a.title}"${n ? `, ${plural(n, 'ficha', 'fichas')} e os questionários delas` : ''}? Esta ação não pode ser desfeita.`)) return;
     state.areas = state.areas.filter(x => x.id !== a.id);
     blobDelMany(fileIdsOf(state.notes.filter(x => x.areaId === a.id)));
     state.notes = state.notes.filter(x => x.areaId !== a.id);
-    state.decks.forEach(k => { if (k.areaId === a.id) k.areaId = null; });
+    state.decks = state.decks.filter(k => k.areaId !== a.id);
     if (openBookId === a.id) openBookId = null;
-    persist(); render(); $('#dlgArea').close(); toast('Área excluída');
+    persist(); render(); $('#dlgArea').close(); toast('Caderno excluído');
   });
 }
 
@@ -1802,23 +1932,21 @@ function renderForm(presetField) {
   if (formMode === 'deck') return renderDeckForm(presetField);
   const editing = formEditId && fieldById(formEditId), isField = formMode === 'field', noFields = !state.fields.length;
   $('#formTitle').textContent = editing ? 'Editar campo de estudo' : 'Novo registo';
-  $('#formSub').textContent = editing ? `${plural(areasOf(editing.id).length, 'área', 'áreas')} neste campo.` : 'Crie um campo de estudo ou acrescente áreas a um campo existente.';
+  $('#formSub').textContent = editing ? `${plural(areasOf(editing.id).length, 'caderno', 'cadernos')} neste campo.` : 'Crie um campo de estudo ou acrescente cadernos a um campo existente.';
   $('#formBody').innerHTML = `
     ${editing ? '' : modeSeg()}
     ${isField ? `
       <div class="fld"><label for="fTitle">Nome do campo</label><input class="input" id="fTitle" placeholder="Ex.: História da Arte" value="${editing ? esc(editing.title) : ''}"></div>
       <div class="fld"><label for="fDesc">Porque estudo isto (opcional)</label><input class="input" id="fDesc" placeholder="Uma frase que dê sentido ao campo" value="${editing ? esc(editing.description) : ''}"></div>
       <div class="fld"><span class="label">Ícone</span><div class="emojis" id="fIcons">${ICONS.map(i => `<button type="button" data-icon="${i}" aria-pressed="${i === formIcon}">${i}</button>`).join('')}</div></div>
-      <div class="fld"><span class="label">Como você quer estudar este campo</span><div class="seg" id="fPosture">
-        <button type="button" data-p="ultra" aria-pressed="${formPosture === 'ultra'}">⚡ Ultralearning</button>
-        <button type="button" data-p="hobby" aria-pressed="${formPosture === 'hobby'}">📚 Tradicional</button></div></div>
+
       <div class="fld"><span class="label">Cor das tags e capas</span><div class="hues" id="fHues">${HUES.map(h => `<button type="button" data-hue="${h}" style="--h:${h}" aria-pressed="${h === formHue}" aria-label="Tom ${h}"></button>`).join('')}</div></div>
       ${editing ? '' : `<label class="check"><input type="checkbox" id="fRoute" checked><span><b>Começar pela Rota de estudos</b> (Metalearning): mapear recursos, pré-requisitos e o que praticar antes de mergulhar.</span></label>`}
-      ${editing ? '' : `<div class="fld"><label for="fAreas">Áreas iniciais (uma por linha, opcional)</label><textarea class="textarea small" id="fAreas" placeholder="Renascimento&#10;Barroco&#10;Modernismo"></textarea></div>`}`
+      ${editing ? '' : `<div class="fld"><label for="fAreas">Cadernos iniciais (um por linha, opcional)</label><textarea class="textarea small" id="fAreas" placeholder="Renascimento&#10;Barroco&#10;Modernismo"></textarea></div>`}`
     : `
       <div class="fld"><label for="fField">Campo de estudo</label><select class="select" id="fField">
         ${state.fields.map(x => `<option value="${x.id}"${x.id === presetField ? ' selected' : ''}>${esc(x.icon)} ${esc(x.title)}</option>`).join('')}</select></div>
-      <div class="fld"><label for="fTitle">Áreas (uma por linha para adicionar várias)</label><textarea class="textarea small" id="fTitle" placeholder="Trigonometria&#10;Geometria Analítica"></textarea></div>
+      <div class="fld"><label for="fTitle">Cadernos (um por linha para adicionar vários)</label><textarea class="textarea small" id="fTitle" placeholder="Trigonometria&#10;Geometria Analítica"></textarea></div>
       <div class="fld"><span class="label">Estado inicial</span><div class="seg three status" id="fStatus">${STATUS.map((s, i) => `<button type="button" data-v="${i}" aria-pressed="${i === formAreaStatus}">${s}</button>`).join('')}</div></div>`}
     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
       ${editing ? '<button class="btn danger" id="fDelete">Excluir campo</button>' : '<span></span>'}
@@ -1834,7 +1962,7 @@ function renderForm(presetField) {
   pick('#fIcons', 'data-icon', v => formIcon = v);
   pick('#fHues', 'data-hue', v => formHue = +v);
   pick('#fStatus', 'data-v', v => formAreaStatus = +v);
-  pick('#fPosture', 'data-p', v => formPosture = v);
+  if ($('#fPosture')) pick('#fPosture', 'data-p', v => formPosture = v);
   if (isField) $('#fTitle').addEventListener('keydown', e => { if (e.key === 'Enter') $('#fSave').click(); });
 
   $('#fDelete')?.addEventListener('click', () => {
@@ -1869,7 +1997,7 @@ function renderForm(presetField) {
       if (!names.length) { toast('Escreva o nome de pelo menos uma área.', true); $('#fTitle').focus(); return; }
       const fid = $('#fField').value;
       names.forEach(t => state.areas.push({ id: uid(), fieldId: fid, title: t, status: formAreaStatus, createdAt: now }));
-      expanded.add(fid); toast(names.length > 1 ? `${names.length} áreas adicionadas` : 'Área adicionada');
+      expanded.add(fid); toast(names.length > 1 ? `${names.length} cadernos adicionados` : 'Caderno adicionado');
     }
     persist(); setTab('map'); render(); $('#dlgForm').close();
   });
@@ -2258,37 +2386,37 @@ function deckRow(k, fromField) {
 function renderAreaPage(editOpen) {
   const a = areaById(route.areaId); if (!a) return go({ v: 'map' }, 'replace');
   const f = fieldById(a.fieldId), notes = notesOf(a.id).sort(byDateAsc), last = lastNoteAt(a.id);
-  const { own, field } = areaDecks(a), ready = [...own, ...field].reduce((t, k) => t + dueCount(k) + newCount(k), 0);
-  const back = route.from === 'notes' ? 'Cadernos' : route.from === 'pills' ? 'Pílulas' : 'Mapa';
+  const ks = state.decks.filter(k => k.areaId === a.id), tot = ks.reduce((t, k) => t + k.items.length, 0), dom = ks.reduce((t, k) => t + deckDone(k), 0);
+  const venc = ks.reduce((t, k) => t + dueCount(k), 0), novas = ks.reduce((t, k) => t + newCount(k), 0);
+  const back = route.from === 'notes' ? 'Cadernos' : route.from === 'pills' ? 'Revisar' : 'Mapa';
   if (editOpen === undefined) editOpen = !!$('#apEdit') && !$('#apEdit').hidden;
   $('#viewArea').innerHTML = `<div class="apage" style="--h:${f.hue}">
     <div class="crumbs"><button class="btn sm" data-go-back>${BACK_ICON}${back}</button><span class="area-tag">${esc(f.icon)} ${esc(f.title)}</span></div>
     <header class="ap-head">
       <h2>${esc(a.title)}</h2>
-      <p>${notes.length ? `${plural(notes.length, 'ficha', 'fichas')}, a última em ${fmtDate(new Date(last).toISOString())}` : 'Caderno em branco'}${ready ? `. ${plural(ready, 'questão pronta', 'questões prontas')} para praticar` : ''}.</p>
+      <p>${notes.length ? plural(notes.length, 'ficha', 'fichas') : 'Caderno em branco'}${tot ? ` · domínio ${dom} de ${tot} ${pl(tot, 'questão', 'questões')}` : ''}${venc ? ` · <b class="due-t">${venc} para revisar hoje</b>` : ''}</p>
+      ${tot ? `<div class="dbar mint ap-bar" aria-hidden="true"><i style="width:${dom / tot * 100}%"></i></div>
+      <div class="ap-prat"><button class="btn primary" data-pill-area="${a.id}">${CAPSULE}Praticar o caderno inteiro</button>${notes.some(n => n.kind !== 'simulado') ? `<button class="btn sm" data-gen-pills="area:${a.id}">✦ Gerar das fichas</button>` : ''}</div>
+      <p class="ap-mix">${venc ? `${venc} vencidas · ` : ''}${novas} ${pl(novas, 'nova', 'novas')} · mistura as questões de todas as fichas</p>` : (notes.some(n => n.kind !== 'simulado') ? `<div class="ap-prat"><button class="btn sm" data-gen-pills="area:${a.id}">✦ Gerar pílulas das fichas</button></div>` : '')}
       <div class="seg three status" id="apStatus" role="group" aria-label="Estado de estudo">${STATUS.map((s, i) => `<button type="button" data-v="${i}" aria-pressed="${a.status === i}">${s}</button>`).join('')}</div>
     </header>
-    ${masteryDoubt(a)}
     <section class="ap-sec">
-      <div class="ap-sec-h"><h3>Caderno <small>${notes.length}</small></h3><button class="btn sm primary" data-compose="${a.id}">+ Nova ficha</button></div>
+      <div class="ap-sec-h"><h3>Fichas <small>${notes.length}</small></h3><span class="ap-btns"><button class="btn sm" data-new-deck-field="${f.id}" data-area="${a.id}">+ Simulado</button><button class="btn sm primary" data-compose="${a.id}">+ Nova ficha</button></span></div>
       ${notes.length ? `<ol class="f-index">${notes.map((n, i) => `<li><button class="fi-row" data-ficha="${n.id}">
           <span class="fi-n">${i + 1}</span>
-          <span class="fi-main"><b>${esc(n.title)}</b><small>${fmtDate(n.createdAt)}${n.files.length ? `, ${plural(n.files.length, 'anexo', 'anexos')}` : ''}${n.tags.length ? ` · ${n.tags.slice(0, 3).map(t => '#' + esc(t)).join(' ')}` : ''}</small>
-            ${plainText(n.body) ? `<span class="fi-prev">${esc(plainText(n.body).slice(0, 140))}</span>` : ''}</span>
+          <span class="fi-main"><b>${esc(n.title)}${n.kind === 'simulado' ? ' <span class="sim-tag">Simulado</span>' : ''}</b>
+            ${(() => { const D = fichaDominio(deckDaFicha(n)); return D.total ? `<small>${D.done} de ${D.total} dominadas${D.due ? ` · <b class="due-t">${D.due} para revisar</b>` : ''}${D.novas ? ` · ${D.novas} ${pl(D.novas, 'nova', 'novas')}` : ''}</small><span class="fi-bar"><i style="width:${D.done / D.total * 100}%"></i></span>`
+              : `<small>${fmtDate(n.createdAt)}${n.files.length ? `, ${plural(n.files.length, 'anexo', 'anexos')}` : ''} · ${n.kind === 'simulado' ? 'simulado vazio' : 'sem questionário ainda'}</small>`; })()}
+            ${plainText(n.body) ? `<span class="fi-prev">${esc(plainText(n.body).slice(0, 110))}</span>` : ''}</span>
           <span class="fi-go" aria-hidden="true">${NEXT_ICON}</span></button></li>`).join('')}</ol>`
         : `<div class="empty"><p>Este caderno ainda está em branco.</p><button class="btn primary" data-compose="${a.id}">+ Escrever a primeira ficha</button></div>`}
     </section>
-    <section class="ap-sec">
-      <div class="ap-sec-h"><h3>Questões <small>${own.length + field.length ? [...own, ...field].reduce((t, k) => t + k.items.length, 0) : 0}</small></h3><span class="ap-btns">${notes.length ? `<button class="btn sm" data-gen-pills="area:${a.id}">✦ Das fichas</button>` : ''}<button class="btn sm" data-new-deck-field="${f.id}">+ Banco</button></span></div>
-      ${own.length || field.length ? `<div class="q-list">${own.map(k => deckRow(k)).join('')}${field.map(k => deckRow(k, true)).join('')}</div>`
-        : `<p class="no-notes">Nenhum banco de questões para esta área ainda. Questões transformam leitura em domínio: crie um banco e pratique o que o caderno ensina.</p>`}
-    </section>
-    <div class="ap-foot"><button class="link" id="apEditToggle" aria-expanded="${editOpen}">Editar área</button></div>
+    <div class="ap-foot"><button class="link" id="apEditToggle" aria-expanded="${editOpen}">Editar caderno</button></div>
     <div class="area-edit" id="apEdit"${editOpen ? '' : ' hidden'}>
-      <div class="fld"><label for="apTitle">Nome da área</label><input class="input" id="apTitle" value="${esc(a.title)}"></div>
+      <div class="fld"><label for="apTitle">Nome do caderno</label><input class="input" id="apTitle" value="${esc(a.title)}"></div>
       <div class="fld"><label for="apField">Campo de estudo</label><select class="select" id="apField">
         ${state.fields.map(x => `<option value="${x.id}"${x.id === a.fieldId ? ' selected' : ''}>${esc(x.title)}</option>`).join('')}</select></div>
-      <button class="btn sm danger" id="apDelete" style="align-self:flex-start">Excluir área e caderno</button>
+      <button class="btn sm danger" id="apDelete" style="align-self:flex-start">Excluir caderno e fichas</button>
     </div>
   </div>`;
   const n = notes.length, commit = () => { persist(); render(); };
@@ -2297,12 +2425,12 @@ function renderAreaPage(editOpen) {
   $('#apTitle').addEventListener('change', e => { const v = e.target.value.trim(); if (v) { a.title = v; commit(); } else e.target.value = a.title; });
   $('#apField').addEventListener('change', e => { a.fieldId = e.target.value; expanded.add(a.fieldId); commit(); });
   $('#apDelete').addEventListener('click', () => {
-    if (!confirm(`Excluir a área "${a.title}"${n ? ` e ${plural(n, 'fichamento', 'fichamentos')}` : ''}? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Excluir o caderno "${a.title}"${n ? `, ${plural(n, 'ficha', 'fichas')} e os questionários delas` : ''}? Esta ação não pode ser desfeita.`)) return;
     state.areas = state.areas.filter(x => x.id !== a.id);
     blobDelMany(fileIdsOf(state.notes.filter(x => x.areaId === a.id)));
     state.notes = state.notes.filter(x => x.areaId !== a.id);
-    state.decks.forEach(k => { if (k.areaId === a.id) k.areaId = null; });
-    persist(); go({ v: route.from || 'map' }, 'replace'); render(); toast('Área excluída');
+    state.decks = state.decks.filter(k => k.areaId !== a.id);
+    persist(); go({ v: route.from || 'map' }, 'replace'); render(); toast('Caderno excluído');
   });
 }
 
@@ -2311,7 +2439,19 @@ function renderFicha() {
   const n = state.notes.find(x => x.id === route.noteId); if (!n) return go({ v: 'area', areaId: route.areaId }, 'replace');
   const a = areaById(n.areaId), f = fieldById(a.fieldId), notes = notesOf(a.id).sort(byDateAsc), i = notes.findIndex(x => x.id === n.id);
   const prev = notes[i - 1], next = notes[i + 1], cover = safeUrl(n.cover);
-  const { own, field } = areaDecks(a), practice = [...own, ...field].find(k => dueCount(k) + newCount(k)) || [...own, ...field].find(k => k.items.length);
+  const qk = deckDaFicha(n), Dm = fichaDominio(qk), sim = n.kind === 'simulado';
+  const mcN = qk ? qk.items.filter(i => i.type === 'mc').length : 0, opN = Dm.total - mcN;
+  const estado = i => !i.seen ? 'nova' : isDue(i) ? (isWeak(i) ? 'gargalo' : 'revisar') : i.done ? 'ok' : 'revisar';
+  const questionario = `<section class="quest" id="questionario">
+      <div class="qs-h"><h3>${sim ? 'Questionário' : `Questionário de ${esc(n.title)}`}</h3><span>${Dm.total ? `${Dm.done} de ${Dm.total}` : ''}</span></div>
+      ${Dm.total ? `<div class="dbar mint" aria-hidden="true"><i style="width:${Dm.done / Dm.total * 100}%"></i></div>
+        <p class="qs-meta">${[Dm.due && `<b class="due-t">${Dm.due} para revisar</b>`, Dm.weak && `${Dm.weak} 🎯`, Dm.novas && `${Dm.novas} ${pl(Dm.novas, 'nova', 'novas')}`, mcN && `${mcN} ${pl(mcN, 'objetiva', 'objetivas')}`, opN && `${opN} ${pl(opN, 'dissertativa', 'dissertativas')}`].filter(Boolean).join(' · ')}</p>
+        <button class="btn primary qs-go" data-pill-deck="${qk.id}">${CAPSULE}Praticar esta ficha</button>`
+        : `<p class="qs-meta">${sim ? 'Este simulado ainda não tem questões.' : 'Ainda sem questões. Gere a partir do texto ou peça a uma IA.'}</p>`}
+      <div class="qs-acts">${sim ? '' : `<button class="btn sm" data-gen-pills="note:${n.id}">✦ Gerar pílulas</button>`}${qk ? `<button class="btn sm" data-deck-edit="${qk.id}">${sim ? 'Editar simulado' : 'Editar questões'}</button>` : `<button class="btn sm" data-new-quest="${n.id}">+ Escrever questões</button>`}</div>
+      ${Dm.total ? `<details class="qs-list"><summary>Ver as ${Dm.total} questões</summary><ul>${qk.items.map(i => `<li><span class="qd" data-e="${estado(i)}"></span>${esc(i.text)}</li>`).join('')}</ul>
+        <p class="qs-leg"><span class="qd" data-e="ok"></span>dominada <span class="qd" data-e="revisar"></span>para revisar <span class="qd" data-e="gargalo"></span>gargalo <span class="qd" data-e="nova"></span>nova</p></details>` : ''}
+    </section>`;
   $('#viewFicha').innerHTML = `<div class="reader fpage" style="--h:${f.hue}">
     <div class="crumbs"><button class="btn sm" data-go-area="${a.id}">${BACK_ICON}${esc(a.title)}</button><span class="crumb-pos">Ficha ${i + 1} de ${notes.length}</span></div>
     <article class="doc"><section class="chapter">
@@ -2319,11 +2459,11 @@ function renderFicha() {
       <h3>${esc(n.title)}</h3>
       <p class="ch-meta">${fmtDate(n.createdAt)}${n.tags.map(t => ` <span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</p>
       ${cover ? `<img class="ch-cover" src="${esc(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
-      <div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>
+      ${sim ? `<p class="sim-desc"><span class="sim-tag">Simulado</span> Só questões, sem texto.${safeUrl(qk && qk.source) ? ` <a href="${esc(qk.source)}" target="_blank" rel="noopener">Ver a fonte</a>` : ''}</p>` : `<div class="prose">${renderProse(n.body) || '<p><em>Sem texto.</em></p>'}</div>`}
       ${attachHtml(n)}
-      <div class="ch-actions"><button data-gen-pills="note:${n.id}">✦ Gerar pílulas</button><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
+      <div class="ch-actions"><button data-note-edit="${n.id}">Editar</button><button class="del" data-note-del="${n.id}">Excluir</button></div>
     </section></article>
-    ${practice ? `<div class="f-practice"><div><b>Praticar ${esc(a.title)}</b><small>${esc(practice.title)}: ${deckLine(practice)}</small></div><button class="btn sm primary" data-pill-deck="${practice.id}">Praticar</button></div>` : ''}
+    ${questionario}
     <nav class="pager" aria-label="Fichas do caderno">
       ${prev ? `<button class="pg prev" data-ficha="${prev.id}" data-replace>${BACK_ICON}<span><small>Anterior</small>${esc(prev.title)}</span></button>` : '<span></span>'}
       ${next ? `<button class="pg next" data-ficha="${next.id}" data-replace><span><small>Próxima</small>${esc(next.title)}</span>${NEXT_ICON}</button>` : '<span></span>'}
@@ -2415,14 +2555,6 @@ function propostasDe(notes, formato, pool) {
   });
   return out;
 }
-function deckDeFichas(a) {
-  let k = state.decks.find(x => x.auto === 'fichas' && x.areaId === a.id);
-  if (!k) {
-    k = { id: uid(), title: `Fichas · ${a.title}`, unit: 'pílulas', fieldId: a.fieldId, areaId: a.id, source: '', order: 'seq', principle: 'retrieval', items: [], createdAt: new Date().toISOString(), auto: 'fichas' };
-    state.decks.push(k);
-  }
-  return k;
-}
 function pedidoIA(notes, nObj, nDis) {
   const texto = notes.map(n => `# ${n.title}\n${n.body || ''}`).join('\n\n').slice(0, 24000);
   return `Crie questões de estudo a partir do texto abaixo, para revisar para uma prova de graduação.
@@ -2448,17 +2580,22 @@ ${texto}`;
 let genFormato = 'ambas';
 function abrirGerador(alvo, extras = []) {
   const [tipo, id] = alvo.split(':');
-  const notes = tipo === 'note' ? state.notes.filter(n => n.id === id) : notesOf(id).sort(byDateAsc);
+  const notes = (tipo === 'note' ? state.notes.filter(n => n.id === id) : notesOf(id).sort(byDateAsc)).filter(n => n.kind !== 'simulado');
   if (!notes.length) return;
   const a = areaById(notes[0].areaId); if (!a) return;
-  const existente = state.decks.find(x => x.auto === 'fichas' && x.areaId === a.id);
-  const ja = new Set(existente ? existente.items.map(i => i.key).filter(Boolean) : []);
+  const itensDasFichas = notes.flatMap(n => (deckDaFicha(n) || { items: [] }).items.map(i => ({ i, n })));
+  const ja = new Set(itensDasFichas.map(x => x.i.key).filter(Boolean));
+  // perguntas do formato antigo ("O que é “X”?"): as já respondidas ficam e evitam repetir; as não respondidas podem ser trocadas
+  const RX_ANT = /^O que é “(.+?)”\?/;
+  const antigasResp = new Set(itensDasFichas.filter(x => x.i.seen && RX_ANT.test(x.i.text)).map(x => x.n.id + '|' + norm(x.i.text.match(RX_ANT)[1])));
+  const antigasNovas = itensDasFichas.filter(x => !x.i.seen && RX_ANT.test(x.i.text));
   // alternativas erradas vêm de toda a área (e do campo, se a área for pequena)
   const juntar = ns => ns.map(materiaDe).reduce((t, m) => ({ termos: t.termos.concat(m.termos), lacunas: t.lacunas.concat(m.lacunas) }), { termos: [], lacunas: [] });
   let pool = juntar(notesOf(a.id));
   if (pool.termos.length < 4) pool = juntar(state.notes.filter(n => { const x = areaById(n.areaId); return x && x.fieldId === a.fieldId; }));
   const fmt = { ambas: 'both', open: 'open', mc: 'mc' }[genFormato] || 'both';
-  const props = [...propostasDe(notes, fmt, pool), ...extras].filter(p => !ja.has(p.key));
+  const props = [...propostasDe(notes, fmt, pool), ...extras].filter(p => !ja.has(p.key))
+    .filter(p => !(p.type === 'open' && /^Explique: “(.+?)”/.test(p.text) && antigasResp.has(p.noteId + '|' + norm(p.text.match(/^Explique: “(.+?)”/)[1]))));
   const nMc = props.filter(p => p.type === 'mc').length, nOp = props.length - nMc;
   $('#formTitle').textContent = 'Pílulas a partir das fichas';
   $('#formSub').textContent = props.length ? `${plural(props.length, 'pergunta encontrada', 'perguntas encontradas')}${notes.length > 1 ? ` em ${plural(notes.length, 'ficha', 'fichas')}` : ''}: ${nMc} ${nMc === 1 ? 'objetiva' : 'objetivas'} e ${nOp} ${nOp === 1 ? 'dissertativa' : 'dissertativas'}. Desmarque o que não serve.` : '';
@@ -2479,7 +2616,8 @@ function abrirGerador(alvo, extras = []) {
       <div class="gen-row"><input class="input" id="gpNObj" type="number" min="0" max="40" value="6" inputmode="numeric" aria-label="Objetivas"><span class="hint">objetivas</span><input class="input" id="gpNDis" type="number" min="0" max="40" value="3" inputmode="numeric" aria-label="Dissertativas"><span class="hint">dissertativas</span><button type="button" class="btn sm" id="gpCopy">Copiar pedido</button></div>
       <textarea class="textarea small mono" id="gpCola" rows="6" placeholder="Cole aqui a resposta da IA"></textarea>
       <button type="button" class="btn sm" id="gpLer">Ler questões coladas</button></div></details>
-    <p class="hint">Entram no banco “Fichas · ${esc(a.title)}”, ligado a esta área, e voltam no tempo certo para revisar. Gerar de novo não duplica.</p>
+    ${antigasNovas.length ? `<label class="check gp-troca"><input type="checkbox" id="gpTroca" checked><span>Trocar ${antigasNovas.length} ${pl(antigasNovas.length, 'pergunta antiga', 'perguntas antigas')} (“O que é…?”) ainda não ${pl(antigasNovas.length, 'respondida', 'respondidas')} pelas novas</span></label>` : ''}
+    <p class="hint">Cada pergunta entra no questionário da sua ficha e volta no tempo certo para revisar. Gerar de novo não duplica.</p>
     <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-close>Cancelar</button>${props.length ? `<button class="btn primary" id="gpOk">Criar ${props.length} pílulas</button>` : ''}</div>`;
   const body = $('#formBody'), conta = () => { const n = body.querySelectorAll('[data-gp]:checked').length; const b = $('#gpOk'); if (b) b.textContent = n ? `Criar ${n} ${n === 1 ? 'pílula' : 'pílulas'}` : 'Nada marcado'; };
   body.querySelectorAll('[data-gp]').forEach(c => c.addEventListener('change', conta));
@@ -2504,13 +2642,22 @@ function abrirGerador(alvo, extras = []) {
   $('#gpOk')?.addEventListener('click', () => {
     const escolhidas = [...body.querySelectorAll('[data-gp]:checked')].map(c => props[+c.dataset.gp]);
     if (!escolhidas.length) { toast('Marque pelo menos uma pergunta.', true); return; }
-    const k = deckDeFichas(a);
-    escolhidas.forEach(p => k.items.push({ ...makeItem(p), key: p.key, noteId: p.noteId }));
+    if ($('#gpTroca') && $('#gpTroca').checked) {
+      const fora = new Set(antigasNovas.map(x => x.i.id));
+      state.decks.forEach(k => { k.items = k.items.filter(i => !fora.has(i.id)); });
+    }
+    const fichas = new Set();
+    escolhidas.forEach(p => { const n = state.notes.find(x => x.id === p.noteId) || notes[0]; criarDeckDaFicha(n).items.push({ ...makeItem(p), key: p.key, noteId: n.id }); fichas.add(n.id); });
     persist(); render(); $('#dlgForm').close();
-    toast(`${plural(escolhidas.length, 'pílula criada', 'pílulas criadas')} em “${k.title}”`);
+    toast(`${plural(escolhidas.length, 'pílula criada', 'pílulas criadas')}${fichas.size > 1 ? ` em ${fichas.size} fichas` : ''}`);
   });
   if (!$('#dlgForm').open) $('#dlgForm').showModal();
 }
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-abrir-caderno]'); if (!c) return;
+  e.stopImmediatePropagation(); go({ v: 'area', areaId: c.dataset.abrirCaderno, from: 'pills' }, 'push');
+}, true);
+document.addEventListener('change', e => { if (e.target && e.target.id === 'revCampo') { revCampo = e.target.value; renderPillsTab(); } });
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-gen-pills]'); if (!g) return;
   e.stopImmediatePropagation(); abrirGerador(g.dataset.genPills);
@@ -2524,7 +2671,9 @@ document.addEventListener('click', e => {
   if (ga) { e.stopImmediatePropagation(); if (route.backIsArea && histDepth > 0) history.back(); else go({ v: 'area', areaId: ga.dataset.goArea, from: route.from }, 'replace'); return; }
   if (t.closest('[data-go-back]')) { e.stopImmediatePropagation(); if (histDepth > 0) history.back(); else go({ v: route.from || 'map' }, 'replace'); return; }
   const nd = t.closest('[data-new-deck-field]');
-  if (nd) { e.stopImmediatePropagation(); return openForm('deck', { fieldId: nd.dataset.newDeckField }); }
+  if (nd) { e.stopImmediatePropagation(); openForm('deck', { fieldId: nd.dataset.newDeckField }); if (nd.dataset.area) { const sel = $('#dArea'); if (sel) sel.value = nd.dataset.area; } return; }
+  const nq = t.closest('[data-new-quest]');
+  if (nq) { e.stopImmediatePropagation(); const n = state.notes.find(x => x.id === nq.dataset.newQuest); if (!n) return; const k = criarDeckDaFicha(n); persist(); return openForm('deck', { editId: k.id }); }
 }, true);
 /* quantos passos de navegação existem dentro do app (para o "voltar" na tela não sair do Cognitio) */
 let histDepth = 0;
@@ -2556,6 +2705,10 @@ document.addEventListener('click', e => {
   if (t.closest('[data-pill-rescue]')) return startPill('rescue');
   const pd = t.closest('[data-pill-deck]');
   if (pd) return startPill('deck', pd.dataset.pillDeck);
+  const pa = t.closest('[data-pill-area]');
+  if (pa) return startPill('escopo', { areaId: pa.dataset.pillArea });
+  const pf = t.closest('[data-pill-field]');
+  if (pf) return startPill('escopo', pf.dataset.pillField ? { fieldId: pf.dataset.pillField } : {});
   const de = t.closest('[data-deck-edit]');
   if (de) return openForm('deck', { editId: de.dataset.deckEdit });
   if (t.closest('[data-load-demo]')) { state.decks.push(...demoDecks(state, false)); persist(); render(); toast('Bancos de exemplo adicionados'); return; }
@@ -2581,7 +2734,7 @@ document.addEventListener('click', e => {
   const ne = t.closest('[data-note-edit]');
   if (ne) { const nn = state.notes.find(x => x.id === ne.dataset.noteEdit); return nn && openNoteDrawer(nn.areaId, nn.id); }
   const nd = t.closest('[data-note-del]');
-  if (nd) { if (!confirm('Excluir esta ficha e os arquivos anexados? Esta ação não pode ser desfeita.')) return; blobDelMany(fileIdsOf(state.notes.filter(n => n.id === nd.dataset.noteDel))); state.notes = state.notes.filter(n => n.id !== nd.dataset.noteDel); persist(); if (route.v === 'ficha' && route.noteId === nd.dataset.noteDel) go({ v: 'area', areaId: route.areaId, from: route.from }, 'replace'); render(); toast('Ficha excluída'); return; }
+  if (nd) { if (!confirm(`Excluir esta ficha, os arquivos anexados${(state.decks.find(k => k.noteId === nd.dataset.noteDel) || { items: [] }).items.length ? ' e o questionário dela' : ''}? Esta ação não pode ser desfeita.`)) return; blobDelMany(fileIdsOf(state.notes.filter(n => n.id === nd.dataset.noteDel))); state.notes = state.notes.filter(n => n.id !== nd.dataset.noteDel); state.decks = state.decks.filter(k => k.noteId !== nd.dataset.noteDel); persist(); if (route.v === 'ficha' && route.noteId === nd.dataset.noteDel) go({ v: 'area', areaId: route.areaId, from: route.from }, 'replace'); render(); toast('Ficha excluída'); return; }
   const ef = t.closest('[data-edit-field]');
   if (ef) return openForm('field', { editId: ef.dataset.editField });
   const nw = t.closest('[data-new]');
@@ -2604,7 +2757,7 @@ document.addEventListener('submit', e => {
   e.preventDefault();
   const v = f.t.value.trim(); if (!v) return;
   state.areas.push({ id: uid(), fieldId: f.dataset.quick, title: v, status: 0, createdAt: new Date().toISOString() });
-  persist(); render(); toast('Área adicionada');
+  persist(); render(); toast('Caderno adicionado');
   document.querySelector(`[data-quick="${f.dataset.quick}"] input`)?.focus();
 });
 document.querySelectorAll('dialog').forEach(d => {
@@ -2643,7 +2796,7 @@ const MIN = 60000, DAY = 864e5;
 const deckById = id => state.decks.find(k => k.id === id);
 const deckDone = k => k.items.filter(i => i.done).length;
 const lastActivity = k => Math.max(0, ...state.pillLog.filter(l => l.deckId === k.id).map(l => Date.parse(l.at)));
-const postureOf = k => (fieldById(k.fieldId) || {}).posture;
+const postureOf = () => 'ultra';                               // todos os campos pesam igual na pílula do dia
 const fmtClock = ms => { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 const minsOf = ms => Math.max(1, Math.round(ms / MIN));
 const minLabel = m => `${m} ${pl(m, 'minuto', 'minutos')}`;
@@ -2748,23 +2901,24 @@ function renderPillsCard() {
     : `<button class="btn sm primary" data-new="deck">+ Banco</button>`}</div>`;
 }
 
+let revCampo = '';
 function renderPillsTab() {
   const el = $('#viewPills'), e = engineStats();
-  const head = `<div class="pills-head"><div><h2>Banco de treino</h2><p>Uma pílula de cada vez. O que trava volta primeiro.</p></div>
-    <button class="btn primary" data-new="deck">+ Novo banco</button></div>`;
+  const head = `<div class="pills-head"><div><h2>Revisar</h2><p>O que venceu hoje, de todos os cadernos. O que trava volta primeiro.</p></div>
+    <button class="btn" data-new="deck">+ Simulado</button></div>`;
   const principles = `<details class="principles"><summary>Os 9 princípios por trás das pílulas</summary><ol>
     <li><b>Metalearning.</b> Cada campo novo pode começar por uma Rota de estudos.</li>
     <li><b>Foco.</b> Blocos de 10 minutos, uma pílula de cada vez, sem distrações.</li>
-    <li><b>Direção.</b> Bancos de Prática Direta: exercícios e problemas reais antes da teoria.</li>
+    <li><b>Direção.</b> Exercícios e problemas reais antes da teoria.</li>
     <li><b>Ataque às fraquezas.</b> O que você erra ou trava vira 🎯 gargalo e volta primeiro.</li>
     <li><b>Recuperação ativa.</b> A solução fica oculta até você tentar.</li>
     <li><b>Feedback.</b> Errei, Trancou, Com esforço ou Fácil, logo depois de revelar.</li>
     <li><b>Retenção.</b> A fila usa repetição espaçada: cada nota decide quando o item volta.</li>
-    <li><b>Intuição.</b> Bancos de Teste de Feynman: explique em 2 frases simples.</li>
-    <li><b>Experimentação.</b> O treino intercalado mistura bancos e tipos de desafio.</li></ol></details>`;
-  if (!state.decks.length) {
-    el.innerHTML = head + `<div class="empty"><p>Nenhum banco ainda. Cole uma lista de exercícios, fórmulas ou conceitos para começar.</p>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-new="deck">+ Novo banco</button>
+    <li><b>Intuição.</b> Explique em 2 frases simples (Teste de Feynman).</li>
+    <li><b>Experimentação.</b> Praticar o caderno inteiro intercala as fichas.</li></ol></details>`;
+  if (!state.decks.some(k => k.items.length)) {
+    el.innerHTML = head + `<div class="empty"><p>Nada para revisar ainda. Abra uma ficha e toque em “Gerar pílulas”, ou crie um simulado com questões de prova.</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-new="deck">+ Simulado</button>
       ${state.fields.length ? '<button class="btn" data-load-demo>Carregar exemplos</button>' : ''}</div></div>` + principles;
     return;
   }
@@ -2773,29 +2927,28 @@ function renderPillsTab() {
     <div class="w"><b>${e.weak}</b><small>🎯 ${pl(e.weak, 'gargalo', 'gargalos')}</small></div>
     <div><b>${e.fresh}</b><small>${pl(e.fresh, 'nova', 'novas')}</small></div>
     <div class="r"><b>${e.retention === null ? '–' : e.retention + '%'}</b><small title="Notas Com esforço ou Fácil nos últimos 30 dias">retenção</small></div></div>`;
-  const decks = state.decks.map(k => {
-    const f = fieldById(k.fieldId), a = k.areaId && areaById(k.areaId), done = deckDone(k), total = k.items.length;
-    const du = dueCount(k), wk = weakCount(k), nw = newCount(k);
-    const nextDue = k.items.filter(i => i.seen && i.due).map(i => Date.parse(i.due)).sort((x, y) => x - y)[0];
-    const status = du || nw
-      ? [du && `<b>${du}</b> para revisar`, wk && `<b>${wk}</b> 🎯`, nw && `<b>${nw}</b> ${pl(nw, 'nova', 'novas')}`].filter(Boolean).join(', ')
-      : `Em dia.${nextDue ? ` Próxima revisão em ${fmtWait(nextDue - Date.now())}.` : ''}`;
-    return `<article class="deck card" style="--h:${f.hue}">
-      <div class="deck-top"><span class="area-tag">${esc(f.icon)} ${esc(f.title)}${a ? ' / ' + esc(a.title) : ''}</span>${prinTag(k.principle)}</div>
-      <h3>${esc(k.title)}</h3>
-      ${(() => { const mc = k.items.filter(i => i.type === 'mc').length, op = k.items.length - mc; return `<p class="deck-mix">${[mc && `${mc} de múltipla escolha`, op && `${op} ${pl(op, 'dissertativa', 'dissertativas')}`].filter(Boolean).join(', ')}${safeUrl(k.source) && /\.pdf($|[?#])/i.test(k.source) ? ', com PDF' : ''}</p>`; })()}
-      <div class="deck-count"><strong>${done}</strong><span>/${total} ${esc(k.unit)} resolvidas</span></div>
-      <div class="dbar mint" aria-hidden="true"><i style="width:${total ? done / total * 100 : 0}%"></i></div>
-      <p class="deck-next">${status}</p>
-      ${safeUrl(k.source) ? `<a class="deck-src" href="${esc(k.source)}" target="_blank" rel="noopener">${esc(k.source.replace(/^https?:\/\/(www\.)?/, ''))}</a>` : ''}
-      <div class="deck-actions"><button class="btn sm primary" data-pill-deck="${k.id}"${!total ? ' disabled' : ''}>${CAPSULE}Iniciar pílula (10 min)</button><button class="btn sm" data-deck-edit="${k.id}">Editar</button></div>
-    </article>`;
-  }).join('');
+  const camposCom = state.fields.filter(f => state.decks.some(k => k.fieldId === f.id && k.items.length));
+  if (revCampo && !camposCom.some(f => f.id === revCampo)) revCampo = '';
+  const ks = state.decks.filter(k => k.items.length && (!revCampo || k.fieldId === revCampo));
+  const vencTot = ks.reduce((t, k) => t + dueCount(k), 0), novTot = ks.reduce((t, k) => t + newCount(k), 0);
+  const filtro = `<div class="rev-f"><select class="select" id="revCampo" aria-label="Filtrar por campo"><option value="">Todos os campos</option>${camposCom.map(f => `<option value="${f.id}"${f.id === revCampo ? ' selected' : ''}>${esc(f.icon)} ${esc(f.title)}</option>`).join('')}</select>
+    <button class="btn primary" data-pill-field="${revCampo}"${vencTot + novTot ? '' : ' disabled'}>${CAPSULE}${vencTot ? `Revisar ${vencTot} ${pl(vencTot, 'vencida', 'vencidas')}` : 'Praticar novas'}</button></div>`;
+  const porCaderno = new Map(); ks.forEach(k => { if (!porCaderno.has(k.areaId)) porCaderno.set(k.areaId, []); porCaderno.get(k.areaId).push(k); });
+  const linhas = [...porCaderno.entries()].map(([aid, lst]) => {
+    const a = areaById(aid); if (!a) return null;
+    const f = fieldById(a.fieldId), du = lst.reduce((t, k) => t + dueCount(k), 0), wk = lst.reduce((t, k) => t + weakCount(k), 0), nw = lst.reduce((t, k) => t + newCount(k), 0);
+    const tot = lst.reduce((t, k) => t + k.items.length, 0), dn = lst.reduce((t, k) => t + deckDone(k), 0);
+    return { du, nw, html: `<div class="rev-row" style="--h:${f.hue}">
+      <button class="rev-main" data-abrir-caderno="${a.id}"><span class="area-tag">${esc(f.icon)} ${esc(f.title)}</span><b>${esc(a.title)}</b>
+        <small>${[du && `<b class="due-t">${du} para revisar</b>`, wk && `${wk} 🎯`, nw && `${nw} ${pl(nw, 'nova', 'novas')}`].filter(Boolean).join(' · ') || 'Em dia'} · ${dn}/${tot} dominadas · ${plural(lst.length, 'ficha', 'fichas')}</small></button>
+      <button class="btn sm${du ? ' primary' : ''}" data-pill-area="${a.id}">Praticar</button></div>` };
+  }).filter(Boolean).sort((x, y) => (y.du - x.du) || (y.nw - x.nw));
+  const decks = linhas.map(x => x.html).join('');
   const log = [...state.pillLog].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 8);
-  el.innerHTML = head + engine + `<div class="decks">${decks}</div>
+  el.innerHTML = head + engine + filtro + `<h3 class="sec-h">Por caderno</h3><div class="rev-list">${decks}</div>
     <h3 class="sec-h">Últimas pílulas</h3>
     ${log.length ? `<ul class="log">${log.map(l => { const k = deckById(l.deckId), gr = GRADES[l.grade];
-      return `<li><b>${esc(l.text)}</b><small>${esc(k ? k.title : 'Banco removido')}, ${fmtDate(l.at)}${gr ? `, <span class="gtxt" data-g="${l.grade}">${gr.label}</span>` : ''}${l.noteId ? ', virou fichamento' : ''}</small><span class="m">${l.minutes} min</span></li>`; }).join('')}</ul>`
+      return `<li><b>${esc(l.text)}</b><small>${esc(k ? k.title : 'Questão removida')}, ${fmtDate(l.at)}${gr ? `, <span class="gtxt" data-g="${l.grade}">${gr.label}</span>` : ''}${l.noteId ? ', virou fichamento' : ''}</small><span class="m">${l.minutes} min</span></li>`; }).join('')}</ul>`
       : '<p class="no-notes">Nenhuma pílula resgatada ainda.</p>'}` + principles;
 }
 
@@ -2804,8 +2957,8 @@ function modeSeg() {
   const dis = !state.fields.length ? ' disabled title="Crie primeiro um campo"' : '';
   return `<div class="seg three" role="group" aria-label="Tipo">
     <button type="button" data-mode="field" aria-pressed="${formMode === 'field'}">Campo</button>
-    <button type="button" data-mode="area" aria-pressed="${formMode === 'area'}"${dis}>Área</button>
-    <button type="button" data-mode="deck" aria-pressed="${formMode === 'deck'}"${dis}>Pílulas</button></div>`;
+    <button type="button" data-mode="area" aria-pressed="${formMode === 'area'}"${dis}>Caderno</button>
+    <button type="button" data-mode="deck" aria-pressed="${formMode === 'deck'}"${dis}>Simulado</button></div>`;
 }
 let formPrinciple = 'direct', formQMode = 'import', workItems = [], me = null;
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
@@ -2868,18 +3021,19 @@ function parseBlock(text) {
 function renderDeckForm(presetField) {
   const k = formEditId && deckById(formEditId);
   const fid = k ? k.fieldId : (presetField || state.fields[0].id);
-  $('#formTitle').textContent = k ? 'Editar banco de treino' : 'Novo registo';
+  const notaK = k && state.notes.find(x => x.id === k.noteId);
+  $('#formTitle').textContent = k ? (notaK && notaK.kind !== 'simulado' ? `Questões de ${notaK.title}` : 'Editar simulado') : 'Novo simulado';
   $('#formSub').textContent = k ? `${deckDone(k)} de ${k.items.length} ${k.unit} resolvidos.` : 'Simulados, listas de exercícios e questões abertas viram pílulas de 10 minutos.';
-  const areaOpts = f => `<option value="">Campo inteiro</option>` + areasOf(f).map(a => `<option value="${a.id}"${k && k.areaId === a.id ? ' selected' : ''}>${esc(a.title)}</option>`).join('');
+  const areaOpts = f => `<option value="">Simulados do campo</option>` + areasOf(f).filter(a => !a.simulados).map(a => `<option value="${a.id}"${k && k.areaId === a.id ? ' selected' : ''}>${esc(a.title)}</option>`).join('');
   const segP = ['direct', 'retrieval', 'feynman'].map(p => `<button type="button" data-pp="${p}" aria-pressed="${formPrinciple === p}">${PRINCIPLES[p].icon} ${PRINCIPLES[p].label}</button>`).join('');
   $('#formBody').innerHTML = `
     ${k ? '' : modeSeg()}
-    <div class="fld"><label for="fTitle">Nome do banco</label><input class="input" id="fTitle" placeholder="Ex.: Simulado CAPM, 10 questões" value="${k ? esc(k.title) : ''}"></div>
+    <div class="fld"><label for="fTitle">Nome do simulado</label><input class="input" id="fTitle" placeholder="Ex.: Simulado CAPM, 10 questões" value="${k ? esc(k.title) : ''}"></div>
     <div class="fld"><label for="dSource">Link da fonte / PDF (opcional)</label><input class="input" id="dSource" placeholder="https://…/simulado.pdf" value="${k ? esc(k.source) : ''}">
       <p class="hint">Aparece como “Ver PDF Original” durante a resolução.</p></div>
     <div class="grid2">
       <div class="fld"><label for="dField">Campo de estudo</label><select class="select" id="dField">${state.fields.map(f => `<option value="${f.id}"${f.id === fid ? ' selected' : ''}>${esc(f.icon)} ${esc(f.title)}</option>`).join('')}</select></div>
-      <div class="fld"><label for="dArea">Área (opcional)</label><select class="select" id="dArea">${areaOpts(fid)}</select></div>
+      <div class="fld"><label for="dArea">Caderno</label><select class="select" id="dArea">${areaOpts(fid)}</select></div>
     </div>
 
     <div class="qbox">
@@ -2898,8 +3052,8 @@ function renderDeckForm(presetField) {
       </div></div></details>
 
     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-      ${k ? `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn danger" id="dDelete">Excluir banco</button><button class="btn" id="dReset">Reiniciar progresso</button></div>` : '<span></span>'}
-      <div style="display:flex;gap:8px"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="dSave">${k ? 'Salvar banco' : 'Criar banco'}</button></div>
+      ${k ? `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn danger" id="dDelete">${notaK && notaK.kind !== 'simulado' ? 'Apagar questões' : 'Excluir simulado'}</button><button class="btn" id="dReset">Reiniciar progresso</button></div>` : '<span></span>'}
+      <div style="display:flex;gap:8px"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="dSave">${k ? 'Salvar' : 'Criar simulado'}</button></div>
     </div>`;
   renderQPanel(); renderQList();
 
@@ -2909,8 +3063,10 @@ function renderDeckForm(presetField) {
   $('#dPrin').addEventListener('click', e => { const b = e.target.closest('[data-pp]'); if (!b) return; formPrinciple = b.dataset.pp; $('#dPrin').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); $('#dPrinHint').textContent = PRINCIPLES[formPrinciple].ask; });
   $('#dField').addEventListener('change', e => { $('#dArea').innerHTML = areaOpts(e.target.value); });
   $('#dDelete')?.addEventListener('click', () => {
-    if (!confirm(`Excluir o banco "${k.title}"? O histórico de minutos continua guardado.`)) return;
+    const nota = state.notes.find(x => x.id === k.noteId), simu = nota && nota.kind === 'simulado';
+    if (!confirm(simu ? `Excluir o simulado "${k.title}"? O histórico de minutos continua guardado.` : `Apagar as ${k.items.length} questões do questionário de "${nota ? nota.title : k.title}"? A ficha continua. O histórico de minutos continua guardado.`)) return;
     state.decks = state.decks.filter(x => x.id !== k.id);
+    if (simu) { state.notes = state.notes.filter(x => x !== nota); if (route.v === 'ficha' && route.noteId === nota.id) go({ v: 'area', areaId: nota.areaId }, 'replace'); }
     if (state.pillOfDay && state.pillOfDay.deckId === k.id) state.pillOfDay = null;
     persist(); render(); $('#dlgForm').close(); toast('Banco excluído');
   });
@@ -2920,7 +3076,7 @@ function renderDeckForm(presetField) {
   });
   $('#dSave').addEventListener('click', () => {
     const title = $('#fTitle').value.trim();
-    if (!title) { toast('Dê um nome ao banco de treino.', true); $('#fTitle').focus(); return; }
+    if (!title) { toast('Dê um nome ao simulado.', true); $('#fTitle').focus(); return; }
     const source = $('#dSource').value.trim();
     if (source && !safeUrl(source)) { toast('O link precisa começar por http:// ou https://', true); $('#dSource').focus(); return; }
     // inclui o que ficou colado na importação ou pendente no editor
@@ -2929,10 +3085,22 @@ function renderDeckForm(presetField) {
     if (!workItems.length) { toast('Adicione pelo menos uma questão.', true); return; }
     const mcN = workItems.filter(i => i.type === 'mc').length;
     const meta = { title, unit: $('#dUnit').value.trim() || (mcN ? 'questões' : 'itens'), fieldId: $('#dField').value, areaId: $('#dArea').value || null, source, order: formOrder, principle: formPrinciple };
-    if (k) { Object.assign(k, meta, { items: workItems }); toast('Banco salvo'); }
-    else { state.decks.push({ id: uid(), ...meta, items: workItems, createdAt: new Date().toISOString() }); toast(`Banco criado com ${workItems.length} ${pl(workItems.length, 'questão', 'questões')}`); }
+    let alvo = k;
+    if (k) {
+      const nota = state.notes.find(x => x.id === k.noteId);
+      if (nota && nota.kind !== 'simulado') { delete meta.areaId; delete meta.fieldId; delete meta.title; }   // o questionário segue a ficha
+      Object.assign(k, meta, { items: workItems });
+      if (nota && nota.kind === 'simulado') { nota.title = k.title; const na = k.areaId && areaById(k.areaId); if (na) nota.areaId = na.id; else { k.areaId = null; nota.areaId = null; delete k.noteId; state.notes = state.notes.filter(x => x !== nota); garantirFichaDoBanco(k); } }
+      toast('Questões salvas');
+    } else {
+      alvo = { id: uid(), ...meta, items: workItems, createdAt: new Date().toISOString() };
+      state.decks.push(alvo); garantirFichaDoBanco(alvo);
+      toast(`Simulado criado com ${workItems.length} ${pl(workItems.length, 'questão', 'questões')}`);
+    }
     if (state.pillOfDay && k && !workItems.some(i => i.id === state.pillOfDay.itemId) && state.pillOfDay.deckId === k.id) state.pillOfDay = null;
-    persist(); render(); $('#dlgForm').close(); setTab('pills');
+    persist(); render(); $('#dlgForm').close();
+    const fn = state.notes.find(x => x.id === alvo.noteId);
+    if (fn) go({ v: 'ficha', noteId: fn.id, areaId: fn.areaId, from: route.from }, route.v === 'ficha' ? 'replace' : 'push');
   });
 }
 
@@ -3046,12 +3214,13 @@ function startPill(kind, deckId) {
   let pick = null;
   if (kind === 'day') { const p = pillOfDay(); if (p && !p.done) pick = p; }
   else if (kind === 'deck') { const k = deckById(deckId); const it = k && (nextItem(k, session && session.itemId) || extraItem(k, session && session.itemId) || nextItem(k) || extraItem(k)); if (it) pick = { deck: k, item: it, extra: !nextItem(k) }; }
+  else if (kind === 'escopo') pick = escopoPick(deckId || {}, session && session.itemId, session && session.deckId);
   else pick = rescuePick(session && session.itemId, session && session.deckId);
   if (!pick) {
     toast(state.decks.length ? 'Não há pílulas disponíveis. Adicione questões a um banco.' : 'Crie primeiro um banco de treino.', true);
     setTab('pills'); return;
   }
-  session = { kind, deckId: pick.deck.id, itemId: pick.item.id, start: Date.now(), phase: 'run', attempt: '', choice: null, extra: !!pick.extra };
+  session = { kind, deckId: pick.deck.id, itemId: pick.item.id, start: Date.now(), phase: 'run', attempt: '', choice: null, extra: !!pick.extra, escopo: kind === 'escopo' ? (deckId || {}) : null };
   renderFocus();
   const d = $('#dlgPill'); if (!d.open) d.showModal();
   $('#focusBody').scrollTop = 0;
@@ -3091,7 +3260,7 @@ function renderFocus() {
   const k = deckById(session.deckId), it = k.items.find(i => i.id === session.itemId), f = fieldById(k.fieldId);
   const key = principleOf(k, it), P = PRINCIPLES[key], isMc = it.type === 'mc';
   const src = safeUrl(k.source), isPdf = /\.pdf($|[?#])/i.test(k.source);
-  const top = `<div class="f-top"><span class="f-label">${CAPSULE}<span>${session.kind === 'day' ? 'Pílula do dia' : session.extra ? 'Treino extra' : 'Pílula de 10 minutos'}</span></span>
+  const top = `<div class="f-top"><span class="f-label">${CAPSULE}<span>${session.kind === 'day' ? 'Pílula do dia' : session.extra ? 'Treino extra' : session.kind === 'escopo' && session.escopo && session.escopo.areaId ? 'Caderno inteiro · ' + esc((areaById(session.escopo.areaId) || {}).title || '') : 'Pílula de 10 minutos'}</span></span>
     <div class="f-top-r">${src ? `<button class="btn sm pdf-btn" data-view-url="${esc(k.source)}" data-label="${esc(k.title)}">${isPdf ? '📄 Ver PDF Original' : '🔗 Ver fonte original'}</button>` : ''}
     <button class="x" data-f="close" aria-label="Sair"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>`;
   const idx = k.items.indexOf(it) + 1;
@@ -3222,6 +3391,7 @@ $('#dlgPill').addEventListener('click', async e => {
     const k = deckById(session.deckId), cur = session.itemId;
     let pick = null;
     if (session.kind === 'deck') { const it = nextItem(k, cur) || extraItem(k, cur); if (it) pick = { deck: k, item: it }; }
+    else if (session.kind === 'escopo') pick = escopoPick(session.escopo || {}, cur, k.id);
     else pick = rescuePick(cur, k.id);
     if (!pick) { toast('Não há outra pílula disponível agora.', true); return; }
     Object.assign(session, { kind: session.kind === 'day' ? 'rescue' : session.kind, deckId: pick.deck.id, itemId: pick.item.id, start: Date.now(), attempt: '', choice: null, extra: !!pick.extra });
@@ -3239,7 +3409,7 @@ $('#dlgPill').addEventListener('click', async e => {
     toast(`Fichamento salvo em ${a ? a.title : 'caderno'}`); return;
   }
   if (act === 'copy') { const ok = await copyText(reflectionText().text); toast(ok ? 'Copiado. Cole no Memento.' : 'Não foi possível copiar neste navegador.', !ok); return; }
-  if (act === 'again') startPill(session.kind === 'deck' ? 'deck' : 'rescue', session.deckId);
+  if (act === 'again') { if (session.kind === 'escopo') startPill('escopo', session.escopo); else startPill(session.kind === 'deck' ? 'deck' : 'rescue', session.deckId); }
 });
 /* Teclado: A–E responde a múltipla escolha; 1–3 dá o feedback */
 $('#dlgPill').addEventListener('keydown', e => {
@@ -3274,6 +3444,7 @@ function fieldPosture(f) {
 }
 const snoozed = f => f.dareUntil && Date.parse(f.dareUntil) > Date.now();
 function fieldSlipLine(f) {
+  return '';
   const fp = fieldPosture(f);
   return fp.slipping ? `<p class="slip">Declarado Ultralearning, praticado como Tradicional: ${fp.mins} min de prática em 14 dias.</p>` : '';
 }
@@ -3300,6 +3471,7 @@ function dareCopy(f, fp) {
 /* Um desafio de cada vez: primeiro quem declarou Ultralearning e deixou escorregar, depois os Tradicionais */
 function renderChallenge() {
   const el = $('#challenge'); if (!el) return;
+  el.innerHTML = ''; return;                                  // sem cobrança de postura: o tempo e a constância ficam no Atrium
   const cands = state.fields.filter(f => !snoozed(f) && areasOf(f.id).length).map(f => ({ f, fp: fieldPosture(f) }));
   const slip = cands.filter(x => x.fp.slipping).sort((a, b) => a.fp.score - b.fp.score)[0];
   const trad = cands.filter(x => x.f.posture !== 'ultra').sort((a, b) => stats(areasOf(b.f.id)).study - stats(areasOf(a.f.id)).study)[0];
@@ -3339,7 +3511,7 @@ function openDare(f) {
 }
 /* Dominado sem prova: o app aceita, mas duvida */
 function masteryDoubt(a) {
-  if (a.status !== 2) return '';
+  return '';
   const f = fieldById(a.fieldId), decks = state.decks.filter(k => k.areaId === a.id || (!k.areaId && k.fieldId === a.fieldId));
   const ids = new Set(decks.map(k => k.id));
   const proofs = state.pillLog.filter(l => ids.has(l.deckId) && l.grade >= 2 && Date.now() - Date.parse(l.at) < 30 * DAY_MS).length;
@@ -3500,7 +3672,10 @@ try { if (!localStorage.getItem(WELCOME_KEY)) openWelcome(); } catch { openWelco
       if (S.backend === 'idb') { S.cache = v; S.pending = true; clearTimeout(timer); timer = setTimeout(flush, 0); return; }
       localStorage.setItem(KEY, v);
     },
-    flush, onError: null, onRecover: null, onExternal: null
+    flush, onError: null, onRecover: null, onExternal: null,
+    guardarCopia(nome, v) {                                   // cópia de segurança antes de uma reorganização
+      try { if (S.backend === 'idb' && S.db) { get(nome).then(x => { if (!x) put(nome, v); }).catch(() => {}); } else if (!lsGet(KEY + '.' + nome)) localStorage.setItem(KEY + '.' + nome, v); } catch (e) {}
+    }
   };
   addEventListener('pagehide', () => flush());
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
