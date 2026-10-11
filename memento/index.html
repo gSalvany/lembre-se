@@ -1295,6 +1295,10 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
           <h2 class="section-title" style="margin-bottom:0;">[+] CRIAÇÃO DE SENTIDO</h2>
           <div class="accordion-icon">+</div>
         </div>
+        <div id="audireBanner" class="draft-banner atrium-banner" hidden>
+          <span id="audireBannerText"></span>
+          <span class="atrium-acts"><button type="button" id="btnAudireUse" class="atrium-apply">Trazer</button><button type="button" id="btnAudireSkip" class="del-btn">dispensar</button></span>
+        </div>
         <div class="accordion-body" id="accBodyNote">
         <p class="field-label" style="margin-top:12px;">Dê sentido ao seu tempo agora.</p>
 
@@ -2807,7 +2811,64 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
     }
     document.getElementById('btnNoteDateToday').addEventListener('click', () => setPendingNoteDate(null));
 
+    /* ---------- relatos do Audire para o diário ----------
+       No Audire você escolhe "Levar ao diário". Aqui o Memento oferece trazer:
+       o formulário já vem preenchido com título, anotação, notas no tempo, transcrição,
+       tags e o link para ouvir no Audire. Quem guarda a memória é você. */
+    let audireFila = [], pendingAudireId = null, audireImportados = [];
+    try { audireImportados = JSON.parse(appStorage.getItem('memento_audire_importados')) || []; } catch (e) {}
+    function salvarImportados() { audireImportados = audireImportados.slice(-300); try { appStorage.setItem('memento_audire_importados', JSON.stringify(audireImportados)); } catch (e) {} }
+    async function lerAudire() {
+      if (!window.Lembre) return;
+      try { const r = await Lembre.ler('audire'); const L = r && r.dados && Array.isArray(r.dados.diario) ? r.dados.diario : []; audireFila = L.filter(x => x && x.id && !audireImportados.includes(x.id)); }
+      catch (e) { audireFila = []; }
+      renderAudireBanner();
+    }
+    function renderAudireBanner() {
+      const el = document.getElementById('audireBanner'); if (!el) return;
+      el.hidden = !audireFila.length;
+      if (!audireFila.length) return;
+      const x = audireFila[0];
+      document.getElementById('audireBannerText').textContent = audireFila.length === 1
+        ? `🎙 “${x.title || 'Relato'}” do Audire espera o diário.`
+        : `🎙 ${audireFila.length} relatos do Audire esperam o diário. O primeiro: “${x.title || 'Relato'}”.`;
+    }
+    function trazerAudire() {
+      const x = audireFila[0]; if (!x) return;
+      if (editingNoteId !== null) { showToast('Termine a edição atual antes de trazer o relato.', true); return; }
+      switchView('existencia');
+      document.querySelectorAll('.scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === 'Dia'));
+      selectedScope = 'Dia'; syncFormWithScope();
+      resetNoteForm();
+      const d = new Date(x.at || Date.now());
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      if (key !== todayStr()) setPendingNoteDate(key);
+      const mmss = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+      const partes = [];
+      if (x.note) partes.push(x.note);
+      if (Array.isArray(x.marks) && x.marks.length) partes.push(x.marks.filter(m => m && m.text).map(m => `- **${mmss(m.t)}** ${m.text}`).join('\n'));
+      if (x.transcript) partes.push('**Transcrição**\n\n> ' + String(x.transcript).replace(/\n+/g, '\n> '));
+      if (!partes.length) partes.push('Relato gravado no Audire.');
+      noteInput.value = partes.join('\n\n');
+      document.getElementById('noteTitleInput').value = x.title || '';
+      document.getElementById('noteTagsInput').value = (x.tags || []).join(', ');
+      try { linkInput.value = new URL('../audire/?clip=' + encodeURIComponent(x.id), location.href).href; } catch (e) {}
+      pendingAudireId = x.id;
+      openAccordion('accBodyNote');
+      setTimeout(() => document.getElementById('noteFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+      showToast('Relato trazido. Ajuste o que quiser e guarde a memória.');
+    }
+    document.getElementById('btnAudireUse').addEventListener('click', trazerAudire);
+    document.getElementById('btnAudireSkip').addEventListener('click', () => {
+      const x = audireFila[0]; if (!x) return;
+      audireImportados.push(x.id); salvarImportados(); audireFila.shift(); renderAudireBanner();
+    });
+    if (window.Lembre) Lembre.ouvir(m => { if (m.app === 'audire') lerAudire(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') lerAudire(); });
+    setTimeout(lerAudire, 300);
+
     function resetNoteForm() {
+      pendingAudireId = null;
       setPendingNoteDate(null);
       noteInput.value = '';
       noteInput.classList.remove('invalid');
@@ -2877,6 +2938,7 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
         memories.unshift(newMemory);
         if (when !== now) memories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // fica no lugar certo da linha do tempo
         if (!persistMemories()) { memories = memories.filter(m => m.id !== newMemory.id); return; }
+        if (pendingAudireId) { audireImportados.push(pendingAudireId); salvarImportados(); audireFila = audireFila.filter(x => x.id !== pendingAudireId); pendingAudireId = null; renderAudireBanner(); }
         showToast(selectedScope === 'Dia' ? 'Memória guardada.' : (selectedScope === 'Mês' ? 'Intenção do mês definida.' : 'Intenção da semana definida.'));
         resetNoteForm();
         syncFormWithScope();
@@ -5677,7 +5739,8 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
           memories, daylog, distractions,
           expenses: (Array.isArray(expenses) ? expenses : []).map(e => ({ date: e.date, cat: e.category || 'Outros', value: num(e.value) })).filter(e => e.value),
           weekReviews: reviews && typeof reviews === 'object' ? reviews : {},
-          plano: construirPlano(daylogRaw)
+          plano: construirPlano(daylogRaw),
+          audireImportados: (ler('memento_audire_importados', []) || []).slice(-300)
         };
       }
       // o que o Atrium precisa para guiar o dia: hábitos ideais, sono, cards de execução, Pecunia
