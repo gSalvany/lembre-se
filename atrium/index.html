@@ -440,6 +440,24 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
 .pecr .pec-b{flex-basis:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}.pecr .pec-b .btn{padding:11px;font-size:14px;border-radius:14px}
 .pec-n{flex-basis:100%;font-size:12px;color:var(--faint)}
 .mi-add{margin-top:12px}.mi-add .btn{padding:12px;font-size:14px;border-radius:14px}
+.mx-r{font-size:12.5px;color:var(--muted);margin-top:10px}.mx-r a{color:var(--aud);text-decoration:none;font-weight:700}
+.bordo{display:flex;flex-direction:column;gap:8px}.bd-i{display:flex;gap:10px;background:var(--card-2);border-radius:12px;padding:9px 11px}
+.bd-h{font-size:12px;font-weight:700;color:var(--aud);flex:none;padding-top:2px}.bd-i b{display:block;color:var(--text);font-size:13.5px}.bd-i small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.bd-a{display:flex;gap:14px;margin-top:4px;font-size:12.5px}.bd-a a{color:var(--aud);text-decoration:none;font-weight:700}
+
+/* ---------- Semana-espelho ---------- */
+.sp{padding:14px 16px;margin-top:12px}
+.sp-big{font-family:var(--serif);font-size:22px;color:var(--text)}.sp-big b{font-weight:600}
+.sp-sub{font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.45}
+.sp-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.sp-two div{background:var(--card-2);border-radius:14px;padding:10px 12px}
+.sp-two small{display:block;font-size:11.5px;color:var(--faint)}.sp-two b{display:block;font-size:20px;color:var(--text)}.sp-two b.good{color:var(--vol)}.sp-two b.bad{color:var(--mem)}
+.sp-bars{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.sp-b{display:grid;grid-template-columns:minmax(0,1.2fr) 1fr auto;gap:8px;align-items:center;font-size:12.5px}
+.sp-b span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.sp-b i{height:6px;border-radius:3px;background:var(--card-3);overflow:hidden;display:block}.sp-b em{display:block;height:100%;background:var(--atr);border-radius:3px}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.sp-grid div{background:var(--card-2);border-radius:14px;padding:10px 12px}
+.sp-grid b{display:block;font-size:20px;color:var(--text)}.sp-grid small{font-size:11.5px;color:var(--faint);line-height:1.3;display:block}
+a.weekline,a.weekline *{text-decoration:none}
 </style>
 </head>
 <body>
@@ -807,7 +825,7 @@ function metrics(S, from, to) {
   if (S.cognitio) {
     const logs = S.cognitio.pillLog.filter(l => inR(dayKey(l.at)));
     r.pills = logs.length; r.pillMin = logs.reduce((t, l) => t + l.minutes, 0);
-    r.notes = S.cognitio.notes.filter(n => inR(dayKey(n.createdAt))).length;
+    r.notes = S.cognitio.notes.filter(n => n.kind !== 'simulado' && inR(dayKey(n.createdAt))).length;
   }
   if (S.volumen) {
     let pages = 0, units = 0;
@@ -885,7 +903,7 @@ function actionParts(S) {
     const amount = { book: '30 min', course: '1 módulo', video: '20 min', article: '1 artigo' }[cur.type] || '30 min';
     P.leitura = { app: 'vol', kind: 'leitura', min: 30, label: `${amount} de ${cur.title}`, why: idle === null ? `${cur.title} sem sessão registrada` : idle >= 2 ? `${cur.title} parado há ${idle} dias` : `${cur.title} em andamento` };
     const lk = linkOf(cur.id), area = lk && S.cognitio && S.cognitio.areas.find(a => a.id === lk.areaId);
-    if (area && !S.cognitio.notes.some(n => n.areaId === area.id)) P.ficha = { app: 'cog', kind: 'ficha', min: 15, label: `1 ficha sobre ${cur.title} no caderno ${area.title}`, why: `leitura ligada sem nenhuma ficha` };
+    if (area && !S.cognitio.notes.some(n => n.areaId === area.id && n.kind !== 'simulado')) P.ficha = { app: 'cog', kind: 'ficha', min: 15, label: `1 ficha sobre ${cur.title} no caderno ${area.title}`, why: `leitura ligada sem nenhuma ficha` };
   }
   const h = new Date().getHours();
   if (S.memento && h >= 19 && !S.memento.daylog.some(x => x.date === today())) P.registro = { app: 'mem', kind: 'registro', min: 5, label: 'Registrar o dia no Confronto do Memento', why: 'o dia de hoje ainda não foi registrado' };
@@ -1070,80 +1088,85 @@ function trendRow(label, now, prev, { unit = '', pp = false, lowerBetter = false
   }
   return `<div class="trend"><span class="tl">${label}</span><b>${fmt(now)}${unit}</b><em class="${cls}">${delta}</em></div>`;
 }
+/* ---------- Semana: um espelho, sem placar ----------
+   Não é sobre produtividade: é sobre ter consciência do tempo vivido,
+   para onde ele foi e o que foi resgatado. Memento mori, memento vivere. */
 function renderSemana(S) {
-  const t = today(), wk = weekKey(), from = mondayOf(t), elapsed = Math.round((keyToDate(t) - keyToDate(from)) / DAY) + 1;
-  const W = metrics(S, from, t);
-  // --- Ritual: compromisso do Memento x realidade
-  const m = S.memento;
-  let commit = null, intent = null;
-  if (m) {
-    const keys = Object.keys(m.weekReviews).filter(k => /^\d{4}-S\d+$/.test(k)).sort((a, b) => { const [ya, wa] = a.split('-S').map(Number), [yb, wb] = b.split('-S').map(Number); return ya - yb || wa - wb; });
-    const k = keys.includes(wk) ? wk : keys.filter(x => x <= wk).pop();
-    if (k && m.weekReviews[k] && m.weekReviews[k].commit) commit = { text: m.weekReviews[k].commit, key: k };
-    const im = m.memories.find(x => x.scope === 'Semana' && x.wk === wk); if (im) intent = im.title || clip(im.text, 140);
+  const seg = mondayOf(today()), k0 = today(), dias = [];
+  for (let k = seg; k <= k0; k = addDays(k, 1)) dias.push(k);
+  const inW = k => k >= seg && k <= k0, wk = weekKey(), m = S.memento, p = (m && m.plano) || {};
+  const nDia = dias.length;
+
+  // 1. tempo vivido
+  let vida = '';
+  if (m && /^\d{4}-\d{2}-\d{2}$/.test(m.birth)) {
+    const semanas = Math.floor((Date.now() - Date.parse(m.birth + 'T00:00:00')) / (7 * DAY));
+    vida = `<p class="sp-big">Semana <b>${semanas.toLocaleString('pt-BR')}</b> da sua vida</p><p class="sp-sub">De cerca de 4.160 semanas, se você viver 80 anos. Esta é uma delas e não volta.</p>`;
   }
-  const reality = [];
-  if (W.desvio !== undefined) reality.push(`<li><b style="color:var(--mem)">${fmtMin(W.desvio)}</b> de desvio</li><li><b style="color:var(--vol)">${fmtMin(W.prod)}</b> de projetos</li>`);
-  if (W.pillMin !== undefined) reality.push(`<li><b style="color:var(--cog)">${fmtMin(W.pillMin)}</b> de prática, ${pl(W.notes, 'ficha', 'fichas')}</li>`);
-  if (W.pages !== undefined) reality.push(`<li><b style="color:var(--vol)">${W.pages}</b> páginas lidas</li>`);
-  if (W.exec !== undefined && W.exec !== null) reality.push(`<li><b>${W.exec}%</b> de execução em ${pl(W.memDays, 'dia registrado', 'dias registrados')}</li>`);
-  const ritual = `<section class="card ritual"><p class="eyebrow">Semana ${wk.split('-S')[1]}, dia ${elapsed} de 7</p><h3>Estou cumprindo o que prometi?</h3>
-    <div class="vs"><div class="vs-l"><small>Promessa</small>${commit ? `<p class="promise">“${esc(commit.text)}”</p><p class="src">Memento, revisão ${esc(commit.key.split('-S')[1] ? 'da semana ' + commit.key.split('-S')[1] : '')}</p>` : '<p class="promise muted">Sem compromisso registrado no Memento para esta semana.</p>'}
-      ${intent ? `<p class="src">Intenção da semana: ${esc(intent)}</p>` : ''}</div>
-      <div class="vs-r"><small>Realidade desde segunda</small>${reality.length ? `<ul>${reality.join('')}</ul>` : '<p class="muted">Sem dados desta semana.</p>'}</div></div></section>`;
+  const J = janela(dia(k0)), acordadoSemana = J.acordado * nDia;
 
-  // --- Metas
-  const list = store.goals[wk] || [];
-  const goalsHtml = list.map(g => { const s = goalStatus(S, g, from, t, elapsed); if (!s) return ''; const u = s.def.dir < 0 ? '' : '';
-    return `<li class="goal ${s.st}"><div class="g-top"><span>${s.def.dir < 0 ? 'Até' : ''} <b>${g.target}</b> ${esc(s.def.label)}</span><em>${ST_LABEL[s.st]}</em></div>
-      <div class="g-bar"><i style="width:${s.pct}%"></i></div><div class="g-foot"><span>Agora: <b>${s.val}${u}</b></span><button class="link" data-goal-rm="${g.id}">Remover</button></div></li>`; }).join('');
-  const avail = Object.entries(GOALS).filter(([k, d]) => APP_OK(S, d.app));
-  const PREV_WK = (() => { const pm = addDays(from, -7), pe = addDays(from, -1), pk = weekKey(keyToDate(pm)); const pg = (store.goals[pk] || []).map(g => goalStatus(S, g, pm, pe, 7)).filter(Boolean); return pg.length ? `<p class="prevgoals">Semana passada: <b>${pg.filter(x => x.st === 'ok').length} de ${pg.length}</b> metas cumpridas.</p>` : ''; })();
-  const goalsSec = `<section class="card goals"><div class="g-head"><h3>Metas da semana</h3><span>${list.length}/3</span></div>
-    ${list.length ? `<ul>${goalsHtml}</ul>` : '<p class="muted">Metas medidas pelos próprios dados dos apps. Escolha de 1 a 3.</p>'}
-    ${list.length < 3 ? `<div class="g-add"><input id="gTarget" type="number" min="0" step="1" inputmode="numeric" placeholder="Nº" aria-label="Valor da meta"><select id="gMetric" aria-label="Tipo de meta">${avail.map(([k, d]) => `<option value="${k}">${d.label}</option>`).join('')}</select><button class="btn primary" id="gAdd">Adicionar</button></div>` : ''}
-    ${PREV_WK}</section>`;
+  // 2. para onde foi o tempo (o Atrium mede; o Memento completa os dias sem Atrium)
+  let presenca = 0, desvio = 0, porMissao = {};
+  dias.forEach(k => {
+    const d = DIA.dias[k];
+    if (d) {
+      d.itens.forEach(i => { const r = realMin(i) || (i.estado === 'feita' ? i.decidido || 0 : 0); if (r > 0) { presenca += r; const mm = missao(i.mid); const nome = mm ? (mm.tipo === 'habito' ? 'Hábitos ideais' : mm.titulo) : 'Outros'; porMissao[nome] = (porMissao[nome] || 0) + r; } });
+      (d.desvios || []).forEach(x => desvio += x.minutos || 0);
+    } else if (m) {
+      const f = m.daylog.find(x => x.date === k);
+      if (f) f.blocks.forEach(b => { if (b.kind === 'desvio') desvio += b.min; else if (b.kind === 'prod') { presenca += b.min; porMissao[b.cat] = (porMissao[b.cat] || 0) + b.min; } });
+    }
+  });
+  const hora = p.hourlyRate || 0;
+  const tops = Object.entries(porMissao).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxT = Math.max(1, ...tops.map(t => t[1]));
+  const tempo = `<section class="card sp"><p class="eyebrow">Para onde o tempo foi</p>
+    <div class="sp-two"><div><small>Presença no que importa</small><b class="good">${fmtMin(presenca)}</b></div><div><small>Desvio</small><b class="${desvio ? 'bad' : ''}">${fmtMin(desvio)}</b>${hora && desvio ? `<small>${brl(desvio / 60 * hora)} da sua hora</small>` : ''}</div></div>
+    ${tops.length ? `<div class="sp-bars">${tops.map(([n, v]) => `<div class="sp-b"><span>${esc(clip(n, 30))}</span><i><em style="width:${Math.round(v / maxT * 100)}%"></em></i><span>${fmtMin(v)}</span></div>`).join('')}</div>` : '<p class="sp-sub">Use o cronômetro das missões e o tempo começa a aparecer aqui.</p>'}
+    <p class="sp-sub">${nDia} ${nDia === 1 ? 'dia' : 'dias'} desta semana, cerca de ${fmtMin(acordadoSemana)} acordado.</p></section>`;
 
-  // --- Tendências: últimos 7 dias x 7 anteriores
-  const A = metrics(S, addDays(t, -6), t), B = metrics(S, addDays(t, -13), addDays(t, -7));
-  const trends = [
-    S.memento ? trendRow('Execução média (Memento)', A.exec, B.exec, { unit: '%', pp: true }) : '',
-    S.memento ? trendRow('Projetos (Memento)', A.prod, B.prod, { fmt: fmtMin }) : '',
-    S.memento ? trendRow('Desvio (Memento)', A.desvio, B.desvio, { fmt: fmtMin, lowerBetter: true }) : '',
-    S.memento ? trendRow('Dias registrados', A.memDays, B.memDays) : '',
-    S.cognitio ? trendRow('Prática (Cognitio)', A.pillMin, B.pillMin, { fmt: fmtMin }) : '',
-    S.cognitio ? trendRow('Fichas escritas', A.notes, B.notes) : '',
-    S.volumen ? trendRow('Páginas lidas (Volumen)', A.pages, B.pages) : '',
-    S.memento ? trendRow('Gastos registrados', A.spent, B.spent, { fmt: v => brl(v), lowerBetter: true }) : ''
-  ].join('');
-  // --- Sequências
-  const sMem = S.memento ? streak(S.memento.daylog.map(x => x.date)) : null;
-  const sCog = S.cognitio ? streak(S.cognitio.pillLog.map(l => dayKey(l.at))) : null;
-  const sAtr = streak(history.map(x => x.date));
-  const streaks = `<div class="streaks">${sMem !== null ? `<div><b>${sMem ? '🔥 ' : ''}${sMem}</b><small>${sMem === 1 ? 'dia' : 'dias'} seguidos registrando no Memento</small></div>` : ''}${sCog !== null ? `<div><b>${sCog ? '🔥 ' : ''}${sCog}</b><small>${sCog === 1 ? 'dia' : 'dias'} seguidos com pílulas</small></div>` : ''}<div><b>${sAtr ? '🔥 ' : ''}${sAtr}</b><small>${sAtr === 1 ? 'dia' : 'dias'} cumprindo a ação do dia</small></div></div>`;
+  // 3. o que foi resgatado (Pecúnia)
+  let pec = '';
+  if (m) {
+    const salvo = (p.savings || []).filter(x => inW(x.date)).reduce((t, x) => t + x.amount, 0);
+    const gasto = m.expenses.filter(e => inW(e.date)).reduce((t, e) => t + e.value, 0);
+    const diasG = new Set(m.expenses.map(e => e.date)).size, media = diasG ? m.expenses.reduce((t, e) => t + e.value, 0) / diasG : 0;
+    const goals = (p.goals || []).filter(g => g.value > 0);
+    pec = `<section class="card sp"><p class="eyebrow">O que foi resgatado</p>
+      <div class="sp-two"><div><small>Guardado em escolhas conscientes</small><b class="good">${brl(salvo)}</b></div><div><small>Gasto na semana</small><b>${brl(gasto)}</b><small>média ${brl(media * nDia)} em ${nDia} ${nDia === 1 ? 'dia' : 'dias'}</small></div></div>
+      ${hora && gasto ? `<p class="sp-sub">Os gastos da semana valem ${fmtMin(gasto / hora * 60)} da sua vida em trabalho.</p>` : ''}
+      ${goals.map(g => `<div class="pec-m"><span>${esc(g.name)}</span><span>${brl(g.saved)} de ${brl(g.value)}</span></div><div class="mi-bar"><i style="width:${Math.min(100, Math.round(g.saved / g.value * 100))}%"></i></div>`).join('')}</section>`;
+  }
 
-  // --- Ritmo (mapa de calor)
-  const n = range, days = Array.from({ length: n }, (_, i) => addDays(t, -(n - 1 - i)));
-  const rows = [];
-  if (S.cognitio) { const by = {}; S.cognitio.pillLog.forEach(l => { const k = dayKey(l.at); by[k] = (by[k] || 0) + l.minutes; }); rows.push({ cls: 'cog', label: 'Cognitio', unit: 'min de pílulas', vals: days.map(d => by[d] || 0) }); }
-  if (S.volumen) { const by = {}; S.volumen.items.forEach(i => (i.sessions || []).forEach(s => { if (s.delta > 0) by[s.date] = (by[s.date] || 0) + s.delta; })); rows.push({ cls: 'vol', label: 'Volumen', unit: 'de progresso', vals: days.map(d => by[d] || 0) }); }
-  if (S.memento) { const by = {}; S.memento.daylog.forEach(x => { if (x.score !== null) by[x.date] = x.score; }); rows.push({ cls: 'mem', label: 'Memento', unit: '% de execução', vals: days.map(d => by[d] ?? null), abs: 100 }); }
-  if (history.length) { const by = {}; history.forEach(x => { by[x.date] = (by[x.date] || 0) + 1; }); rows.push({ cls: 'atr', label: 'Atrium', unit: 'ações feitas', vals: days.map(d => by[d] || 0) }); }
-  const heat = rows.length ? `<div class="heat-grid" style="grid-template-columns:auto repeat(${n},minmax(0,1fr))">
-      ${rows.map(r => { const max = r.abs || Math.max(1, ...r.vals.map(v => v || 0));
-        return `<span class="heat-label ${r.cls}">${r.label}</span>` + r.vals.map((v, i) => `<span class="cell ${r.cls}${days[i] === t ? ' today' : ''}"${v ? ` data-v style="--p:${Math.round(18 + 82 * v / max)}"` : ''} title="${fmtDate(keyToDate(days[i]))}: ${v === null ? 'sem registro' : v + ' ' + r.unit}"></span>`).join(''); }).join('')}
-      <span></span>${days.map((d, i) => `<span class="dlabel">${n === 7 ? keyToDate(d).toLocaleDateString('pt-BR', { weekday: 'narrow' }) : (i % 5 === 0 || i === n - 1) ? d.slice(8) : ''}</span>`).join('')}
-    </div>` : '<p class="empty-note">Importe ao menos um backup para ver o ritmo.</p>';
+  // 4. presença: o que ficou da semana
+  const fechados = dias.filter(k => DIA.dias[k] && DIA.dias[k].fechadoEm).length;
+  const viradas = dias.filter(k => DIA.dias[k] && DIA.dias[k].virada).length;
+  const imprev = dias.reduce((t, k) => t + (DIA.dias[k] ? DIA.dias[k].itens.filter(i => i.estado === 'imprevisto' || i.estado === 'adiada').length : 0), 0);
+  const memorias = m ? m.memories.filter(x => x.scope === 'Dia' && inW(dayKey(x.ts))).length : 0;
+  const fichas = S.cognitio ? S.cognitio.notes.filter(n => n.kind !== 'simulado' && inW(dayKey(n.createdAt))).length : 0;
+  const leitura = S.volumen ? S.volumen.items.reduce((t, i) => t + (i.sessions || []).filter(x => inW(x.date) && x.delta > 0).reduce((a, x) => a + x.delta, 0), 0) : 0;
+  const A = audire(), relatos = A && Array.isArray(A.relatos) ? A.relatos.filter(r => inW(dayKey(r.at))).length : 0;
+  const cell = (v, l) => `<div><b>${v}</b><small>${l}</small></div>`;
+  const pres = `<section class="card sp"><p class="eyebrow">O que ficou</p><div class="sp-grid">
+    ${cell(`${fechados}/${nDia}`, 'dias fechados com honestidade')}${cell(viradas, viradas === 1 ? 'virada' : 'viradas')}
+    ${cell(memorias, memorias === 1 ? 'memória guardada' : 'memórias guardadas')}${cell(fichas, fichas === 1 ? 'ficha escrita' : 'fichas escritas')}
+    ${cell(leitura, 'de progresso no Volumen')}${cell(relatos, relatos === 1 ? 'relato de campo' : 'relatos de campo')}</div>
+    ${imprev ? `<p class="sp-sub">${pl(imprev, 'imprevisto acolhido', 'imprevistos acolhidos')} sem culpa. O dia decide; você reprograma.</p>` : ''}</section>`;
 
-  view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Semana</h2><p>Promessa, metas e tendência.</p></div></div>
-    ${freshStrip(S)}${ritual}${goalsSec}
-    <section class="card trends"><h3>Tendência</h3><p class="muted">Últimos 7 dias comparados com os 7 anteriores.</p>${trends || '<p class="muted">Sem dados suficientes.</p>'}</section>
-    ${streaks}
-    <section class="card heat"><div class="g-head"><h3>Ritmo</h3><div class="seg" id="rangeSeg"><button data-r="7" aria-pressed="${n === 7}">7 dias</button><button data-r="30" aria-pressed="${n === 30}">30 dias</button></div></div>${heat}
-      <p class="heat-note">Cada linha usa a sua própria escala.</p></section></div>`;
+  // 5. missões grandes em curso
+  const grandes = DIA.missoes.filter(x => x.estimado && !x.concluida);
+  const mis = grandes.length ? `<section class="card sp"><p class="eyebrow">Missões em curso</p>${grandes.map(x => { const f = feitoTotal(x.id); return `<div class="pec-m"><span>${esc(x.icone ? x.icone + ' ' : '')}${esc(x.titulo)}</span><span>${fmtMin(f)} de ~${fmtMin(x.estimado)}</span></div><div class="mi-bar"><i style="width:${Math.min(100, Math.round(f / x.estimado * 100))}%"></i></div>`; }).join('')}</section>` : '';
+
+  // 6. intenção e pergunta
+  const I = intencoes(), prev = m && m.weekReviews ? Object.entries(m.weekReviews).filter(([k]) => k < wk).sort((a, b) => a[0] < b[0] ? 1 : -1)[0] : null;
+  const promessa = prev && prev[1] && prev[1].commit ? prev[1].commit : '';
+  const topo = `<section class="intent">${I.semana ? `<p class="in-l">Intenção da semana</p><p class="in-s">${esc(clip(I.semana.title && I.semana.title.replace(/[\s?!.]/g, '').length >= 3 ? I.semana.title : I.semana.text, 220))}</p>` : `<a class="in-falta" href="${MEM_URL}">Sem intenção para esta semana. Definir no Memento ›</a>`}
+    ${promessa ? `<p class="in-l">O que você prometeu na revisão passada</p><p class="in-m">“${esc(clip(promessa, 200))}”</p>` : ''}</section>`;
+  const perg = `<a class="card weekline" href="${MEM_URL}"><span>Lembrar-se</span><b>${nDia >= 6 ? 'A semana está acabando. Escreva a revisão no Memento: o que manter, o que mudar?' : 'No domingo, a revisão da semana no Memento fecha este espelho.'}</b><em>›</em></a>`;
+
+  view().innerHTML = `<div class="view"><p class="life">Semana ${wk.split('-S')[1]} · dia ${nDia} de 7</p><h2 class="greet">Espelho da semana</h2>${freshStrip(S)}
+    ${vida ? `<section class="card sp">${vida}</section>` : ''}${topo}${tempo}${pec}${pres}${mis}${perg}</div>`;
 }
-
-/* ---------- Ligações: por categoria, com ação proposta ---------- */
 function renderLigacoes(S) {
   if (!S.volumen || !S.cognitio) {
     view().innerHTML = `<div class="view"><div class="sec-head"><div><h2>Ligações</h2><p>Leituras do Volumen ligadas a áreas do Cognitio.</p></div></div>
@@ -1459,6 +1482,11 @@ function folha(html, onAcao) {
 }
 
 /* ---------- tela ---------- */
+function relatosDe(mid, k) {
+  const A = audire(); if (!A || !Array.isArray(A.relatos)) return [];
+  return A.relatos.filter(r => r.mid === mid && (!k || dayKey(r.at) === k));
+}
+const relatoUrl = m => `${AUDIRE_URL}?gravar=1&missao=${encodeURIComponent(m.id)}&titulo=${encodeURIComponent(m.titulo)}`;
 let foco = null, grupoHab = false;
 function subtitulo(m, it) {
   const S = sources(), lk = abrirLink(m), bits = [];
@@ -1475,6 +1503,7 @@ function subtitulo(m, it) {
     S.cognitio.decks.filter(k => k.areaId === ref.id).forEach(k => k.items.forEach(x => { if (x.seen && x.due && Date.parse(x.due) <= now) due++; }));
     if (due) bits.push(pl(due, 'pílula vencida', 'pílulas vencidas'));
   }
+  const nr = relatosDe(m.id, today()).length; if (nr) bits.push('🎙 ' + nr);
   if (it.estado === 'imprevisto') bits.push('imprevisto' + (it.motivo ? ': ' + it.motivo : ''));
   if (it.estado === 'adiada') bits.push('passou para amanhã');
   if (it.estado === 'fora') bits.push('fora de hoje');
@@ -1509,8 +1538,9 @@ function itemHtml(it, d, k) {
       <button class="mi-more" data-m="menu" data-id="${esc(it.mid)}" aria-label="Opções de ${esc(m.titulo)}">⋯</button></div>
     <div class="mx-t"><b ${rodando ? 'data-tick' : ''}>${relogio(r)}</b><span>${dm || (it.decidido ? 'de ' + fmtMin(it.decidido) : '')}</span></div>
     <div class="mi-bar"><i style="width:${pct}%"></i></div>
-    <div class="mx-b"><a class="btn" href="${AUDIRE_URL}?gravar=1">🎙 Relato de campo</a>
+    <div class="mx-b"><a class="btn" href="${relatoUrl(m)}">🎙 Relato de campo</a>
       ${rodando ? `<button class="btn primary" data-m="pausar" data-id="${esc(it.mid)}">❚❚ Pausar</button>` : `<button class="btn primary" data-m="iniciar" data-id="${esc(it.mid)}">▶ ${rm ? 'Continuar' : 'Começar'}</button>`}</div>
+    ${(() => { const rs = relatosDe(m.id, k); return rs.length ? `<p class="mx-r">∿ ${pl(rs.length, 'relato', 'relatos')} · ${rs.map(r => `<a href="${AUDIRE_URL}?clip=${encodeURIComponent(r.id)}">${hm(r.at)}</a>`).join(' · ')}</p>` : ''; })()}
     <div class="mx-s"><button class="lnk" data-m="mais15" data-id="${esc(it.mid)}">+15 min sem cronômetro</button>${lk ? `<a class="lnk" href="${lk.href}">${lk.txt}</a>` : ''}<button class="lnk" data-m="fiz" data-id="${esc(it.mid)}">${ok ? 'Desmarcar' : 'Marcar feito'}</button></div>
   </article>`;
 }
@@ -1595,18 +1625,30 @@ function renderHoje(S) {
   view().innerHTML = `<div class="view">${life}<h2 class="greet">${sal}${name ? `, ${esc(name)}` : ''}.</h2>${freshStrip(S)}${intent}${avisoOntem}${acordou}${seg}${budget}<p class="mis-h">Missões de ${isHoje ? 'hoje' : k < today() ? 'ontem' : 'amanhã'}</p><div class="mis">${itens}</div>${add}${pec}${desv}${fim}${isHoje ? audLine() : ''}${wkLine}</div>`;
   if (fechando && podeFechar) { const ta = $('#fxSint'); ta && ta.addEventListener('input', () => { d.sintese = ta.value; salvarDia(); }); }
 }
+function bordoHtml(d) {
+  const mids = new Set(d.itens.map(i => i.mid)), A = audire(), k = diaKey();
+  const rs = A && Array.isArray(A.relatos) ? A.relatos.filter(r => mids.has(r.mid) && dayKey(r.at) === k) : [];
+  if (!rs.length) return '';
+  return `<p class="fx-l">Diário de bordo · ${pl(rs.length, 'relato', 'relatos')} de campo</p><div class="bordo">${rs.map(r => {
+    const m = missao(r.mid);
+    return `<div class="bd-i"><span class="bd-h">${hm(r.at)}</span><div><b>${esc(m ? m.titulo : r.title)}</b>${r.note ? `<small>${esc(clip(r.note, 160))}</small>` : ''}
+      <span class="bd-a"><a href="${AUDIRE_URL}?clip=${encodeURIComponent(r.id)}">▶ ouvir</a>${r.note ? `<button class="lnk" data-m="ussint" data-t="${esc(hm(r.at) + ' — ' + clip(r.note, 300))}">usar na síntese</button>` : ''}</span></div></div>`;
+  }).join('')}</div>`;
+}
 function fechamentoHtml(d) {
   const ESTS = [['feita', 'Feito'], ['parcial', 'Parcial'], ['nao', 'Não fiz'], ['imprevisto', 'Imprevisto']];
   const rows = d.itens.filter(ativo).map(it => {
     const m = missao(it.mid); if (!m) return '';
     const f = estadoFinal(it);
-    return `<div class="fx-r"><div><b>${esc(m.titulo)}</b><small>decidido ${fmtMin(it.decidido || 0)} · real ${fmtMin(realMin(it))}</small></div>
+    const rs = relatosDe(m.id, diaKey());
+    return `<div class="fx-r"><div><b>${esc(m.titulo)}</b><small>decidido ${fmtMin(it.decidido || 0)} · real ${fmtMin(realMin(it))}${rs.length ? ' · 🎙 ' + rs.length : ''}</small></div>
       <div class="fx-e">${ESTS.map(([v, l]) => `<button class="fx-b${f === v ? ' on' : ''}" data-m="est" data-id="${esc(it.mid)}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   }).join('');
   const adiadas = d.itens.filter(i => i.estado === 'adiada').map(i => missao(i.mid)).filter(Boolean);
   const houveImprev = d.itens.some(i => i.estado === 'imprevisto' || i.estado === 'adiada');
   return `<section class="card fim"><p class="eyebrow">Lembrar-se · fechar o dia</p><h3>O que você decidiu e o que aconteceu</h3>${rows}
     ${adiadas.length ? `<p class="bd-n">Passaram para amanhã: ${adiadas.map(m => esc(m.titulo)).join(', ')}.</p>` : ''}
+    ${bordoHtml(d)}
     <label class="fx-l" for="fxSint">Uma linha honesta sobre o dia</label>
     <textarea id="fxSint" rows="3" placeholder="Deveria ter… Em vez disso…">${esc(d.sintese || '')}</textarea>
     <label class="fx-v"><input type="checkbox" data-m="virada" ${d.virada ? 'checked' : ''}> Houve virada: a intenção ruiu, mas quebrei a inércia</label>
@@ -1745,6 +1787,7 @@ document.addEventListener('click', e => {
   if (a === 'acordei') { const v = $('#wakeIn').value; if (!/^\d\d:\d\d$/.test(v)) return; d.acordou = v; salvarDia(); render(); toast('Bom dia. O dia é finito: escolha bem.'); return; }
   if (a === 'fechar') { pararTimer(d); salvarDia(); fechando = true; render(); setTimeout(() => { const f = document.querySelector('.fim'); f && f.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); return; }
   if (a === 'fecharx') { fechando = false; render(); return; }
+  if (a === 'ussint') { const ta = $('#fxSint'); if (!ta) return; const t = b.dataset.t; if (!ta.value.includes(t)) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + t; d.sintese = ta.value; salvarDia(); toast('Entrou na síntese'); return; }
   if (a === 'est' && it) { const auto = estadoFinal({ ...it, estado: null }); it.estado = b.dataset.v === auto ? null : b.dataset.v; salvarDia(); render(); return; }
   if (a === 'fecharok') {
     const ta = $('#fxSint'); if (ta) d.sintese = ta.value.trim();
