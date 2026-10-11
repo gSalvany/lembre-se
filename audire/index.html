@@ -298,6 +298,7 @@ html[data-theme="light"] .em-coin{box-shadow:0 0 0 1px rgba(60,45,20,.12),0 26px
   .em-view{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.mis-hint{color:var(--accent,#a78bfa);margin:-4px 0 4px}.ok-tag{font-size:12px;color:#22a35a;font-weight:700;margin-left:6px}.hint-tag{font-size:12px;opacity:.7;margin-left:6px}
 </style>
 </head>
 <body>
@@ -544,7 +545,9 @@ function stopRec(save) {
     const blob = new Blob(chunks, { type: mr.mimeType || mime || 'audio/webm' });
     const par = parent && clips.find(x => x.id === parent);
     const an = await analyzeBlob(blob);
-    openEditor({ id: uid(), createdAt: Date.now(), title: '', kind: par ? par.kind : S.lastKind, tags: par ? [...par.tags] : [], note: '', fav: false, status: 'inbox',
+    const mis = missaoPendente;
+    openEditor({ id: uid(), createdAt: Date.now(), title: mis ? 'Relato · ' + (mis.title || 'missão') + ' · ' + fmtTime(Date.now()) : '', kind: par ? par.kind : (mis ? 'thought' : S.lastKind),
+      tags: par ? [...par.tags] : mis ? ['relato'] : [], note: '', fav: false, status: mis ? 'done' : 'inbox', missao: mis ? { ...mis } : (par && par.missao ? { ...par.missao } : null),
       parent: par ? par.id : null, rel: par && par.rel ? { ...par.rel } : null, marks: marks.map(m => ({ ...m })), source: 'rec',
       duration: an && an.duration ? an.duration : Math.round(duration), mime: blob.type, peaks: an && an.peaks ? an.peaks : toPeaks(levels), blob }, true);
   };
@@ -681,6 +684,8 @@ function normalize(c) {
   c.marks = Array.isArray(c.marks) ? c.marks.filter(m => m && typeof m.t === 'number').map(m => ({ t: m.t, text: String(m.text || '') })) : [];
   c.source = c.source || 'rec'; c.fileName = c.fileName || '';
   c.transcript = c.transcript || ''; c.ai = c.ai || null;
+  c.missao = c.missao && c.missao.id ? { id: String(c.missao.id), title: String(c.missao.title || '') } : null;
+  c.diario = c.diario && c.diario.em ? { em: +c.diario.em } : null;
   if (typeof c.stage !== 'number') c.stage = 0;
   if (c.nextReview === undefined) c.nextReview = null;
   return c;
@@ -702,7 +707,7 @@ function titleOf(id) { const c = clips.find(x => x.id === id); return c ? c.titl
 /* =============================================================
    LEITURA DOS OUTROS APPS (mesmo domínio, só leitura)
    ============================================================= */
-const Ext = { loaded: false, volumen: [], cognitio: [] };
+const Ext = { loaded: false, volumen: [], cognitio: [], importados: [] };
 function idbOpenExisting(name) {
   return new Promise(async res => {
     try { if (indexedDB.databases) { const l = await indexedDB.databases(); if (!l.some(x => x.name === name)) return res(null); } } catch (e) {}
@@ -741,9 +746,10 @@ async function loadExt() {
         .sort((a, b) => a.title.localeCompare(b.title));
     }
   } catch (e) {}
+  try { const im = R.memento && R.memento.dados && R.memento.dados.audireImportados; Ext.importados = Array.isArray(im) ? im.map(String) : []; } catch (e) { Ext.importados = []; }
   Ext.loaded = true; return Ext;
 }
-if (window.Lembre) Lembre.ouvir(() => { Ext.loaded = false; });           // outro app salvou: relê na próxima vez
+if (window.Lembre) Lembre.ouvir(m => { Ext.loaded = false; if (m && m.app === 'memento') loadExt().then(() => renderAll()); });   // outro app salvou: relê; o Memento diz o que já entrou no diário
 function shareText(c) {
   const marks = (c.marks || []).filter(m => m.text).sort((a, b) => a.t - b.t).map(m => fmtDur(m.t * 1000) + ' — ' + m.text).join('\n');
   return [c.title, c.note, marks, c.nextStep ? 'Próximo passo: ' + c.nextStep : '', c.tags.length ? c.tags.map(t => '#' + t).join(' ') : '', c.transcript ? 'Transcrição:\n' + c.transcript : ''].filter(Boolean).join('\n\n');
@@ -780,6 +786,12 @@ function writeSummary() {
       .map(c => ({ id: c.id, title: c.title, nextStep: c.nextStep, dest: c.dest, remindAt: c.remindAt, rel: c.rel ? { app: c.rel.app, title: c.rel.title } : null })),
     lastAt: clips.reduce((a, c) => Math.max(a, c.createdAt), 0) || null,
     latest: live.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 3).map(c => ({ id: c.id, title: c.title, kind: c.kind, createdAt: c.createdAt })),
+    // relatos de campo das missões do Atrium (últimas 2 semanas)
+    relatos: clips.filter(c => c.missao && c.createdAt > Date.now() - 14 * DAYMS).sort((a, b) => a.createdAt - b.createdAt)
+      .map(c => ({ id: c.id, mid: c.missao.id, at: c.createdAt, dur: c.duration || 0, title: c.title, note: String(c.note || '').slice(0, 400) })),
+    // levados ao diário e ainda não guardados no Memento
+    diario: clips.filter(c => c.diario && !(Ext.importados || []).includes(c.id)).sort((a, b) => a.createdAt - b.createdAt).slice(0, 20)
+      .map(c => ({ id: c.id, at: c.createdAt, title: c.title, note: c.note || '', transcript: String(c.transcript || '').slice(0, 20000), tags: c.tags, marks: c.marks.filter(m => m.text) })),
     updatedAt: Date.now()
   });
 }
@@ -929,10 +941,10 @@ document.addEventListener('click', e => {
 /* =============================================================
    REVISÃO (passa por cada áudio da caixa de entrada)
    ============================================================= */
-const RV = { queue: [], i: 0, decided: { action: 0, kept: 0, archived: 0, deleted: 0 } };
+const RV = { queue: [], i: 0, decided: { action: 0, kept: 0, archived: 0, deleted: 0, diario: 0 } };
 function openReview() {
   RV.queue = clips.filter(c => c.status === 'inbox').sort((a, b) => a.createdAt - b.createdAt).map(c => c.id);
-  RV.i = 0; RV.decided = { action: 0, kept: 0, archived: 0, deleted: 0 };
+  RV.i = 0; RV.decided = { action: 0, kept: 0, archived: 0, deleted: 0, diario: 0 };
   if (!RV.queue.length) { toast('Caixa de entrada vazia.'); return; }
   draft = null; $('#dlg').dataset.isNew = '';
   renderReviewStep();
@@ -956,6 +968,7 @@ function renderReviewStep(showAction) {
     <div class="decide">
       <button class="dec" data-d="action"><b>Virou ação</b><span>Tem um próximo passo</span></button>
       <button class="dec" data-d="kept"><b>Guardar</b><span>Volta em 1, 7, 30 e 90 dias</span></button>
+      <button class="dec" data-d="diario"><b>Ao diário</b><span>Vira memória no Memento</span></button>
       <button class="dec" data-d="archived"><b>Arquivar</b><span>Sai da frente, mas fica salvo</span></button>
       <button class="dec danger" data-d="delete"><b>Excluir</b><span>Não serve mais</span></button>
     </div>`}
@@ -976,6 +989,7 @@ function renderReviewStep(showAction) {
         try { await DB.del(c.id); clips = clips.filter(x => x.id !== c.id); RV.decided.deleted++; RV.i++; renderReviewStep(); } catch (e) { toast('Não foi possível excluir.', true); }
         return;
       }
+      if (d === 'diario') { c.diario = c.diario || { em: Date.now() }; setStatus(c, 'done'); await commitReview(c, 'diario'); return; }
       setStatus(c, d); await commitReview(c, d);
     });
   }
@@ -985,11 +999,11 @@ async function commitReview(c, d) {
   catch (e) { toast('Não foi possível salvar.', true); }
 }
 function finishReview(stopped) {
-  const D = RV.decided, total = D.action + D.kept + D.archived + D.deleted;
+  const D = RV.decided, total = D.action + D.kept + D.archived + D.deleted + (D.diario || 0);
   if (total) LS.set('audire.lastReview', Date.now());
   stopPlayback();
   const left = clips.filter(c => c.status === 'inbox').length;
-  const parts = [D.action && `${D.action} ${D.action === 1 ? 'virou ação' : 'viraram ação'}`, D.kept && `${D.kept} ${D.kept === 1 ? 'guardado' : 'guardados'}`,
+  const parts = [D.action && `${D.action} ${D.action === 1 ? 'virou ação' : 'viraram ação'}`, D.kept && `${D.kept} ${D.kept === 1 ? 'guardado' : 'guardados'}`, D.diario && `${D.diario} ${D.diario === 1 ? 'foi' : 'foram'} ao diário`,
     D.archived && `${D.archived} ${D.archived === 1 ? 'arquivado' : 'arquivados'}`, D.deleted && `${D.deleted} ${D.deleted === 1 ? 'excluído' : 'excluídos'}`].filter(Boolean);
   $('#dlgBody').innerHTML = `
     <div><h2>${left ? 'Revisão pausada' : 'Caixa de entrada vazia'}</h2>
@@ -1081,6 +1095,7 @@ function readActionFields(c) {
    EDITOR (novo áudio ou edição)
    ============================================================= */
 let draft = null;
+let missaoPendente = null, voltarAoAtrium = false;   // relato de campo vindo de uma missão do Atrium
 let edRenderMarks = null;
 function allTags() {
   const m = new Map(); clips.forEach(c => c.tags.forEach(t => m.set(t, (m.get(t) || 0) + 1)));
@@ -1116,6 +1131,7 @@ async function openEditor(c, isNew, opts = {}) {
       <div class="marks" id="edMarks"></div>
       <div class="inline"><button type="button" class="btn" id="addMark">${ICON.flag} Nota neste momento</button></div>
       <p class="hint">A nota fica presa ao ponto em que o áudio está tocando. Toque no tempo para ouvir dali.</p></div>
+    ${draft.missao ? `<p class="hint mis-hint">🎯 Relato de campo da missão “${esc(draft.missao.title || 'missão')}”. Ele aparece no Atrium, junto da missão.</p>` : ''}
     <div class="field"><label id="relLbl">Sobre</label>
       <div class="relpick" id="relPick">
         <button type="button" class="rel-cur" id="relCur" aria-labelledby="relLbl relCur" aria-expanded="false"></button>
@@ -1134,6 +1150,7 @@ async function openEditor(c, isNew, opts = {}) {
       </div></div>
     <div id="edAction" ${draft.status === 'action' ? '' : 'hidden'}>${actionFields(draft)}</div>
     <div id="edLinks"></div>
+    <label class="check"><input type="checkbox" id="edDiario" ${draft.diario ? 'checked' : ''}> Levar ao diário do Memento${draft.diario && (Ext.importados || []).includes(draft.id) ? ' <span class="ok-tag">✓ já está no diário</span>' : draft.diario ? ' <span class="hint-tag">esperando no Memento</span>' : ''}</label>
     <label class="check"><input type="checkbox" id="edFav" ${draft.fav ? 'checked' : ''}> Marcar como favorito</label>
     ${kids.length ? `<div class="field"><label>Continuações</label><div class="kids">${kids.map(k => `<button class="kid" data-act="edit" data-id="${k.id}">${esc(k.title)} <span>${dayLabel(k.createdAt).toLowerCase()}</span></button>`).join('')}</div></div>` : ''}
     <div class="row">
@@ -1215,6 +1232,7 @@ async function saveDraft(isNew) {
   draft.note = $('#edNote').value.trim();
   draft.tags = parseTags($('#edTags').value);
   draft.fav = $('#edFav').checked;
+  draft.diario = $('#edDiario').checked ? (draft.diario || { em: Date.now() }) : null;
   draft.marks = draft.marks.map(m => ({ t: m.t, text: m.text.trim() }));
   draft.transcript = $('#edTranscript').value.trim();
   // draft.rel já vem escolhido pelo seletor "Sobre"
@@ -1226,7 +1244,8 @@ async function saveDraft(isNew) {
     S.lastKind = draft.kind; LS.set('audire.lastKind', draft.kind);
     const saved = draft; draft = null;
     $('#dlg').close(); renderAll();
-    toast(isNew ? (saved.status === 'inbox' ? 'Guardado na caixa de entrada.' : 'Áudio guardado.') : 'Alterações salvas.');
+    toast(isNew ? (saved.missao ? 'Relato guardado na missão.' : saved.status === 'inbox' ? 'Guardado na caixa de entrada.' : 'Áudio guardado.') : saved.diario ? 'Salvo. O Memento vai oferecer trazer para o diário.' : 'Alterações salvas.');
+    if (isNew && saved.missao && voltarAoAtrium) { voltarAoAtrium = false; missaoPendente = null; setTimeout(() => { location.href = '../atrium/'; }, 700); }
     if (P.id === saved.id) syncCard(saved.id);
   } catch (e) {
     toast(e && e.name === 'QuotaExceededError' ? 'Sem espaço para guardar. Libere espaço no aparelho.' : 'Não foi possível guardar o áudio.', true);
@@ -1667,7 +1686,9 @@ $('#themeBtn').onclick = () => {
   renderAll();
   // atalhos e links vindos do Atrium: ?gravar=1, ?revisar=1, ?clip=ID
   const qs = new URLSearchParams(location.search);
-  if (qs.has('gravar') || qs.has('revisar') || qs.has('clip') || qs.has('shared')) history.replaceState(null, '', location.pathname);
+  if (qs.has('gravar') || qs.has('revisar') || qs.has('clip') || qs.has('shared') || qs.has('missao')) history.replaceState(null, '', location.pathname);
+  if (qs.get('missao')) { missaoPendente = { id: qs.get('missao'), title: (qs.get('titulo') || '').slice(0, 90) }; voltarAoAtrium = true; }
+  loadExt().then(() => writeSummary()).catch(() => {});
   if (qs.has('shared')) takeShared();
   else if (qs.has('gravar')) startRec();
   else if (qs.has('revisar')) openReview();
