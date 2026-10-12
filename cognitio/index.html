@@ -928,6 +928,7 @@ dialog.viewer{background:var(--bg)}
 #btnOrganizar[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
 .ord{display:inline-flex;gap:4px;margin-right:6px}.ord .icon-btn,.row-actions [data-mover-caderno]{font-size:16px;font-weight:700}
 .icon-btn[disabled]{opacity:.3}
+.filo{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:8px}.filo li{font-size:13.5px;line-height:1.5;color:var(--muted)}.filo b{color:var(--text)}
 </style>
 </head>
 <body>
@@ -973,7 +974,7 @@ dialog.viewer{background:var(--bg)}
       <div class="meter-label"><span>Domínio intelectual</span><b id="dDomPct"></b></div>
       <div class="dom-legend" id="dLegend"></div>
       <div class="density">
-        <div class="meter-label"><span>Densidade de fichamentos</span><b id="dDens"></b></div>
+        <div class="meter-label"><span>Cadernos com ficha escrita</span><b id="dDens"></b></div>
         <div class="dbar" aria-hidden="true"><i id="dDensBar"></i></div>
         <p class="rule" id="dDensTxt"></p>
       </div>
@@ -1547,7 +1548,7 @@ function nextStep(p) {
   const worst = [...p.signals].sort((a, b) => b.w * (1 - b.score) - a.w * (1 - a.score))[0];
   if (!worst || worst.score >= 0.9) return { text: 'Semana exemplar em todos os sinais. O próximo salto é abrir um território que ainda está em “Não iniciado”.', btn: '<button class="btn sm" data-tab="map">Ver o mapa</button>' };
   const pill = state.decks.length ? '<button class="btn sm primary" data-pill-day>Iniciar pílula do dia</button>' : '<button class="btn sm primary" data-new="deck">+ Criar banco de treino</button>';
-  const left = Math.max(0, WEEK_GOAL.mins - p.mins7);
+  const left = Math.max(0, Math.round(WEEK_GOAL.mins - p.mins7));
   return {
     pratica: { text: `Faltam ${left} min para a meta de ${WEEK_GOAL.mins} min de prática nesta semana. Cada pílula de 10 minutos conta mais do que uma hora de releitura.`, btn: pill },
     constancia: { text: `Você praticou em ${p.days} ${pl(p.days, 'dia', 'dias')} dos últimos 7. Pouco e todos os dias fixa mais do que muito num dia só.`, btn: pill },
@@ -1579,9 +1580,9 @@ function setDaily(open) {
 function renderSummary() {
   const g = diagnosis(), e = engineStats();
   const today = state.pillLog.filter(l => isToday(l.at)).reduce((t, l) => t + l.minutes, 0);
-  $('#dMode').dataset.m = g.mode;
-  $('#dMode').innerHTML = `${MODE_LABEL[g.mode]} <b>${g.score}</b>`;
-  $('#dMode').title = `Postura de aprendizagem: ${g.score} de 100`;
+  $('#dMode').dataset.m = 'mid';                              // sem rótulo de postura: só fatos da semana
+  $('#dMode').innerHTML = `🗓 <b>${g.days}</b> de 7 dias`;
+  $('#dMode').title = `Dias com estudo nos últimos 7`;
   $('#dPctS').textContent = g.pct + '%'; $('#dMinS').textContent = today > 0 && today < 1 ? Math.round(today * 60) + ' s' : Math.round(today); $('#dMinS').nextSibling && ($('#dMinS').nextSibling.textContent = today > 0 && today < 1 ? ' hoje' : ' min hoje');
   const pv = provocation(g); $('#dProvoke').innerHTML = pv.head; $('#dSub').textContent = pv.sub;
   $('#dDomPct').textContent = `${g.pct}%`;
@@ -1592,33 +1593,37 @@ function renderSummary() {
     <span style="--c:var(--amber)"><b>${g.study}</b>Em estudo, ${pc(g.study)}%</span>
     <span style="--c:var(--teal)"><b>${g.dom}</b>Dominado, ${pc(g.dom)}%</span>`;
   const withNotes = state.areas.filter(a => notesOf(a.id).length).length, ratio = g.total ? state.notes.length / g.total : 0;
-  $('#dDens').textContent = `${ratio.toFixed(1).replace('.', ',')} ${pl(ratio, 'síntese', 'sínteses')} por área`;
+  $('#dDens').textContent = `${ratio.toFixed(1).replace('.', ',')} ${pl(ratio, 'ficha', 'fichas')} por caderno`;
   $('#dDensBar').style.width = (g.total ? withNotes / g.total * 100 : 0) + '%';
   $('#dDensTxt').innerHTML = `<b>${withNotes} de ${g.total}</b> cadernos têm pelo menos uma ficha escrita.`;
   $('#dEngine').innerHTML = `<div><b>${e.due}</b><small>${pl(e.due, 'vencida', 'vencidas')}</small></div><div class="w"><b>${e.weak}</b><small>🎯 ${pl(e.weak, 'gargalo', 'gargalos')}</small></div>
-    <div><b>${e.fresh}</b><small>${pl(e.fresh, 'nova', 'novas')}</small></div><div class="r"><b>${g.mins7}</b><small>min em 7 dias</small></div>`;
-  const reading = {
-    ultra: 'Você está aprendendo como quem pratica: tenta antes de ver, erra, revisa na hora certa e explica com as próprias palavras.',
-    mid: 'Metade prática, metade consumo. O método já aparece, mas ainda falta regularidade para ele segurar o conhecimento.',
-    trad: 'Modo passivo: ler, rever e sublinhar dão sensação de progresso, mas a memória só se fixa quando é obrigada a produzir.'
-  }[g.mode];
-  const ns = nextStep(g), pos = Math.max(2, Math.min(98, g.score));
+    <div><b>${e.fresh}</b><small>${pl(e.fresh, 'nova', 'novas')}</small></div><div class="r"><b>${minCurto(g.mins7)}</b><small>nos últimos 7 dias</small></div>`;
+  const ns = nextStep(g), r1 = v => Math.round(v);
+  const fatos = [
+    { label: 'Prática', princ: 'tentar resolver, não só reler', score: g.signals[0].score, value: `${minCurto(g.mins7)} de ${WEEK_GOAL.mins} min` },
+    { label: 'Constância', princ: 'pouco, quase todo dia', score: g.signals[1].score, value: `${g.days} de 7 dias` },
+    { label: 'Tentativas', princ: 'responder antes de ver a solução', score: g.signals[2].score, value: g.pills7 ? `${g.attempted} de ${g.pills7} pílulas` : 'nenhuma pílula ainda' },
+    { label: 'Fila em dia', princ: 'revisar antes de esquecer', score: g.signals[3].score, value: g.due ? `${g.due} ${pl(g.due, 'vencida', 'vencidas')}${g.weakDue ? `, ${g.weakDue} 🎯` : ''}` : 'nada vencido' },
+    { label: 'Fichas', princ: 'explicar com as próprias palavras', score: g.signals[4].score, value: `${g.notes7} ${pl(g.notes7, 'ficha', 'fichas')} na semana` }
+  ];
   $('#dPostureBox').innerHTML = `
-    <div class="pb-head"><span>Postura de aprendizagem</span><b data-m="${g.mode}">${g.score}<small>/100</small></b></div>
-    <div class="spectrum" role="img" aria-label="${g.score} de 100, ${MODE_LABEL[g.mode].slice(2).trim()}"><span class="tick" style="left:35%"></span><span class="tick" style="left:60%"></span><i style="left:${pos}%"></i></div>
-    <div class="spec-labels"><span class="${g.mode === 'trad' ? 'on' : ''}">📚 Tradicional</span><span class="${g.mode === 'mid' ? 'on' : ''}">🔄 Transição</span><span class="${g.mode === 'ultra' ? 'on' : ''}">⚡ Ultralearning</span></div>
-    <p class="pb-read">${reading}</p>
-    ${g.quick >= 3 ? `<p class="pb-warn">${g.quick} pílulas foram fechadas em 1 minuto sem tentativa. Pressa conta como consumo, não como prática.</p>` : ''}
-    <ul class="signals">${g.signals.map(x => `<li>
+    <div class="pb-head"><span>Sua semana de estudo</span></div>
+    ${g.quick >= 3 ? `<p class="pb-warn">${g.quick} pílulas foram fechadas sem tentar responder. Tentar antes de ver, mesmo errando, é o que fixa.</p>` : ''}
+    <ul class="signals">${fatos.map(x => `<li>
       <div class="sg-top"><span><b>${x.label}</b><small>${x.princ}</small></span><em>${x.value}</em></div>
-      <div class="sg-bar"><i class="${x.score >= 0.7 ? 'hi' : x.score >= 0.4 ? 'md' : 'lo'}" style="width:${Math.round(x.score * 100)}%"></i></div></li>`).join('')}</ul>
+      <div class="sg-bar"><i class="${x.score >= 0.7 ? 'hi' : x.score >= 0.4 ? 'md' : 'lo'}" style="width:${r1(Math.min(1, x.score) * 100)}%"></i></div></li>`).join('')}</ul>
     <div class="nextstep"><small>Próximo passo</small><p>${ns.text}</p>${ns.btn}</div>
-    <details class="contrast"><summary>O que separa Tradicional de Ultralearning</summary>
-      <div class="ct-grid">
-        <div><b>📚 Tradicional</b><ul><li>Reler e sublinhar</li><li>Ver a resposta logo</li><li>Estudar em maratonas</li><li>Evitar o que trava</li><li>Decorar a frase do livro</li></ul></div>
-        <div><b>⚡ Ultralearning</b><ul><li>Resolver problemas reais</li><li>Tentar antes de olhar</li><li>Pouco, todos os dias</li><li>Atacar o gargalo primeiro</li><li>Explicar em palavras simples</li></ul></div>
-      </div>
-      <p class="hint">A nota soma cinco sinais dos últimos 7 dias: prática (30), constância (20), recuperação ativa (20), fila em dia (15) e síntese (15). A partir de 35 é transição; a partir de 60, Ultralearning.</p>
+    <details class="contrast"><summary>Como o Cognitio ensina</summary>
+      <p class="hint" style="margin-top:8px">O Cognitio segue os princípios do Ultralearning (Scott Young). Não é um rótulo nem uma nota: é o jeito como o app funciona.</p>
+      <ul class="filo">
+        <li><b>Recordação ativa.</b> Você tenta responder antes de ver a solução. Buscar na memória é o que a fortalece; reler só dá a sensação de saber.</li>
+        <li><b>Repetição espaçada.</b> Cada questão volta no intervalo certo: o que você erra volta logo, o que domina volta cada vez mais tarde.</li>
+        <li><b>Atacar o gargalo.</b> O que trava vira 🎯 e tem prioridade na pílula do dia.</li>
+        <li><b>Prática direta.</b> Questões de prova e problemas reais valem mais do que resumos.</li>
+        <li><b>Intercalar.</b> Praticar o caderno inteiro mistura as fichas, como acontece na prova.</li>
+        <li><b>Explicar com as próprias palavras.</b> A ficha é onde você mostra que entendeu; se não sai simples, ainda não entendeu.</li>
+        <li><b>Pouco, todos os dias.</b> Pílulas curtas e frequentes seguram mais do que maratonas.</li>
+      </ul>
     </details>`;
   $('#cFields').textContent = state.fields.length;
 
