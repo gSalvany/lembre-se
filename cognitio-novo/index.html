@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0e12">
+<title>Cognitio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cognitio">
+<script src="../comum/lembre.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+(function(){try{var t=localStorage.getItem('cognitio.theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}catch(e){}})();
+</script>
+<style>
+:root{
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+html[data-theme="dark"]{
+  --bg:#0d0e12; --card:#161821; --card-2:#1c1f29; --line:#252a37; --line-strong:#353b4b;
+  --text:#ece6d8; --muted:#a3a19a; --faint:#737782; --prose:#d6d0c2;
+  --amber:#f0a030; --amber-soft:rgba(240,160,48,.14); --on-amber:#1a1204;
+  --teal:#34c99a; --teal-soft:rgba(52,201,154,.14); --red:#ff7a72; --red-soft:rgba(255,122,114,.13);
+  --blue:#7fb2ff; --blue-soft:rgba(127,178,255,.13); --violet:#b9a2ff; --violet-soft:rgba(185,162,255,.14);
+  --input:#111218; --mark:rgba(240,160,48,.28);
+}
+html[data-theme="light"]{
+  --bg:#f5f0e6; --card:#fffdf9; --card-2:#faf6ee; --line:#e7dfd0; --line-strong:#d4c9b5;
+  --text:#1f1b14; --muted:#5e584d; --faint:#8e8678; --prose:#2b261d;
+  --amber:#b06a08; --amber-soft:rgba(217,142,11,.13); --on-amber:#fff;
+  --teal:#0a8a60; --teal-soft:rgba(10,138,96,.1); --red:#c43a30; --red-soft:rgba(196,58,48,.09);
+  --blue:#2d64c4; --blue-soft:rgba(45,100,196,.1); --violet:#6a4cc9; --violet-soft:rgba(106,76,201,.1);
+  --input:#fbf9f4; --mark:rgba(240,170,40,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--muted);font-family:var(--sans);font-size:15.5px;line-height:1.5;min-height:100vh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;text-align:left}
+a{color:var(--amber)}
+svg{width:20px;height:20px;flex:none}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px}
+#view{max-width:720px;margin:0 auto;padding:18px 16px 90px}
+
+/* topo */
+.home-h{display:flex;justify-content:space-between;align-items:flex-start;margin:6px 0 18px}
+.brand{font-family:var(--serif);font-weight:500;font-size:34px;color:var(--text);letter-spacing:-.01em}.brand span{color:var(--amber)}
+.tag{font-size:13.5px;color:var(--faint)}
+.h-acts{display:flex;gap:6px}
+.ib{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line);flex:none}
+.ib.sm{width:32px;height:32px;border:none}.ib.sm svg{width:17px;height:17px}
+.ib[disabled]{opacity:.25}
+.bar{display:flex;align-items:center;gap:10px;margin:0 0 6px}
+.bar-t{flex:1;min-width:0;font-size:13.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .ib:first-child{border:none;margin-left:-10px}
+.pg-t{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.15;color:var(--text);margin:2px 0 4px;letter-spacing:-.01em}
+.pg-d{font-size:13.5px;color:var(--faint);margin-bottom:14px}
+.aviso{font-size:13px;color:var(--amber);background:var(--amber-soft);border-radius:12px;padding:10px 12px;margin-bottom:14px}
+
+/* listas */
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 8px}
+.sec-h h2{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.lk{font-size:13.5px;font-weight:600;color:var(--amber)}.lk.mt{display:block;margin-top:18px}
+.grp{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 6px}
+.lista{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+.lista>.row,.lista>.row-w{border-top:1px solid var(--line)}.lista>:first-child{border-top:none}
+.row-w{display:flex;align-items:center}.row-w .row{flex:1;min-width:0}
+.row{width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;color:var(--text)}
+.row>i{color:var(--faint);display:flex}
+.rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rt b{font-weight:600;font-size:15.5px;line-height:1.3}.rt small{font-size:12.5px;color:var(--faint)}
+.clip1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prev{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.ico{width:38px;height:38px;border-radius:11px;background:var(--card-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.num{font-family:var(--serif);font-size:15px;color:var(--amber);min-width:26px;text-align:center}
+.ord{display:flex;padding-left:6px}
+.continuar{width:100%;display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:14px 16px;border-radius:16px;background:var(--amber-soft);color:var(--text);margin-bottom:6px}
+.continuar small{grid-column:1;font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em}
+.continuar b{grid-column:1;font-family:var(--serif);font-weight:500;font-size:20px}.continuar span{grid-column:1;font-size:13px;color:var(--muted)}
+.continuar i{grid-column:2;grid-row:1/4;align-self:center;color:var(--amber);display:flex}
+.vazio{border:1px dashed var(--line-strong);border-radius:16px;padding:18px;font-size:14px;line-height:1.55;color:var(--muted)}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;border:1px solid var(--line-strong);font-size:14px;font-weight:600;color:var(--text)}
+.btn svg{width:17px;height:17px}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:var(--on-amber)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.btn.perigo{color:var(--red);border-color:transparent;margin-right:auto}
+.btn.add{margin-top:12px}.btn.mt{margin-top:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.dica{font-size:13.5px;color:var(--faint);line-height:1.5;margin:6px 0}
+.tent{font-size:13px;color:var(--muted);margin:2px 0 8px}.tent b{color:var(--teal)}
+
+/* compor anotação */
+.compor{border:1px solid var(--line-strong);border-radius:18px;background:var(--card);padding:12px;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.on{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.in{width:100%;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;color:var(--text);outline:none}
+.in:focus{border-color:var(--amber)}
+.in.sm{padding:8px 10px;font-size:13.5px}
+textarea.in{resize:vertical;line-height:1.5}
+.compor textarea{border:none;background:transparent;padding:4px 2px;min-height:70px}
+.cp-pe{display:flex;gap:8px;align-items:center}.cp-pe .in{flex:1}
+
+/* anotações */
+.notas{display:flex;flex-direction:column;gap:10px}
+.nota{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px 14px}
+.nota.pisca{animation:pisca 1.6s var(--ease)}@keyframes pisca{0%,40%{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}}
+.nota-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.nota-d{flex:1;font-size:12.5px;color:var(--faint)}
+.nota-t{font-weight:600;color:var(--text);margin:4px 0}
+.nota .prosa{font-size:15px}
+.longo summary{font-size:13px;font-weight:600;color:var(--amber);cursor:pointer;margin:4px 0}
+.fonte{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--faint);margin-top:8px;word-break:break-word}.fonte svg{width:15px;height:15px;margin-top:2px}
+.tp{flex:none;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.tp-li{background:var(--blue-soft);color:var(--blue)}.tp-pesquisei{background:var(--teal-soft);color:var(--teal)}.tp-encontrei{background:var(--teal-soft);color:var(--teal)}
+.tp-ia{background:var(--violet-soft);color:var(--violet)}.tp-critica{background:var(--red-soft);color:var(--red)}.tp-nota{background:var(--card-2);color:var(--muted)}.tp-ficha{background:var(--amber-soft);color:var(--amber)}
+
+/* texto da ficha */
+.prosa{color:var(--prose);font-size:16.5px;line-height:1.7}
+.prosa p{margin:0 0 .8em}.prosa ul,.prosa ol{margin:0 0 .9em 1.3em}.prosa li{margin:.2em 0}
+.prosa blockquote{border-left:3px solid var(--amber);padding:2px 0 2px 12px;margin:0 0 .9em;color:var(--muted);font-style:italic}
+.prosa mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 2px}
+.prosa strong{color:var(--text)}.prosa code{font-size:.9em;background:var(--card-2);padding:1px 5px;border-radius:5px}
+.ficha-t{margin:6px 0 18px}
+.sec>summary{list-style:none;display:flex;align-items:baseline;gap:8px;cursor:pointer}.sec>summary::-webkit-details-marker{display:none}
+.sec .chev{display:flex;color:var(--faint);transition:transform .2s var(--ease);align-self:center}.sec .chev svg{width:18px;height:18px}
+.sec:not([open])>summary .chev{transform:rotate(-90deg)}
+.h{flex:1;color:var(--text);font-family:var(--serif);font-weight:500}
+.h1{font-size:26px;line-height:1.2;margin:22px 0 10px}
+.s1{border-bottom:1px solid var(--line);margin-bottom:8px}
+.h2{font-size:20.5px;line-height:1.3;margin:16px 0 6px}
+.h3{font-family:var(--sans);font-size:15.5px;font-weight:700;color:var(--text);letter-spacing:.01em;margin:14px 0 4px}
+.sumario{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:6px 0 10px;display:flex;flex-direction:column;gap:6px;background:var(--card)}
+.sumario p{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.sumario a{text-decoration:none;color:var(--text);font-size:14.5px}.sumario .sm2{padding-left:14px;color:var(--muted);font-size:14px}.sumario .sm3{padding-left:28px;color:var(--faint);font-size:13.5px}
+.vazio-t{color:var(--faint);font-style:italic}
+.rodape{border-top:1px solid var(--line);margin-top:20px;padding-top:12px}
+.rd-t{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.anx{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.anx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.anx-img{aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--card-2)}.anx-img img{width:100%;height:100%;object-fit:cover;display:block}
+.anx-row{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--text)}
+.anx-row span{display:flex;flex-direction:column}.anx-row small{color:var(--faint);font-size:12px}
+
+/* folhas */
+#sheet{border:none;padding:0;margin:auto auto 0;width:100%;max-width:720px;max-height:92vh;background:var(--card);color:var(--muted);border-radius:22px 22px 0 0}
+#sheet.cheia{height:100%;max-height:100%;margin:0 auto;border-radius:0}
+#sheet::backdrop{background:rgba(0,0,0,.55)}
+.sh{display:flex;flex-direction:column;max-height:inherit;height:100%}
+.sh-h{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}.sh-h h2{flex:1;font-family:var(--serif);font-weight:500;font-size:21px;color:var(--text)}
+.sh-h .ib{border:none}
+.sh-b{padding:4px 16px calc(18px + env(safe-area-inset-bottom,0));overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.sh-acts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}
+.lb{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:700;color:var(--faint)}
+.in.titulo{font-family:var(--serif);font-size:22px;border:none;background:transparent;padding:4px 0}
+.in.corpo{min-height:42vh;font-size:15.5px;line-height:1.6}
+.in.grande{min-height:150px}
+.fmt{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:-4px;background:var(--card);padding:4px 0;z-index:1}
+.fmt button{flex:none;padding:6px 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;color:var(--text)}
+.fmt mark{background:var(--mark);color:inherit;padding:0 2px}
+.destino{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.emojis{display:flex;flex-wrap:wrap;gap:6px}.emo{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);font-size:20px;display:flex;align-items:center;justify-content:center}.emo.on{border-color:var(--amber);background:var(--amber-soft)}
+.arq{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);padding:6px 0}.arq span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.arq small{color:var(--faint)}
+.anexar{align-self:flex-start}
+.menu{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}.menu .row{border-top:1px solid var(--line)}.menu .row:first-child{border-top:none}
+.seg{display:flex;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 6px;border-radius:9px;font-size:13px;font-weight:600;text-align:center;color:var(--muted)}.seg button.on{background:var(--card-2);color:var(--text)}
+.props{display:flex;flex-direction:column;gap:6px}
+.prop{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;font-size:14px;color:var(--text)}
+.prop input{margin-top:3px;accent-color:var(--amber)}.prop small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.qlist{list-style:none;display:flex;flex-direction:column}
+.qlist li{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--text)}
+.qlist span{flex:1;min-width:0}.qlist small{color:var(--faint);font-size:12px}
+.nums{display:flex;gap:10px}.nums label{flex:1;display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--faint)}
+
+/* questionário */
+.qbar{height:4px;border-radius:2px;background:var(--line);overflow:hidden}.qbar i{display:block;height:100%;background:var(--amber)}
+.qtext{font-size:17.5px;color:var(--text);margin:8px 0}
+.ops{display:flex;flex-direction:column;gap:8px}
+.op{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;color:var(--text);font-size:15px}
+.op b{width:24px;height:24px;border-radius:50%;background:var(--card-2);display:flex;align-items:center;justify-content:center;font-size:12.5px;flex:none}
+.op.certa{border-color:var(--teal);background:var(--teal-soft)}.op.errada{border-color:var(--red);background:var(--red-soft)}
+.op[disabled]{cursor:default}
+.sol{border-left:3px solid var(--line-strong);padding-left:12px}
+.ver{font-weight:700;margin-bottom:4px}.ver.ok{color:var(--teal)}.ver.no{color:var(--red)}
+.res{text-align:center;padding:30px 0}.res b{display:block;font-family:var(--serif);font-weight:500;font-size:44px;color:var(--text)}.res p{color:var(--faint)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;padding:10px 16px;border-radius:999px;transition:.25s var(--ease);z-index:99;max-width:90vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (min-width:700px){#sheet:not(.cheia){margin:auto;border-radius:22px}}
+</style>
+</head>
+<body>
+<main id="view"></main>
+<dialog id="sheet"></dialog>
+<input type="file" id="impIn" accept=".json,application/json" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="text/plain" id="cogApp">
+(() => {
+'use strict';
+/* =====================================================================
+   COGNITIO — caderno de estudos
+   Caderno → Matéria → Conteúdo → fichas e anotações
+   Os dados são os mesmos de antes, só com nomes novos:
+     state.fields = cadernos · state.areas = matérias · note.tema = conteúdo
+     state.notes  = fichas (kind vazio) e anotações (kind 'anotacao')
+     state.decks  = questões de cada ficha (deck.noteId)
+   Nada do que existia é apagado: campos antigos (status, revisões,
+   pílulas) continuam guardados, só não aparecem mais.
+   ===================================================================== */
+const TESTE = /cognitio-novo/.test(location.pathname);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+const safeUrl = u => /^https?:\/\//i.test(u) ? u : '';
+const norm = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+const agora = () => new Date().toISOString();
+const dataCurta = iso => { const d = new Date(iso), h = new Date(); const dias = Math.round((new Date(h.toDateString()) - new Date(d.toDateString())) / 864e5);
+  return dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : dias < 7 ? `há ${dias} dias` : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', ...(d.getFullYear() !== h.getFullYear() ? { year: 'numeric' } : {}) }).replace('.', ''); };
+const dataLonga = iso => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const plainText = t => String(t || '').replace(/==|\*\*|[#>*`]/g, '').replace(/^\s*[-•]\s/gm, '').replace(/\s+/g, ' ').trim();
+const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
+const romano = i => ROMANOS[i] || String(i + 1);
+
+const IC = {
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
+  clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg>'
+};
+
+/* ---------- tipos de anotação ---------- */
+const TIPOS = [
+  ['li', 'Li'], ['pesquisei', 'Pesquisei'], ['encontrei', 'Encontrei'], ['ia', 'Conversa com IA'], ['critica', 'Minha crítica'], ['nota', 'Nota']
+];
+const tipoNome = t => (TIPOS.find(x => x[0] === t) || TIPOS[5])[1];
+
+/* ============ Dados ============ */
+function isValid(d) {
+  if (!d || typeof d !== 'object') return false;
+  if (!Array.isArray(d.fields) || !Array.isArray(d.areas) || !Array.isArray(d.notes)) return false;
+  const ok = x => x && typeof x === 'object' && typeof x.id === 'string' && x.id;
+  return d.fields.every(f => ok(f) && typeof f.title === 'string') && d.areas.every(a => ok(a) && typeof a.title === 'string' && typeof a.fieldId === 'string') && d.notes.every(n => ok(n) && typeof n.areaId === 'string');
+}
+function normalize(d) {
+  const fieldIds = new Set(d.fields.map(f => f.id));
+  d.fields.forEach(f => { f.icon = f.icon || '📚'; f.description = typeof f.description === 'string' ? f.description : ''; });
+  d.areas = d.areas.filter(a => fieldIds.has(a.fieldId));
+  d.areas.forEach(a => {
+    a.conteudos = Array.isArray(a.conteudos) ? [...new Set(a.conteudos.filter(t => typeof t === 'string' && t.trim()).map(t => t.trim()))] : [];
+    a.semestre = typeof a.semestre === 'string' ? a.semestre : '';
+    a.description = typeof a.description === 'string' ? a.description : '';
+  });
+  const areaIds = new Set(d.areas.map(a => a.id));
+  d.notes = d.notes.filter(n => areaIds.has(n.areaId));
+  d.notes.forEach(n => {
+    n.title = typeof n.title === 'string' ? n.title : ''; n.body = typeof n.body === 'string' ? n.body : '';
+    n.tags = Array.isArray(n.tags) ? n.tags.filter(t => typeof t === 'string') : [];
+    n.refs = Array.isArray(n.refs) ? n.refs.filter(r => typeof r === 'string') : [];
+    n.files = Array.isArray(n.files) ? n.files.filter(f => f && f.name) : [];
+    n.tema = typeof n.tema === 'string' ? n.tema.trim().slice(0, 80) : '';
+    n.createdAt = n.createdAt || agora();
+    if (n.kind === 'anotacao' && !TIPOS.some(t => t[0] === n.tipo)) n.tipo = 'nota';
+  });
+  d.decks = (Array.isArray(d.decks) ? d.decks : []).filter(k => k && typeof k.id === 'string');
+  d.decks.forEach(k => {
+    k.items = (Array.isArray(k.items) ? k.items : []).filter(i => i && typeof i.id === 'string' && typeof i.text === 'string');
+    k.items.forEach(i => {
+      i.options = Array.isArray(i.options) ? i.options.filter(o => o && /^[A-E]$/.test(o.k) && typeof o.t === 'string') : [];
+      i.type = i.options.length >= 2 ? 'mc' : 'open';
+      i.answer = typeof i.answer === 'string' ? i.answer : ''; i.correct = typeof i.correct === 'string' ? i.correct.toUpperCase() : '';
+      i.explanation = typeof i.explanation === 'string' ? i.explanation : '';
+    });
+  });
+  d.tentativas = Array.isArray(d.tentativas) ? d.tentativas.filter(t => t && t.alvo && t.at) : [];
+  d.pillLog = Array.isArray(d.pillLog) ? d.pillLog : [];
+  if (!('pillOfDay' in d)) d.pillOfDay = null;
+  d.version = Math.max(6, +d.version || 0);
+  return d;
+}
+function load() {
+  try {
+    const raw = CogStore.get();
+    if (raw) { const d = JSON.parse(raw); if (isValid(d)) return normalize(d); }
+  } catch (e) { console.warn('Falha ao ler os dados', e); }
+  return normalize({ version: 6, fields: [], areas: [], notes: [], decks: [], tentativas: [], pillLog: [], pillOfDay: null });
+}
+let state = load();
+function persist() {
+  try { CogStore.set(JSON.stringify(state)); }
+  catch (e) { toast('Não foi possível salvar. Exporte um backup.'); }
+  try { if (!TESTE) publicarResumo(); } catch (e) {}
+}
+CogStore.onError = () => toast('Não foi possível salvar. Exporte um backup.');
+CogStore.onExternal = () => { state = load(); render(); };
+
+/* ---------- consultas ---------- */
+const porOrdem = lista => lista.map((x, i) => [x, i]).sort((a, b) => ((a[0].ordem ?? a[1]) - (b[0].ordem ?? b[1])) || a[1] - b[1]).map(p => p[0]);
+const cadernos = () => porOrdem(state.fields);
+const cadernoById = id => state.fields.find(f => f.id === id);
+const materiaById = id => state.areas.find(a => a.id === id);
+const materiasDe = fid => porOrdem(state.areas.filter(a => a.fieldId === fid));
+const itensDe = aid => state.notes.filter(n => n.areaId === aid);
+const notaById = id => state.notes.find(n => n.id === id);
+const ehAnotacao = n => n.kind === 'anotacao';
+const quando = n => n.updatedAt || n.createdAt;
+const deckDe = n => n && state.decks.find(k => k.noteId === n.id) || null;
+const questoesDe = n => { const k = deckDe(n); return k ? k.items : []; };
+function conteudosDe(a) {                                       // ordem salva, depois os que só existem nas fichas
+  const lista = [...a.conteudos];
+  itensDe(a.id).sort((x, y) => Date.parse(x.createdAt) - Date.parse(y.createdAt)).forEach(n => { if (n.tema && !lista.includes(n.tema)) lista.push(n.tema); });
+  return lista;
+}
+const itensDoConteudo = (aid, tema) => itensDe(aid).filter(n => n.tema === tema);
+const ultimoDe = lista => lista.reduce((m, n) => (!m || quando(n) > m ? quando(n) : m), '');
+function resumoContagem(lista) {
+  const f = lista.filter(n => !ehAnotacao(n)).length, a = lista.length - f;
+  return [f ? plural(f, 'ficha', 'fichas') : '', a ? plural(a, 'anotação', 'anotações') : ''].filter(Boolean).join(' · ') || 'vazio';
+}
+function mover(lista, id, dir) {
+  const i = lista.findIndex(x => x.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= lista.length) return;
+  [lista[i], lista[j]] = [lista[j], lista[i]];
+  lista.forEach((x, k) => { x.ordem = k; });
+}
+function lembrarUltimo(aid, tema) { try { localStorage.setItem('cognitio.ultimo', JSON.stringify({ aid, tema })); } catch (e) {} }
+function ultimoUsado() { try { const u = JSON.parse(localStorage.getItem('cognitio.ultimo') || 'null'); if (u && materiaById(u.aid)) return u; } catch (e) {} return null; }
+
+/* ============ Texto da ficha: títulos, seções recolhíveis e sumário ============ */
+function inline(s) {
+  return s.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>').replace(/==([^=]+)==/g, '<mark>$1</mark>')
+    .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+function prosa(text) {
+  const lines = esc(text).split('\n'); let html = '', lista = '', para = [];
+  const flush = () => { if (para.length) { html += `<p>${inline(para.join('<br>'))}</p>`; para = []; } };
+  const fecha = () => { if (lista) { html += `</${lista}>`; lista = ''; } };
+  for (const raw of lines) {
+    const l = raw.trim();
+    if (!l) { flush(); fecha(); continue; }
+    let m;
+    if ((m = l.match(/^[-•*]\s+(.*)/))) { flush(); if (lista !== 'ul') { fecha(); html += '<ul>'; lista = 'ul'; } html += `<li>${inline(m[1])}</li>`; }
+    else if ((m = l.match(/^\d+[.)]\s+(.*)/))) { flush(); if (lista !== 'ol') { fecha(); html += '<ol>'; lista = 'ol'; } html += `<li>${inline(m[1])}</li>`; }
+    else if (/^&gt;\s?/.test(l)) { flush(); fecha(); html += `<blockquote>${inline(l.replace(/^&gt;\s?/, ''))}</blockquote>`; }
+    else { fecha(); para.push(l); }
+  }
+  flush(); fecha(); return html;
+}
+function blocosDe(text) {
+  const out = []; let buf = [];
+  const solta = () => { if (buf.length) { out.push({ html: prosa(buf.join('\n')) }); buf = []; } };
+  String(text || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const m = l.match(/^(#{1,3})\s+(.+)$/);
+    if (m) { solta(); out.push({ h: m[1].length, t: m[2].trim() }); } else buf.push(l);
+  });
+  solta(); return out;
+}
+function textoDaFicha(n) {
+  const bl = blocosDe(n.body); let k = 0;
+  const titulos = bl.filter(b => b.h).map(b => ({ h: b.h, t: b.t, id: 'sec-' + (k++) }));
+  k = 0;
+  function build(i, nivel) {
+    let out = '';
+    while (i < bl.length) {
+      const b = bl[i];
+      if (b.h) {
+        if (b.h <= nivel) break;
+        const id = 'sec-' + (k++), tag = `<span class="h h${b.h}">${inline(esc(b.t))}</span>`;
+        if (b.h <= 2) {
+          const [dentro, j] = build(i + 1, b.h);
+          out += `<details class="sec s${b.h}" id="${id}" open><summary>${tag}<i class="chev">${IC.down}</i></summary><div class="sec-b">${dentro}</div></details>`;
+          i = j; continue;
+        }
+        out += `<h4 class="h3" id="${id}">${inline(esc(b.t))}</h4>`; i++; continue;
+      }
+      out += b.html; i++;
+    }
+    return [out, i];
+  }
+  return { html: build(0, 0)[0], titulos };
+}
+
+/* ============ Anexos (arquivos no aparelho, mesmo banco da versão anterior) ============ */
+const FILES_DB = 'cognitio-files', MAX_FILE = 100 * 1024 * 1024;
+let filesDbP = null;
+function filesDb() {
+  if (!filesDbP) filesDbP = new Promise((ok, no) => {
+    const r = indexedDB.open(FILES_DB, 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('blobs')) r.result.createObjectStore('blobs'); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => { filesDbP = null; no(r.error); };
+  });
+  return filesDbP;
+}
+async function fileOp(mode, fn) {
+  const db = await filesDb();
+  return new Promise((ok, no) => { const tx = db.transaction('blobs', mode), req = fn(tx.objectStore('blobs')); tx.oncomplete = () => ok(req ? req.result : undefined); tx.onerror = () => no(tx.error); });
+}
+const blobPut = (id, blob) => fileOp('readwrite', s => s.put(blob, id));
+const blobGet = id => fileOp('readonly', s => s.get(id));
+const blobDel = ids => ids.length ? fileOp('readwrite', s => { ids.forEach(id => s.delete(id)); return null; }).catch(() => {}) : Promise.resolve();
+const ehImagem = f => /^image\//.test(f.type || '') || /\.(png|jpe?g|gif|webp|avif)$/i.test(f.name);
+const fmtSize = b => !b ? '' : b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+function parseRef(r) {
+  const m = String(r).match(/https?:\/\/\S+/);
+  if (!m) return { label: String(r), url: '' };
+  const url = m[0].replace(/[),.;]+$/, '');
+  return { url, label: String(r).replace(m[0], '').replace(/^[\s:|—–-]+|[\s:|—–-]+$/g, '').trim() };
+}
+const hostDe = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } };
+function fonteHtml(r) {
+  const p = parseRef(r);
+  return p.url && safeUrl(p.url) ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.label || hostDe(p.url))}</a>` : esc(p.label);
+}
+function anexosHtml(n) {
+  if (!n.files.length) return '';
+  const imgs = n.files.filter(f => f.id && ehImagem(f)), outros = n.files.filter(f => !(f.id && ehImagem(f)));
+  return `<div class="anx">${imgs.length ? `<div class="anx-grid">${imgs.map(f => `<button class="anx-img" data-abrir-arq="${esc(f.id)}"><img data-blob="${esc(f.id)}" alt="${esc(f.name)}"></button>`).join('')}</div>` : ''}
+    ${outros.map(f => `<button class="anx-row" data-abrir-arq="${esc(f.id || '')}">${IC.clip}<span><b>${esc(f.name)}</b><small>${fmtSize(f.size)}</small></span></button>`).join('')}</div>`;
+}
+function hidratarImagens(root = document) {
+  $$('img[data-blob]', root).forEach(async img => {
+    const id = img.dataset.blob; img.removeAttribute('data-blob');
+    try { const b = await blobGet(id); if (b) img.src = URL.createObjectURL(b); } catch (e) {}
+  });
+}
+async function abrirArquivo(id) {
+  if (!id) return toast('Este anexo não tem o arquivo guardado, só o nome.');
+  try {
+    const b = await blobGet(id); if (!b) return toast('Arquivo não encontrado neste aparelho.');
+    const u = URL.createObjectURL(b), w = window.open(u, '_blank');
+    if (!w) { const a = document.createElement('a'); a.href = u; a.download = ''; a.click(); }
+  } catch (e) { toast('Não foi possível abrir o arquivo.'); }
+}
+
+/* ============ Questões: leitura de texto colado (formato de IA e de prova) ============ */
+const RX_OPT = /^\(?([A-Ea-e])\s*[\)\.\-–:]\s+(.+)$/;
+const RX_KEY = /^(gabarito|resposta correta|resposta|correta|alternativa correta)\s*[:\-–]\s*(.*)$/i;
+const RX_EXP = /^(coment[aá]rio|explica[cç][aã]o|justificativa|solu[cç][aã]o)\s*[:\-–]\s*(.*)$/i;
+function parseBlock(text) {
+  // a IA às vezes devolve markdown: negrito, títulos, listas ("* ", "- ", "• "), citações e recuos
+  text = String(text || '').replace(/\r/g, '').replace(/\*\*|__/g, '').replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/^[ \t]*(?:[*\-•+][ \t]+|>[ \t]?)+/gm, '').replace(/^[ \t]+/gm, '')
+    .replace(/^(quest[aã]o\s*\d+)\s*[:\-–.]?\s*$/gim, '')                       // linha só com "Questão 3"
+    .replace(/^(?:parte\s+\w+\s*[:\-–]?\s*)?(?:quest[oõ]es|perguntas)?\s*(?:objetivas|dissertativas|abertas|discursivas|de m[uú]ltipla escolha)\s*:?\s*$/gim, '')   // títulos de seção
+    .replace(/^(?:aqui est[aã]o|segue[m]?|claro|com certeza|abaixo)\b[^\n]*$/gim, '');  // frase de abertura da IA
+  // "Gabarito: B) texto" ou "Resposta correta: letra B" continuam valendo
+  const items = [], warns = []; let cur = null;
+  const start = () => { cur = { q: [], opts: [], key: null, exp: [], ans: [], last: null, gap: false }; };
+  const finish = () => {
+    if (!cur) return;
+    const q = cur.q.join('\n').replace(/^\s*(quest[aã]o\s*)?\d+\s*[\.\)\-–:]\s*/i, '').trim(), n = items.length + 1;
+    if (!q && !cur.opts.length && !cur.key) { cur = null; return; }
+    if (cur.opts.length >= 2) {
+      const kk = (cur.key || '').trim(), m = kk.match(/^\(?([A-Ea-e])(?![a-zà-ú])\)?/);
+      const correct = m ? m[1].toUpperCase() : '';
+      const rest = m ? kk.slice(m[0].length).replace(/^[\s.\-–:,]+/, '') : kk;
+      if (!correct) warns.push(`Questão ${n}: sem gabarito (A a E). Você vai avaliar-se sozinho.`);
+      else if (!cur.opts.some(o => o.k === correct)) warns.push(`Questão ${n}: gabarito ${correct} não corresponde a nenhuma alternativa.`);
+      items.push({ type: 'mc', text: q || `Questão ${n}`, options: cur.opts, correct, explanation: [rest, ...cur.exp].filter(Boolean).join('\n').trim() });
+    } else {
+      let t = q, ans = [cur.key || '', ...cur.ans, ...cur.exp].filter(Boolean).join('\n').trim();
+      if (cur.opts.length === 1) { warns.push(`Questão ${n}: só uma alternativa encontrada; entrou como dissertativa.`); t += '\n' + cur.opts[0].k + ') ' + cur.opts[0].t; }
+      items.push({ type: 'open', text: t, answer: ans });
+    }
+    cur = null;
+  };
+  const linhas = text.replace(/\r/g, '').split('\n');
+  // começo de questão mesmo sem linha em branco (o app do Gemini apaga as linhas vazias ao copiar):
+  // termina em "?" ou ":", vem numerada, ou a próxima linha já é uma alternativa ou "Resposta:"
+  const abre = idx => {
+    const l = linhas[idx].trim();
+    if (/^(quest[aã]o\s*)?\d+\s*[\.\)\-–:]\s+\S/i.test(l) || /[?:]$/.test(l)) return true;
+    for (let j = idx + 1; j < linhas.length; j++) { const n = linhas[j].trim(); if (!n) continue; return RX_OPT.test(n) || /^(resposta|gabarito)\s*[:\-–]/i.test(n); }
+    return false;
+  };
+  for (let li = 0; li < linhas.length; li++) {
+    const raw = linhas[li], l = raw.trim();
+    if (!l) { if (cur) { if (['key', 'exp', 'ans'].includes(cur.last)) finish(); else cur.gap = true; } continue; }
+    let m;
+    if ((m = l.match(RX_KEY))) { if (!cur) start(); cur.key = m[2]; cur.last = 'key'; cur.gap = false; continue; }
+    if ((m = l.match(RX_EXP))) { if (!cur) start(); cur.exp.push(m[2]); cur.last = 'exp'; cur.gap = false; continue; }
+    if ((m = l.match(RX_OPT)) && cur && cur.q.length) {
+      if (['key', 'exp', 'ans'].includes(cur.last)) { finish(); start(); }
+      cur.opts.push({ k: m[1].toUpperCase(), t: m[2].trim() }); cur.last = 'opt'; cur.gap = false; continue;
+    }
+    if (l.includes('::') && (!cur || !cur.opts.length)) {
+      finish(); const [a, ...b] = l.split('::');
+      if (a.trim()) items.push({ type: 'open', text: a.trim(), answer: b.join('::').trim() });
+      continue;
+    }
+    if (cur && (cur.gap || (cur.last === 'key' && cur.opts.length) || (['key', 'exp', 'ans'].includes(cur.last) && abre(li)))) { finish(); }
+    if (cur && cur.last === 'opt') { cur.opts[cur.opts.length - 1].t += ' ' + l; continue; }
+    if (cur && cur.last === 'key') { cur.ans.push(l); cur.last = 'ans'; continue; }
+    if (cur && (cur.last === 'exp' || cur.last === 'ans')) { (cur.last === 'exp' ? cur.exp : cur.ans).push(l); continue; }
+    if (!cur) start();
+    cur.q.push(l); cur.last = 'q'; cur.gap = false;
+  }
+  finish();
+  return { items, warns };
+}
+
+
+const genStrip = t => String(t || '').replace(/==([^=]+)==/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\s+/g, ' ').trim();
+function genContexto(h) { return genStrip(h).replace(/^(ciclo|unidade|aula|m[oó]dulo|parte|cap[ií]tulo)\s*\d+\s*[—–:\-]\s*/i, '').replace(/^\d+[\.\)]\s*/, '').trim(); }
+const RX_QSEC = /^(quest[oõ]es|exerc[ií]cios|simulado|perguntas|teste|quiz)\b/i;
+/* matéria-prima de uma ficha: termos, lacunas e questões escritas */
+function materiaDe(note) {
+  const termos = [], lacunas = [], escritas = []; let ctx = '', emQuestoes = false, bloco = [];
+  const fechaBloco = () => { if (bloco.length) { escritas.push(...parseBlock(bloco.join('\n')).items); bloco = []; } };
+  String(note.body || '').replace(/\r/g, '').split('\n').forEach(raw => {
+    const l = raw.trim();
+    if (/^#{1,3}\s/.test(l)) { fechaBloco(); const h = l.replace(/^#+\s*/, ''); emQuestoes = RX_QSEC.test(genStrip(h)); if (!emQuestoes) ctx = genContexto(h); return; }
+    if (emQuestoes) { bloco.push(raw); return; }
+    if (!l) return;
+    if (/^\*\*[^*]+\*\*$/.test(l)) { const c = genContexto(l); if (c.length >= 3) ctx = c; return; }
+    const corpo = l.replace(/^[-•>]\s*/, '');
+    const rx = /\*\*([^*]{2,60}?)(?::\*\*|\*\*\s*[:=])\s*([\s\S]*?)(?=\s\*\*[^*]{2,60}?(?::\*\*|\*\*\s*[:=])|$)/g;
+    let m;
+    while ((m = rx.exec(corpo))) {
+      const termo = genStrip(m[1]).replace(/[:=]$/, '').trim(), def = genStrip(m[2]).replace(/^[:=\s]+/, '');
+      if (termo && termo.length <= 60 && def.length >= 4) termos.push({ termo, def, ctx });
+    }
+    const hs = [...corpo.matchAll(/==([^=]{1,80})==/g)];
+    hs.forEach((h, i) => {
+      let k = 0;
+      const frase = genStrip(corpo.replace(/==([^=]{1,80})==/g, (_, x) => (k++ === i ? '_____' : x)));
+      if (frase.length >= 12) lacunas.push({ frase, resp: genStrip(h[1]), linha: genStrip(corpo), ctx });
+    });
+  });
+  fechaBloco();
+  return { termos, lacunas, escritas };
+}
+/* embaralha de forma estável (a mesma pergunta sempre com a mesma ordem) */
+function genMistura(arr, semente) {
+  let h = 0; for (const c of semente) h = (h * 31 + c.charCodeAt(0)) | 0;
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { h = (h * 1103515245 + 12345) | 0; const j = Math.abs(h) % (i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function genObjetiva(texto, certa, erradas, semente, explicacao, perto = []) {
+  // alternativas erradas: primeiro as do mesmo tema (mais difíceis), depois o resto da área
+  const ok = x => norm(x) !== norm(certa);
+  const prox = genMistura([...new Set(perto.filter(ok))], semente + '#p');
+  const dist = [...new Set([...prox, ...genMistura([...new Set(erradas.filter(ok))], semente + '#d')])].slice(0, 3);
+  if (dist.length < 3) return null;
+  const corte = t => t.length > 150 ? t.slice(0, 148).trim() + '…' : t;
+  const ops = genMistura([certa, ...dist], semente).map((t, i) => ({ k: LETTERS[i], t: corte(t) }));
+  return { type: 'mc', text: texto, options: ops, correct: LETTERS[ops.findIndex(o => o.t === corte(certa))], explanation: explicacao || '' };
+}
+function propostasDe(notes, formato, pool) {
+  const out = [], vistos = new Set();
+  const add = (q, note, tipo) => {
+    if (!q) return;
+    const key = note.id + '|' + q.type + '|' + genStrip(q.text).toLowerCase();
+    if (vistos.has(key)) return; vistos.add(key);
+    out.push({ ...q, key, tipo, noteId: note.id });
+  };
+  const defsPool = pool.termos.map(t => t.def), termosPool = pool.termos.map(t => t.termo), respPool = [...pool.lacunas.map(l => l.resp), ...termosPool];
+  notes.forEach(note => {
+    const M = materiaDe(note), ctxTxt = c => c ? ` (${c})` : '';
+    M.escritas.forEach(q => add(q, note, 'escrita'));
+    M.termos.forEach((t, i) => {
+      if (formato !== 'mc') add({ type: 'open', text: `Explique: “${t.termo}”.${t.ctx && norm(t.ctx) !== norm(t.termo) ? ctxTxt(t.ctx) : ''}`, answer: `**${t.termo}:** ${t.def}${t.ctx ? `\n\n*${t.ctx}*` : ''}` }, note, 'termo');
+      if (formato !== 'open') {
+        const expl = `${t.termo}: ${t.def}`;
+        const q = i % 2 === 0
+          ? genObjetiva(`Qual alternativa corresponde a “${t.termo}”?${ctxTxt(t.ctx)}`, t.def, defsPool, note.id + t.termo, expl, pool.termos.filter(x => x.ctx === t.ctx).map(x => x.def))
+          : genObjetiva(`A qual termo se refere: “${t.def.length > 160 ? t.def.slice(0, 158) + '…' : t.def}”?`, t.termo, termosPool, note.id + t.termo, expl, pool.termos.filter(x => x.ctx === t.ctx).map(x => x.termo));
+        add(q, note, 'termo');
+      }
+    });
+    M.lacunas.forEach(l => {
+      if (formato !== 'mc') add({ type: 'open', text: `Complete: ${l.frase}${ctxTxt(l.ctx)}`, answer: `**${l.resp}**\n\n${l.linha}` }, note, 'lacuna');
+      if (formato !== 'open') add(genObjetiva(`Complete: ${l.frase}${ctxTxt(l.ctx)}`, l.resp, respPool, note.id + l.frase, l.linha), note, 'lacuna');
+    });
+  });
+  return out;
+}
+function pedidoIA(notes, nObj, nDis) {
+  const texto = notes.map(n => `# ${n.title}\n${n.body || ''}`).join('\n\n').slice(0, 24000);
+  return `Crie questões de estudo a partir do texto abaixo, para revisar para uma prova de graduação.
+
+Faça ${nObj} questões objetivas e ${nDis} dissertativas, cobrindo os conceitos mais importantes, com alternativas erradas plausíveis.
+
+Use EXATAMENTE este formato, sem markdown, sem negrito e sem títulos. Numere cada questão (1., 2., 3.…) e separe cada uma com uma linha em branco:
+
+1. Enunciado da questão objetiva?
+A) alternativa
+B) alternativa
+C) alternativa
+D) alternativa
+Gabarito: B
+Comentário: por que a B é a correta.
+
+2. Enunciado da questão dissertativa?
+Resposta: a resposta modelo, com os pontos que não podem faltar.
+
+TEXTO:
+${texto}`;
+}
+
+function pedidoIA(notes, nObj, nDis) {
+  // linhas inteiras entre colchetes são observações suas e não vão para a IA
+  const limpa = t => String(t || '').split('\n').filter(l => !/^\s*\[[^\]]*\]\s*$/.test(l)).join('\n');
+  const texto = notes.map(n => `# ${n.title}\n${limpa(n.body)}`).join('\n\n').slice(0, 24000);
+  const ex = [];
+  if (nObj > 0) ex.push(`1. Enunciado da questão objetiva?\nA) alternativa\nB) alternativa\nC) alternativa\nD) alternativa\nGabarito: B\nComentário: por que a B é a correta.`);
+  if (nDis > 0) ex.push(`${ex.length + 1}. Enunciado da questão dissertativa?\nResposta: a resposta modelo, com os pontos que não podem faltar.`);
+  const pede = [nObj > 0 ? plural(nObj, 'questão objetiva', 'questões objetivas') : '', nDis > 0 ? plural(nDis, 'questão dissertativa', 'questões dissertativas') : ''].filter(Boolean).join(' e ');
+  return `Crie questões de estudo a partir do texto abaixo, para revisar para uma prova de graduação.
+
+Faça exatamente ${pede}, cobrindo os conceitos mais importantes${nObj > 0 ? ', com alternativas erradas plausíveis' : ''}.
+
+Use EXATAMENTE este formato, sem markdown, sem negrito e sem títulos. Numere cada questão (1., 2., 3.…) e separe cada uma com uma linha em branco:
+
+${ex.join('\n\n')}
+
+TEXTO:
+${texto}`;
+}
+function pedidoOrganizar(materia, tema, lista) {
+  const ordem = lista.slice().sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+  const linhas = ordem.map((n, i) => {
+    const cab = ehAnotacao(n) ? `[${i + 1}] ${tipoNome(n.tipo)} · ${dataLonga(n.createdAt)}${n.refs[0] ? ' · fonte: ' + n.refs[0] : ''}` : `[${i + 1}] Ficha: ${n.title}`;
+    return `${cab}\n${(n.title && ehAnotacao(n) && n.tipo === 'ia' ? 'Resumo: ' + n.title + '\n' : '')}${n.body}`;
+  }).join('\n\n').slice(0, 30000);
+  return `Organize as minhas anotações de estudo abaixo numa ficha-resumo clara, em português.
+
+Matéria: ${materia}
+Conteúdo: ${tema || 'Geral'}
+
+Regras:
+- Use títulos com # e ## (markdown simples), listas com "- " e **negrito** só nos termos-chave, no formato "- **Termo:** definição".
+- Agrupe por ideia, não pela ordem das anotações. Não invente nada que não esteja nas anotações.
+- Coloque as minhas críticas e opiniões numa seção final "# Minhas críticas", com as minhas palavras.
+- Ao fim de cada parágrafo ou item, indique entre colchetes de qual anotação veio, por exemplo [3].
+- Termine com "# Fontes", listando as fontes citadas.
+
+ANOTAÇÕES:
+${linhas}`;
+}
+
+/* ============ Resumo para os outros apps (contrato lembre-se) ============ */
+function construirResumoCognitio() {
+  const clip = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; };
+  const num = v => Number.isFinite(+v) ? +v : 0;
+  return {
+    exportedAt: null,
+    fields: state.fields.map(f => ({ id: f.id, title: f.title, icon: f.icon || '📚', posture: f.posture || 'ultra' })),
+    areas: state.areas.map(a => ({ id: a.id, fieldId: a.fieldId, title: a.title, status: [0, 1, 2].includes(+a.status) ? +a.status : 0, ...(a.simulados ? { simulados: true } : {}) })),
+    notes: state.notes.map(n => ({ id: n.id, areaId: n.areaId, title: clip(n.title, 120), tags: Array.isArray(n.tags) ? n.tags.slice(0, 8) : [], createdAt: n.createdAt, ...(n.tema ? { tema: n.tema } : {}), ...(n.kind === 'simulado' ? { kind: 'simulado' } : {}) })),
+    decks: state.decks.map(k => ({ id: k.id, title: k.title, fieldId: k.fieldId, areaId: k.areaId || null, noteId: k.noteId || null,
+      items: k.items.map(i => ({ id: i.id, last: i.lastAt || null, t: clip(i.text, 160), due: i.due || null, g: typeof i.lastGrade === 'number' ? i.lastGrade : -1, seen: !!i.seen, done: !!i.done })) })),
+    pillLog: state.pillLog.slice(-500).map(l => ({ deckId: l.deckId, t: clip(l.text, 120), minutes: num(l.minutes), grade: l.grade, at: l.at })),
+    pillOfDay: state.pillOfDay || null
+  };
+}
+function publicarResumo() {
+  if (!window.Lembre) return;
+  if (!publicarResumo.agendado) publicarResumo.agendado = Lembre.agendar('cognitio', construirResumoCognitio, 900);
+  publicarResumo.agendado();
+}
+
+function publicarResumo() {
+  if (!window.Lembre) return;
+  if (!publicarResumo.agendado) publicarResumo.agendado = Lembre.agendar('cognitio', construirResumoCognitio, 900);
+  publicarResumo.agendado();
+}
+
+/* ============ Navegação ============ */
+let route = { v: 'home' };
+function lerRota() {
+  const p = new URLSearchParams(location.search);
+  if (p.get('ficha')) { const n = notaById(p.get('ficha')); if (n) return ehAnotacao(n) ? { v: 'conteudo', aid: n.areaId, tema: n.tema, foco: n.id } : { v: 'ficha', id: n.id }; }
+  const aid = p.get('m') || p.get('area');
+  if (aid && materiaById(aid)) return p.has('t') ? { v: 'conteudo', aid, tema: p.get('t') } : { v: 'materia', aid };
+  if (p.get('c') && cadernoById(p.get('c'))) return { v: 'caderno', id: p.get('c') };
+  return { v: 'home' };
+}
+function urlDe(r) {
+  const u = new URL(location.href); ['c', 'm', 't', 'area', 'ficha', 'compartilhar', 'title', 'text', 'url'].forEach(k => u.searchParams.delete(k));
+  if (r.v === 'caderno') u.searchParams.set('c', r.id);
+  if (r.v === 'materia') u.searchParams.set('m', r.aid);
+  if (r.v === 'conteudo') { u.searchParams.set('m', r.aid); u.searchParams.set('t', r.tema); }
+  if (r.v === 'ficha') u.searchParams.set('ficha', r.id);
+  return u.pathname + u.search;
+}
+function go(r, substituir) {
+  route = r; organizando = false;
+  history[substituir ? 'replaceState' : 'pushState']({ r }, '', urlDe(r));
+  render(); scrollTo(0, 0);
+}
+addEventListener('popstate', e => { route = (e.state && e.state.r) || lerRota(); organizando = false; render(); });
+function voltar() {
+  const r = route;
+  if (r.v === 'ficha') { const n = notaById(r.id); return go(n ? { v: 'conteudo', aid: n.areaId, tema: n.tema } : { v: 'home' }); }
+  if (r.v === 'conteudo') return go({ v: 'materia', aid: r.aid });
+  if (r.v === 'materia') { const a = materiaById(r.aid); return go(a ? { v: 'caderno', id: a.fieldId } : { v: 'home' }); }
+  go({ v: 'home' });
+}
+
+/* ============ Telas ============ */
+let organizando = false;
+const view = () => $('#view');
+function topo(titulo, sub, extra = '') {
+  return `<div class="bar"><button class="ib" data-voltar aria-label="Voltar">${IC.back}</button><span class="bar-t">${esc(sub)}</span>${extra}</div>
+    <h1 class="pg-t">${esc(titulo)}</h1>`;
+}
+function setasHtml(attr, id, i, total) {
+  return organizando ? `<span class="ord"><button class="ib sm" data-${attr}="${esc(id)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Subir">${IC.up}</button><button class="ib sm" data-${attr}="${esc(id)}" data-dir="1" ${i === total - 1 ? 'disabled' : ''} aria-label="Descer">${IC.down}</button></span>` : '';
+}
+
+function renderHome() {
+  const cs = cadernos(), u = ultimoUsado();
+  const recentes = state.notes.slice().sort((a, b) => quando(b).localeCompare(quando(a))).slice(0, 3);
+  view().innerHTML = `
+    <header class="home-h"><div><h1 class="brand">Cognitio<span>.</span></h1><p class="tag">Seu caderno de estudos</p></div>
+      <div class="h-acts"><button class="ib" data-buscar aria-label="Buscar">${IC.search}</button><button class="ib" data-menu aria-label="Mais opções">${IC.more}</button></div></header>
+    ${TESTE ? `<p class="aviso">Versão de teste com uma cópia dos seus dados. O que você mudar aqui não altera o Cognitio atual.</p>` : ''}
+    ${u ? (() => { const a = materiaById(u.aid); return `<button class="continuar" data-ir-conteudo="${esc(u.aid)}" data-tema="${esc(u.tema)}"><small>Continuar</small><b>${esc(u.tema || 'Geral')}</b><span>${esc(a.title)}</span><i>${IC.next}</i></button>`; })() : ''}
+    <div class="sec-h"><h2>Cadernos</h2>${cs.length > 1 ? `<button class="lk" data-organizar>${organizando ? 'Pronto' : 'Organizar'}</button>` : ''}</div>
+    ${cs.length ? `<div class="lista">${cs.map((f, i) => {
+      const ms = materiasDe(f.id), its = state.notes.filter(n => ms.some(m => m.id === n.areaId));
+      return `<div class="row-w">${setasHtml('mover-caderno', f.id, i, cs.length)}<button class="row" data-ir-caderno="${f.id}"><span class="ico">${esc(f.icon)}</span><span class="rt"><b>${esc(f.title)}</b><small>${plural(ms.length, 'matéria', 'matérias')}${its.length ? ' · ' + resumoContagem(its) : ''}</small></span><i>${IC.next}</i></button></div>`;
+    }).join('')}</div>` : `<div class="vazio"><p>Crie um caderno para cada curso ou grande interesse: “Gestão Pública”, “Curiosidades”, “Oratória”.</p></div>`}
+    <button class="btn add" data-novo-caderno>${IC.plus}Novo caderno</button>
+    ${recentes.length ? `<div class="sec-h"><h2>Mexeu por último</h2></div><div class="lista">${recentes.map(itemLinha).join('')}</div>` : ''}`;
+}
+function itemLinha(n) {
+  const a = materiaById(n.areaId), onde = `${a ? a.title : ''}${n.tema ? ' › ' + n.tema : ''}`;
+  return ehAnotacao(n)
+    ? `<button class="row" data-ir-conteudo="${esc(n.areaId)}" data-tema="${esc(n.tema)}" data-foco="${n.id}"><span class="tp tp-${n.tipo}">${esc(tipoNome(n.tipo))}</span><span class="rt"><b class="clip1">${esc(n.title || plainText(n.body).slice(0, 80))}</b><small>${esc(onde)} · ${dataCurta(quando(n))}</small></span></button>`
+    : `<button class="row" data-ir-ficha="${n.id}"><span class="tp tp-ficha">Ficha</span><span class="rt"><b class="clip1">${esc(n.title || 'Sem título')}</b><small>${esc(onde)} · ${dataCurta(quando(n))}</small></span></button>`;
+}
+
+function renderCaderno() {
+  const f = cadernoById(route.id); if (!f) return go({ v: 'home' }, true);
+  const ms = materiasDe(f.id);
+  const temSem = ms.some(m => m.semestre);
+  const grupos = temSem ? [...new Set(ms.map(m => m.semestre))].sort((a, b) => !a ? 1 : !b ? -1 : b.localeCompare(a)).map(s => ({ s, ms: ms.filter(m => m.semestre === s) })) : [{ s: null, ms }];
+  view().innerHTML = `${topo(f.title, 'Cadernos', `<button class="ib" data-editar-caderno="${f.id}" aria-label="Editar caderno">${IC.edit}</button>`)}
+    ${f.description ? `<p class="pg-d">${esc(f.description)}</p>` : ''}
+    <div class="sec-h"><h2>Matérias</h2>${ms.length > 1 ? `<button class="lk" data-organizar>${organizando ? 'Pronto' : 'Organizar'}</button>` : ''}</div>
+    ${ms.length ? grupos.map(g => `${g.s !== null ? `<p class="grp">${esc(g.s || 'Sem semestre')}</p>` : ''}<div class="lista">${g.ms.map(m => {
+      const its = itensDe(m.id), cs = conteudosDe(m), i = ms.indexOf(m);
+      return `<div class="row-w">${setasHtml('mover-materia', m.id, i, ms.length)}<button class="row" data-ir-materia="${m.id}"><span class="rt"><b>${esc(m.title)}</b><small>${cs.length ? plural(cs.length, 'conteúdo', 'conteúdos') + ' · ' : ''}${resumoContagem(its)}${its.length ? ' · ' + dataCurta(ultimoDe(its)) : ''}</small></span><i>${IC.next}</i></button></div>`;
+    }).join('')}</div>`).join('') : `<div class="vazio"><p>Uma matéria para cada disciplina ou assunto: “Teoria da administração”, “Sustentabilidade”.</p></div>`}
+    <button class="btn add" data-nova-materia="${f.id}">${IC.plus}Nova matéria</button>
+    <button class="lk mt" data-exportar-caderno="${f.id}">Exportar este caderno como texto</button>`;
+}
+
+function renderMateria() {
+  const a = materiaById(route.aid); if (!a) return go({ v: 'home' }, true);
+  const f = cadernoById(a.fieldId), cs = conteudosDe(a), geral = itensDoConteudo(a.id, '');
+  const quest = itensDe(a.id).reduce((s, n) => s + questoesDe(n).length, 0);
+  view().innerHTML = `${topo(a.title, f.title + (a.semestre ? ' · ' + a.semestre : ''), `<button class="ib" data-editar-materia="${a.id}" aria-label="Editar matéria">${IC.edit}</button>`)}
+    ${a.description ? `<p class="pg-d">${esc(a.description)}</p>` : ''}
+    <div class="sec-h"><h2>Conteúdos</h2>${cs.length > 1 ? `<button class="lk" data-organizar>${organizando ? 'Pronto' : 'Organizar'}</button>` : ''}</div>
+    ${cs.length || geral.length ? `<div class="lista caps">${cs.map((t, i) => {
+      const its = itensDoConteudo(a.id, t);
+      return `<div class="row-w">${organizando ? `<span class="ord"><button class="ib sm" data-mover-conteudo="${esc(t)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Subir">${IC.up}</button><button class="ib sm" data-mover-conteudo="${esc(t)}" data-dir="1" ${i === cs.length - 1 ? 'disabled' : ''} aria-label="Descer">${IC.down}</button></span>` : ''}
+        <button class="row" data-ir-conteudo="${a.id}" data-tema="${esc(t)}"><span class="num">${romano(i)}</span><span class="rt"><b>${esc(t)}</b><small>${resumoContagem(its)}${its.length ? ' · ' + dataCurta(ultimoDe(its)) : ''}</small></span><i>${IC.next}</i></button></div>`;
+    }).join('')}${geral.length ? `<button class="row" data-ir-conteudo="${a.id}" data-tema=""><span class="num">·</span><span class="rt"><b>Geral</b><small>${resumoContagem(geral)} · sem conteúdo definido</small></span><i>${IC.next}</i></button>` : ''}</div>`
+      : `<div class="vazio"><p>Os conteúdos são os capítulos da matéria: “Administração científica”, “Relações humanas e Hawthorne”.</p></div>`}
+    <button class="btn add" data-novo-conteudo="${a.id}">${IC.plus}Novo conteúdo</button>
+    ${quest ? `<button class="btn ghost mt" data-quiz="area:${a.id}">${IC.quiz}Questionário da matéria · ${quest}</button>${ultimaTentativa('area:' + a.id)}` : ''}`;
+}
+
+let tipoAtual = 'li';
+function renderConteudo() {
+  const a = materiaById(route.aid); if (!a) return go({ v: 'home' }, true);
+  const tema = route.tema || '', its = itensDoConteudo(a.id, tema).sort((x, y) => Date.parse(y.createdAt) - Date.parse(x.createdAt));
+  lembrarUltimo(a.id, tema);
+  const fichas = its.filter(n => !ehAnotacao(n)), notas = its.filter(ehAnotacao);
+  const quest = its.reduce((s, n) => s + questoesDe(n).length, 0);
+  view().innerHTML = `${topo(tema || 'Geral', a.title, tema ? `<button class="ib" data-editar-conteudo aria-label="Editar conteúdo">${IC.edit}</button>` : '')}
+    <p class="pg-d">${resumoContagem(its)}</p>
+    <form class="compor" id="compor" autocomplete="off">
+      <div class="chips">${TIPOS.map(([k, t]) => `<button type="button" class="chip${k === tipoAtual ? ' on' : ''}" data-tipo="${k}">${t}</button>`).join('')}</div>
+      <input class="in resumo-ia" id="cpResumo" placeholder="Do que tratou a conversa, em uma linha" ${tipoAtual === 'ia' ? '' : 'hidden'}>
+      <textarea class="in" id="cpTexto" rows="3" placeholder="${esc(placeholderDe(tipoAtual))}"></textarea>
+      <div class="cp-pe"><input class="in sm" id="cpFonte" placeholder="Fonte: link, livro, aula (opcional)"><button class="btn pri" type="submit">Guardar</button></div>
+    </form>
+    <div class="acts">
+      <button class="btn" data-nova-ficha>${IC.plus}Ficha</button>
+      ${notas.length >= 2 ? `<button class="btn" data-organizar-ia>${IC.spark}Organizar com IA</button>` : ''}
+      ${quest ? `<button class="btn" data-quiz="tema:${a.id}|${esc(tema)}">${IC.quiz}Questões · ${quest}</button>` : ''}
+    </div>
+    ${quest ? ultimaTentativa('tema:' + a.id + '|' + tema) : ''}
+    ${fichas.length ? `<div class="sec-h"><h2>Fichas</h2></div><div class="lista">${fichas.map(n => {
+      const q = questoesDe(n).length;
+      return `<button class="row" data-ir-ficha="${n.id}"><span class="rt"><b>${esc(n.title || 'Sem título')}</b><small>${dataCurta(quando(n))}${q ? ' · ' + plural(q, 'questão', 'questões') : ''}</small>${plainText(n.body) ? `<span class="prev">${esc(plainText(n.body).slice(0, 120))}</span>` : ''}</span><i>${IC.next}</i></button>`;
+    }).join('')}</div>` : ''}
+    ${notas.length ? `<div class="sec-h"><h2>Anotações</h2></div><div class="notas">${notas.map(notaHtml).join('')}</div>` : ''}
+    ${!its.length ? `<div class="vazio"><p>Guarde aqui o que você lê, pesquisa e encontra sobre ${esc(tema || 'esta matéria')}, e o que você pensa disso. Para um texto mais elaborado, crie uma ficha.</p></div>` : ''}`;
+  hidratarImagens(view());
+  if (route.foco) { const el = document.getElementById('n-' + route.foco); if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('pisca'); } delete route.foco; }
+}
+function placeholderDe(t) {
+  return { li: 'O que você leu e quer guardar…', pesquisei: 'O que você pesquisou e descobriu…', encontrei: 'Um vídeo, artigo, imagem, citação…', ia: 'Cole aqui a conversa ou a resposta da IA…', critica: 'O que você pensa disso, com as suas palavras…', nota: 'Anote…' }[t] || 'Anote…';
+}
+function notaHtml(n) {
+  const longo = n.body.length > 600 || n.tipo === 'ia';
+  const corpo = `<div class="prosa">${prosa(n.body)}</div>`;
+  return `<article class="nota" id="n-${n.id}">
+    <div class="nota-h"><span class="tp tp-${n.tipo}">${esc(tipoNome(n.tipo))}</span><span class="nota-d">${dataCurta(n.createdAt)}</span><button class="ib sm" data-editar-nota="${n.id}" aria-label="Editar">${IC.edit}</button></div>
+    ${n.title && n.tipo === 'ia' ? `<p class="nota-t">${esc(n.title)}</p>` : ''}
+    ${longo ? `<details class="longo"${n.tipo === 'ia' ? '' : ' open'}><summary>${n.tipo === 'ia' ? `Ver conversa · ${plural(plainText(n.body).split(' ').length, 'palavra', 'palavras')}` : 'Recolher'}</summary>${corpo}</details>` : corpo}
+    ${n.refs.length ? `<p class="fonte">${IC.link}${n.refs.map(fonteHtml).join(' · ')}</p>` : ''}
+    ${anexosHtml(n)}
+  </article>`;
+}
+function ultimaTentativa(alvo) {
+  const ts = state.tentativas.filter(t => t.alvo === alvo);
+  if (!ts.length) return '';
+  const u = ts[ts.length - 1], p = ts[ts.length - 2];
+  return `<p class="tent">Última vez: <b>${u.acertos} de ${u.total}</b> · ${dataCurta(u.at)}${p ? ` · antes ${p.acertos} de ${p.total}` : ''}</p>`;
+}
+
+function renderFicha() {
+  const n = notaById(route.id); if (!n) return go({ v: 'home' }, true);
+  const a = materiaById(n.areaId), qs = questoesDe(n), T = textoDaFicha(n);
+  view().innerHTML = `${topo(n.title || 'Sem título', `${a.title}${n.tema ? ' › ' + n.tema : ''}`, `<button class="ib" data-editar-ficha="${n.id}" aria-label="Editar ficha">${IC.edit}</button>`)}
+    <p class="pg-d">${n.updatedAt ? 'Editada ' + dataCurta(n.updatedAt) : 'Criada ' + dataCurta(n.createdAt)}</p>
+    ${T.titulos.length >= 3 ? `<nav class="sumario"><p>Sumário</p>${T.titulos.map(t => `<a href="#${t.id}" class="sm${t.h}" data-ir-sec="${t.id}">${esc(plainText(t.t))}</a>`).join('')}</nav>` : ''}
+    <div class="prosa ficha-t">${T.html || '<p class="vazio-t">Ficha sem texto ainda. Toque no lápis para escrever.</p>'}</div>
+    <button class="btn ghost" data-refletir="${n.id}">${IC.plus}Reflexão</button>
+    ${n.refs.length ? `<div class="rodape"><p class="rd-t">Fontes</p>${n.refs.map(r => `<p class="fonte">${IC.link}${fonteHtml(r)}</p>`).join('')}</div>` : ''}
+    ${n.files.length ? `<div class="rodape"><p class="rd-t">Anexos</p>${anexosHtml(n)}</div>` : ''}
+    <div class="rodape quest">
+      <p class="rd-t">Questões${qs.length ? ' · ' + qs.length : ''}</p>
+      ${qs.length ? `${ultimaTentativa('note:' + n.id)}<div class="acts"><button class="btn pri" data-quiz="note:${n.id}">${IC.quiz}Responder</button><button class="btn" data-questoes="${n.id}">Ver e editar</button></div>`
+        : `<p class="dica">Transforme esta ficha em questões para se testar antes da prova.</p><div class="acts"><button class="btn" data-questoes="${n.id}">${IC.spark}Criar questões</button></div>`}
+    </div>`;
+  hidratarImagens(view());
+}
+
+function render() {
+  document.body.dataset.v = route.v;
+  ({ home: renderHome, caderno: renderCaderno, materia: renderMateria, conteudo: renderConteudo, ficha: renderFicha }[route.v] || renderHome)();
+}
+
+/* ============ Folhas (diálogos) ============ */
+const dlg = () => $('#sheet');
+function abrirFolha(titulo, html, cheia) {
+  const d = dlg();
+  d.className = cheia ? 'cheia' : '';
+  d.innerHTML = `<div class="sh"><div class="sh-h"><h2>${esc(titulo)}</h2><button class="ib" data-fechar aria-label="Fechar">${IC.x}</button></div><div class="sh-b">${html}</div></div>`;
+  if (!d.open) d.showModal();
+  return d;
+}
+function fecharFolha() { const d = dlg(); if (d.open) d.close(); }
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2600); }
+async function copiar(texto) {
+  try { await navigator.clipboard.writeText(texto); return true; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = texto; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (x) {} ta.remove(); return ok; }
+}
+
+/* ---------- caderno ---------- */
+const EMOJIS = ['📚', '🏛️', '📈', '🧠', '🗂️', '💻', '🌍', '⚖️', '🎨', '🔬', '✒️', '🎼'];
+function folhaCaderno(f) {
+  abrirFolha(f ? 'Editar caderno' : 'Novo caderno', `
+    <label class="lb">Nome<input class="in" id="fTit" value="${esc(f ? f.title : '')}" placeholder="Administração Pública e Social"></label>
+    <div class="lb">Ícone<div class="emojis">${EMOJIS.map(e => `<button type="button" class="emo${(f ? f.icon : '📚') === e ? ' on' : ''}" data-emo="${e}">${e}</button>`).join('')}</div></div>
+    <label class="lb">Descrição (opcional)<input class="in" id="fDesc" value="${esc(f ? f.description : '')}" placeholder="Graduação EAD, Estácio"></label>
+    <div class="sh-acts">${f ? `<button class="btn perigo" data-apagar-caderno="${f.id}">Excluir</button>` : ''}<button class="btn pri" data-salvar-caderno="${f ? f.id : ''}">Salvar</button></div>`);
+  setTimeout(() => $('#fTit')?.focus(), 50);
+}
+/* ---------- matéria ---------- */
+function semestreAtual() { const d = new Date(); return `${d.getFullYear()}/${d.getMonth() < 6 ? 1 : 2}`; }
+function folhaMateria(fid, a) {
+  const sems = [...new Set(state.areas.map(x => x.semestre).filter(Boolean))].sort().reverse();
+  abrirFolha(a ? 'Editar matéria' : 'Nova matéria', `
+    <label class="lb">Nome<input class="in" id="mTit" value="${esc(a ? a.title : '')}" placeholder="Teoria da administração"></label>
+    <label class="lb">Semestre (opcional)<input class="in" id="mSem" list="mSemL" value="${esc(a ? a.semestre : '')}" placeholder="${semestreAtual()}"><datalist id="mSemL">${[semestreAtual(), ...sems].filter((x, i, l) => l.indexOf(x) === i).map(s => `<option value="${esc(s)}">`).join('')}</datalist></label>
+    <label class="lb">Descrição (opcional)<input class="in" id="mDesc" value="${esc(a ? a.description : '')}"></label>
+    ${a ? `<label class="lb">Caderno<select class="in" id="mCad">${cadernos().map(f => `<option value="${f.id}"${f.id === a.fieldId ? ' selected' : ''}>${esc(f.icon + ' ' + f.title)}</option>`).join('')}</select></label>` : ''}
+    <div class="sh-acts">${a ? `<button class="btn perigo" data-apagar-materia="${a.id}">Excluir</button>` : ''}<button class="btn pri" data-salvar-materia="${a ? a.id : ''}" data-fid="${esc(fid)}">Salvar</button></div>`);
+  setTimeout(() => $('#mTit')?.focus(), 50);
+}
+/* ---------- conteúdo ---------- */
+function folhaConteudo(aid, tema) {
+  const editando = tema !== undefined;
+  abrirFolha(editando ? 'Editar conteúdo' : 'Novo conteúdo', `
+    <label class="lb">Nome<input class="in" id="tTit" value="${esc(editando ? tema : '')}" placeholder="Administração científica"></label>
+    ${editando ? `<p class="dica">Ao excluir, as fichas e anotações deste conteúdo vão para “Geral”. Nada é apagado.</p>` : ''}
+    <div class="sh-acts">${editando ? `<button class="btn perigo" data-apagar-conteudo>Excluir</button>` : ''}<button class="btn pri" data-salvar-conteudo="${esc(aid)}">Salvar</button></div>`);
+  dlg().dataset.temaAntigo = editando ? tema : '\u0000';
+  setTimeout(() => $('#tTit')?.focus(), 50);
+}
+/* ---------- anotação ---------- */
+function folhaNota(n) {
+  abrirFolha('Anotação', `
+    <div class="chips">${TIPOS.map(([k, t]) => `<button type="button" class="chip${k === n.tipo ? ' on' : ''}" data-tipo-ed="${k}">${t}</button>`).join('')}</div>
+    <input class="in" id="nResumo" value="${esc(n.title)}" placeholder="Resumo em uma linha (opcional)">
+    <textarea class="in grande" id="nTexto" rows="8">${esc(n.body)}</textarea>
+    <input class="in" id="nFonte" value="${esc(n.refs.join(' · '))}" placeholder="Fonte (opcional)">
+    ${destinoHtml(n.areaId, n.tema)}
+    <div class="sh-acts"><button class="btn perigo" data-apagar-nota="${n.id}">Excluir</button><button class="btn" data-virar-ficha="${n.id}">Virar ficha</button><button class="btn pri" data-salvar-nota="${n.id}">Salvar</button></div>`);
+  dlg().dataset.tipoSel = n.tipo;
+}
+function destinoHtml(aid, tema) {
+  const ms = cadernos().map(f => ({ f, ms: materiasDe(f.id) })).filter(g => g.ms.length);
+  const a = materiaById(aid);
+  return `<div class="destino"><label class="lb">Matéria<select class="in" id="dMat">${ms.map(g => `<optgroup label="${esc(g.f.title)}">${g.ms.map(m => `<option value="${m.id}"${m.id === aid ? ' selected' : ''}>${esc(m.title)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+    <label class="lb">Conteúdo<input class="in" id="dTema" list="dTemaL" value="${esc(tema)}" placeholder="Geral"><datalist id="dTemaL">${a ? conteudosDe(a).map(t => `<option value="${esc(t)}">`).join('') : ''}</datalist></label></div>`;
+}
+function lerDestino() {
+  const aid = $('#dMat') ? $('#dMat').value : null, tema = $('#dTema') ? $('#dTema').value.trim().slice(0, 80) : '';
+  if (aid && tema) { const a = materiaById(aid); if (a && !conteudosDe(a).includes(tema)) a.conteudos.push(tema); }
+  return { aid, tema };
+}
+
+/* ---------- editor de ficha (tela cheia) ---------- */
+let rascunho = null;
+function abrirEditor(n, aid, tema) {
+  rascunho = { id: n ? n.id : null, files: n ? n.files.map(f => ({ ...f })) : [], novos: [] };
+  abrirFolha(n ? 'Editar ficha' : 'Nova ficha', `
+    <input class="in titulo" id="eTit" value="${esc(n ? n.title : '')}" placeholder="Título da ficha">
+    <div class="fmt" role="toolbar" aria-label="Formatação">
+      <button type="button" data-fmt="h1">T1</button><button type="button" data-fmt="h2">T2</button><button type="button" data-fmt="h3">T3</button>
+      <button type="button" data-fmt="b"><b>N</b></button><button type="button" data-fmt="i"><i>I</i></button><button type="button" data-fmt="mark"><mark>D</mark></button>
+      <button type="button" data-fmt="ul">• Lista</button><button type="button" data-fmt="termo">Termo:</button>
+    </div>
+    <textarea class="in corpo" id="eBody" placeholder="# Título de seção&#10;Texto…&#10;&#10;- **Termo:** definição&#10;&#10;[linhas entre colchetes não vão para a IA]">${esc(n ? n.body : '')}</textarea>
+    ${destinoHtml(n ? n.areaId : aid, n ? n.tema : tema)}
+    <label class="lb">Fontes, uma por linha<textarea class="in" id="eRefs" rows="2" placeholder="Chiavenato, Introdução à TGA, cap. 3&#10;https://…">${esc(n ? n.refs.join('\n') : '')}</textarea></label>
+    <div class="lb">Anexos<div id="eFiles"></div><label class="btn ghost anexar">${IC.clip}Anexar arquivo<input type="file" id="eFileIn" multiple hidden></label></div>
+    <div class="sh-acts">${n ? `<button class="btn perigo" data-apagar-ficha="${n.id}">Excluir</button>` : ''}<button class="btn pri" data-salvar-ficha>Guardar</button></div>`, true);
+  desenharArquivos();
+  if (!n) setTimeout(() => $('#eTit')?.focus(), 60);
+}
+function desenharArquivos() {
+  const el = $('#eFiles'); if (!el) return;
+  el.innerHTML = rascunho.files.map((f, i) => `<div class="arq"><span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small><button type="button" class="ib sm" data-tirar-arq="${i}" aria-label="Remover">${IC.x}</button></div>`).join('');
+}
+function aplicarFmt(tipo) {
+  const ta = $('#eBody'), s = ta.selectionStart, e = ta.selectionEnd, v = ta.value, sel = v.slice(s, e);
+  const ini = v.lastIndexOf('\n', s - 1) + 1;
+  const linha = pre => { const l = v.slice(ini).replace(/^(#{1,3}\s|[-•]\s)/, ''); ta.value = v.slice(0, ini) + pre + l; ta.setSelectionRange(ini + pre.length, ini + pre.length); };
+  const envolve = (a, b, ph) => { const t = sel || ph; ta.value = v.slice(0, s) + a + t + b + v.slice(e); ta.setSelectionRange(s + a.length, s + a.length + t.length); };
+  ({ h1: () => linha('# '), h2: () => linha('## '), h3: () => linha('### '), ul: () => linha('- '),
+    b: () => envolve('**', '**', 'negrito'), i: () => envolve('*', '*', 'itálico'), mark: () => envolve('==', '==', 'destaque'),
+    termo: () => { ta.value = v.slice(0, ini) + '- **' + (sel || 'Termo') + ':** ' + v.slice(e).replace(/^\s*/, ''); ta.setSelectionRange(ini + 4, ini + 4 + (sel || 'Termo').length); } }[tipo])();
+  ta.focus();
+}
+async function salvarFicha() {
+  const title = $('#eTit').value.trim(), body = $('#eBody').value, { aid, tema } = lerDestino();
+  if (!aid) return toast('Crie uma matéria antes.');
+  if (!title && !body.trim()) return toast('Escreva um título ou um texto.');
+  const refs = $('#eRefs').value.split('\n').map(x => x.trim()).filter(Boolean);
+  try { for (const x of rascunho.novos) if (rascunho.files.includes(x.meta)) await blobPut(x.meta.id, x.file); }
+  catch (e) { return toast('Não foi possível guardar um anexo neste aparelho.'); }
+  let n = rascunho.id && notaById(rascunho.id);
+  if (n) {
+    const removidos = n.files.filter(f => f.id && !rascunho.files.some(g => g.id === f.id)).map(f => f.id);
+    Object.assign(n, { title, body, refs, files: rascunho.files, areaId: aid, tema, updatedAt: agora() }); blobDel(removidos);
+  } else {
+    n = { id: uid(), areaId: aid, tema, title, body, tags: [], refs, files: rascunho.files, cover: '', createdAt: agora() };
+    state.notes.push(n);
+  }
+  const k = deckDe(n); if (k) { k.title = n.title; k.areaId = aid; k.fieldId = materiaById(aid).fieldId; }
+  persist(); fecharFolha(); go({ v: 'ficha', id: n.id }, !!rascunho.id); toast('Ficha guardada');
+}
+function apagarNota(id) {
+  const n = notaById(id); if (!n) return;
+  blobDel(n.files.filter(f => f.id).map(f => f.id));
+  state.notes = state.notes.filter(x => x !== n);
+  state.decks = state.decks.filter(k => k.noteId !== id);
+  persist();
+}
+
+/* ---------- reflexão: entra na própria ficha, numa seção "Reflexões" ---------- */
+function folhaReflexao(id) {
+  abrirFolha('Reflexão', `<p class="dica">Entra no fim desta ficha, na seção “Reflexões”, com a data de hoje.</p>
+    <textarea class="in grande" id="rTexto" rows="6" placeholder="O que isso te fez pensar? Concorda? Onde já viu isso?"></textarea>
+    <div class="sh-acts"><button class="btn pri" data-salvar-reflexao="${id}">Guardar</button></div>`);
+  setTimeout(() => $('#rTexto')?.focus(), 50);
+}
+function juntarReflexao(body, texto) {
+  const linhas = body.replace(/\r/g, '').split('\n'), entrada = `*${dataLonga(agora())}* — ${texto.trim()}`;
+  const i = linhas.findIndex(l => /^#\s+reflex[oõ]es\s*$/i.test(l.trim()));
+  if (i < 0) return body.replace(/\s+$/, '') + `\n\n# Reflexões\n${entrada}\n`;
+  let j = linhas.findIndex((l, k) => k > i && /^#\s/.test(l)); if (j < 0) j = linhas.length;
+  while (j > i + 1 && !linhas[j - 1].trim()) j--;
+  linhas.splice(j, 0, '', entrada);
+  return linhas.join('\n');
+}
+
+/* ---------- questões de uma ficha ---------- */
+function deckCriar(n) {
+  let k = deckDe(n); if (k) return k;
+  const a = materiaById(n.areaId);
+  k = { id: uid(), title: n.title, unit: 'questões', fieldId: a.fieldId, areaId: a.id, source: '', order: 'seq', principle: 'retrieval', items: [], createdAt: agora(), noteId: n.id };
+  state.decks.push(k); return k;
+}
+function novoItem(q) {
+  return { id: uid(), type: q.type, text: q.text, answer: q.answer || '', options: q.options || [], correct: q.correct || '', explanation: q.explanation || '', done: false, minutes: 0, seen: false, ease: 2.5, interval: 0, reps: 0, lapses: 0, lastGrade: -1, due: null, ...(q.key ? { key: q.key } : {}), ...(q.noteId ? { noteId: q.noteId } : {}) };
+}
+function adicionarQuestoes(n, lista) {
+  const k = deckCriar(n), tem = new Set(k.items.map(i => norm(i.text)));
+  let c = 0; lista.forEach(q => { if (!tem.has(norm(q.text))) { k.items.push(novoItem(q)); tem.add(norm(q.text)); c++; } });
+  persist(); return c;
+}
+let qAba = 'lista', qFormato = 'ambas', qLido = null;
+function folhaQuestoes(id, aba) {
+  const n = notaById(id); if (!n) return;
+  qAba = aba || (questoesDe(n).length ? 'lista' : 'gerar');
+  const qs = questoesDe(n);
+  let corpo = '';
+  if (qAba === 'lista') corpo = qs.length ? `<ol class="qlist">${qs.map(i => `<li><span>${esc(i.text.split('\n')[0])}</span><small>${i.type === 'mc' ? 'objetiva' : 'dissertativa'}</small><button class="ib sm" data-tirar-q="${i.id}" aria-label="Excluir questão">${IC.x}</button></li>`).join('')}</ol>` : '<p class="dica">Nenhuma questão ainda.</p>';
+  if (qAba === 'gerar') {
+    const pool = materiaDe(n), props = propostasDe([n], qFormato === 'ambas' ? 'ambas' : qFormato, pool).filter(p => !qs.some(i => norm(i.text) === norm(p.text)));
+    corpo = `<div class="seg">${[['ambas', 'Ambas'], ['mc', 'Objetivas'], ['open', 'Dissertativas']].map(([k, t]) => `<button type="button" class="${qFormato === k ? 'on' : ''}" data-qformato="${k}">${t}</button>`).join('')}</div>
+      ${props.length ? `<p class="dica">${plural(props.length, 'questão saiu', 'questões saíram')} dos termos em negrito (“**Termo:** definição”), dos ==destaques== e das questões escritas na ficha.</p>
+        <div class="props">${props.map((p, i) => `<label class="prop"><input type="checkbox" data-prop="${i}" checked><span>${esc(p.text)}<small>${p.type === 'mc' ? 'objetiva · gabarito ' + esc(p.correct) : 'dissertativa'}</small></span></label>`).join('')}</div>
+        <div class="sh-acts"><button class="btn pri" data-add-props="${n.id}">Adicionar marcadas</button></div>`
+        : `<p class="dica">Não encontrei nada para transformar em questão. Escreva termos como “- **Termo:** definição”, marque ==destaques==, ou peça para uma IA na aba ao lado.</p>`}`;
+    qLido = props;
+  }
+  if (qAba === 'ia') corpo = `<p class="dica">Copie o pedido, cole no Gemini ou outra IA, e cole a resposta aqui embaixo.</p>
+    <div class="nums"><label>Objetivas<input class="in sm" type="number" id="iaObj" min="0" max="30" value="8"></label><label>Dissertativas<input class="in sm" type="number" id="iaDis" min="0" max="30" value="2"></label></div>
+    <button class="btn" data-copiar-pedido="${n.id}">Copiar pedido</button>
+    <textarea class="in grande" id="iaResp" rows="8" placeholder="Cole aqui a resposta da IA"></textarea>
+    <p class="dica" id="iaLido"></p>
+    <div class="sh-acts"><button class="btn pri" data-add-ia="${n.id}">Adicionar questões</button></div>`;
+  abrirFolha('Questões · ' + (n.title || 'ficha'), `<div class="seg abas">${[['lista', 'Lista' + (qs.length ? ' · ' + qs.length : '')], ['gerar', 'Gerar do texto'], ['ia', 'Pedir para IA']].map(([k, t]) => `<button type="button" class="${qAba === k ? 'on' : ''}" data-qaba="${k}" data-nid="${n.id}">${t}</button>`).join('')}</div>${corpo}`, true);
+}
+
+/* ---------- responder ---------- */
+let quiz = null;
+function questoesDoAlvo(alvo) {
+  const [tipo, resto] = alvo.split(':');
+  let notas = [];
+  if (tipo === 'note') notas = [notaById(resto)].filter(Boolean);
+  if (tipo === 'tema') { const [aid, ...t] = resto.split('|'); notas = itensDoConteudo(aid, t.join('|')); }
+  if (tipo === 'area') notas = itensDe(resto);
+  return notas.flatMap(n => { const k = deckDe(n); return k ? k.items.map(i => ({ k, i })) : []; });
+}
+function iniciarQuiz(alvo, soEstas) {
+  let lista = questoesDoAlvo(alvo);
+  if (soEstas) lista = lista.filter(x => soEstas.includes(x.i.id));
+  if (!lista.length) return toast('Sem questões aqui ainda.');
+  if (!alvo.startsWith('note:')) lista = lista.sort(() => Math.random() - .5);
+  quiz = { alvo, lista, pos: 0, acertos: 0, erradas: [], resp: null };
+  abrirFolha('', '', true); dlg().classList.add('quiz'); desenharQuiz();
+}
+function desenharQuiz() {
+  const Q = quiz, b = $('.sh-b', dlg()), h = $('.sh-h h2', dlg());
+  if (Q.pos >= Q.lista.length) return fimQuiz();
+  const { i } = Q.lista[Q.pos];
+  h.textContent = `${Q.pos + 1} de ${Q.lista.length}`;
+  const resp = Q.resp;
+  b.innerHTML = `<div class="qbar"><i style="width:${Q.pos / Q.lista.length * 100}%"></i></div>
+    <div class="qtext prosa">${prosa(i.text)}</div>
+    ${i.type === 'mc' ? `<div class="ops">${i.options.map(o => {
+      let c = ''; if (resp) { if (o.k === i.correct) c = ' certa'; else if (o.k === resp.esc) c = ' errada'; }
+      return `<button class="op${c}" data-op="${o.k}" ${resp ? 'disabled' : ''}><b>${o.k}</b><span>${esc(o.t)}</span></button>`;
+    }).join('')}</div>`
+    : `<textarea class="in" id="qMinha" rows="4" placeholder="Responda com as suas palavras (opcional)" ${resp ? 'readonly' : ''}>${esc(resp ? resp.minha : '')}</textarea>`}
+    ${resp ? `<div class="sol">${i.type === 'mc' ? `<p class="ver ${resp.ok ? 'ok' : 'no'}">${resp.ok ? 'Certo' : 'Errado · correta: ' + esc(i.correct)}</p>` : ''}${(i.type === 'open' ? i.answer : i.explanation) ? `<div class="prosa">${prosa(i.type === 'open' ? i.answer : i.explanation)}</div>` : ''}</div>` : ''}
+    <div class="sh-acts">${!resp ? (i.type === 'open' ? `<button class="btn pri" data-ver-resp>Ver resposta</button>` : '') :
+      i.type === 'open' && resp.ok === undefined ? `<button class="btn" data-auto="0">Errei</button><button class="btn pri" data-auto="1">Acertei</button>` : `<button class="btn pri" data-prox>Próxima</button>`}</div>`;
+}
+function registrar(ok) {
+  const { i } = quiz.lista[quiz.pos];
+  quiz.resp.ok = ok; if (ok) quiz.acertos++; else quiz.erradas.push(i.id);
+  i.seen = true; i.lastAt = agora(); i.lastGrade = ok ? 2 : 0;
+}
+function fimQuiz() {
+  const Q = quiz, t = { id: uid(), alvo: Q.alvo, at: agora(), acertos: Q.acertos, total: Q.lista.length, erradas: Q.erradas };
+  const ant = state.tentativas.filter(x => x.alvo === Q.alvo).pop();
+  state.tentativas.push(t); if (state.tentativas.length > 2000) state.tentativas = state.tentativas.slice(-2000);
+  persist();
+  $('.sh-h h2', dlg()).textContent = 'Resultado';
+  $('.sh-b', dlg()).innerHTML = `<div class="res"><b>${t.acertos} de ${t.total}</b><p>${ant ? `Antes: ${ant.acertos} de ${ant.total} (${dataCurta(ant.at)})` : 'Primeira vez com estas questões.'}</p></div>
+    <div class="sh-acts">${Q.erradas.length ? `<button class="btn" data-refazer>Refazer as ${Q.erradas.length} que errei</button>` : ''}<button class="btn pri" data-fechar>Fechar</button></div>`;
+  render();
+}
+
+/* ---------- busca ---------- */
+function folhaBusca() {
+  abrirFolha('Buscar', `<input class="in" id="bQ" type="search" placeholder="Palavra, autor, conceito…" autocomplete="off"><div id="bRes" class="lista"></div>`, true);
+  setTimeout(() => $('#bQ')?.focus(), 50);
+}
+function buscar(q) {
+  const t = norm(q.trim()); const el = $('#bRes'); if (!el) return;
+  if (t.length < 2) { el.innerHTML = ''; return; }
+  const res = state.notes.filter(n => norm(n.title + ' ' + n.body + ' ' + n.tema + ' ' + n.refs.join(' ')).includes(t)).sort((a, b) => quando(b).localeCompare(quando(a))).slice(0, 40);
+  el.innerHTML = res.length ? res.map(itemLinha).join('') : '<p class="dica">Nada encontrado.</p>';
+}
+
+/* ---------- menu, backup e exportação ---------- */
+function folhaMenu() {
+  abrirFolha('Opções', `<div class="menu">
+    <button class="row" data-exportar>Exportar backup completo</button>
+    <button class="row" data-importar>Importar backup</button>
+    <button class="row" data-tema-cor>Tema ${document.documentElement.dataset.theme === 'dark' ? 'claro' : 'escuro'}</button>
+    ${TESTE ? `<button class="row" data-recopiar>Recopiar os dados do Cognitio atual</button>` : ''}
+    </div><p class="dica">${plural(state.notes.length, 'item guardado', 'itens guardados')} em ${plural(state.fields.length, 'caderno', 'cadernos')}.</p>`);
+}
+function baixar(nome, conteudo, tipo) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo })); a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+}
+const hojeArq = () => new Date().toISOString().slice(0, 10);
+function exportarCaderno(fid) {
+  const f = cadernoById(fid); let md = `# ${f.title}\n${f.description ? '\n' + f.description + '\n' : ''}`;
+  materiasDe(fid).forEach(a => {
+    md += `\n\n## ${a.title}${a.semestre ? ' (' + a.semestre + ')' : ''}\n`;
+    [...conteudosDe(a), ''].forEach(t => {
+      const its = itensDoConteudo(a.id, t).sort((x, y) => Date.parse(x.createdAt) - Date.parse(y.createdAt)); if (!its.length) return;
+      md += `\n### ${t || 'Geral'}\n`;
+      its.forEach(n => {
+        if (ehAnotacao(n)) md += `\n- **${tipoNome(n.tipo)} · ${dataLonga(n.createdAt)}**${n.title ? ' — ' + n.title : ''}\n${n.body.split('\n').map(l => '  ' + l).join('\n')}${n.refs.length ? '\n  Fonte: ' + n.refs.join(' · ') : ''}\n`;
+        else md += `\n#### ${n.title || 'Sem título'}\n\n${n.body.replace(/^(#{1,3})\s/gm, (m, h) => '#'.repeat(Math.min(6, h.length + 4)) + ' ')}\n${n.refs.length ? '\nFontes: ' + n.refs.join(' · ') + '\n' : ''}`;
+      });
+    });
+  });
+  baixar(`${f.title.replace(/[^\wÀ-ú -]/g, '').trim() || 'caderno'} ${hojeArq()}.md`, md, 'text/markdown');
+}
+
+/* ---------- guardar algo compartilhado de outro app ---------- */
+function compartilhado() {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('compartilhar')) return;
+  const titulo = p.get('title') || '', texto = p.get('text') || '', url = p.get('url') || (texto.match(/https?:\/\/\S+/) || [])[0] || '';
+  const corpo = texto.replace(url, '').trim(), tipo = /gemini|chatgpt|claude\.ai|copilot|perplexity/i.test(url + titulo) || corpo.length > 800 ? 'ia' : url ? 'encontrei' : 'nota';
+  history.replaceState({ r: route }, '', urlDe(route));
+  if (!state.areas.length) return toast('Crie um caderno e uma matéria antes de guardar.');
+  const u = ultimoUsado() || { aid: porOrdem(state.areas)[0].id, tema: '' };
+  abrirFolha('Guardar no Cognitio', `
+    <div class="chips">${TIPOS.map(([k, t]) => `<button type="button" class="chip${k === tipo ? ' on' : ''}" data-tipo-ed="${k}">${t}</button>`).join('')}</div>
+    <input class="in" id="nResumo" value="${esc(titulo)}" placeholder="Resumo em uma linha (opcional)">
+    <textarea class="in grande" id="nTexto" rows="7">${esc(corpo)}</textarea>
+    <input class="in" id="nFonte" value="${esc(url)}" placeholder="Fonte (opcional)">
+    ${destinoHtml(u.aid, u.tema)}
+    <div class="sh-acts"><button class="btn pri" data-salvar-nota="">Guardar</button></div>`);
+  dlg().dataset.tipoSel = tipo;
+}
+
+/* ============ Eventos ============ */
+document.addEventListener('click', async e => {
+  const t = e.target, c = s => t.closest(s);
+  let el;
+  if (c('[data-fechar]')) return fecharFolha();
+  if (c('[data-voltar]')) return voltar();
+  if ((el = c('[data-ir-caderno]'))) return go({ v: 'caderno', id: el.dataset.irCaderno });
+  if ((el = c('[data-ir-materia]'))) return go({ v: 'materia', aid: el.dataset.irMateria });
+  if ((el = c('[data-ir-conteudo]'))) { fecharFolha(); return go({ v: 'conteudo', aid: el.dataset.irConteudo, tema: el.dataset.tema || '', ...(el.dataset.foco ? { foco: el.dataset.foco } : {}) }); }
+  if ((el = c('[data-ir-ficha]'))) { fecharFolha(); return go({ v: 'ficha', id: el.dataset.irFicha }); }
+  if ((el = c('[data-ir-sec]'))) { e.preventDefault(); const s = document.getElementById(el.dataset.irSec); if (s) { if (s.tagName === 'DETAILS') s.open = true; s.scrollIntoView({ behavior: 'smooth', block: 'start' }); } return; }
+  if (c('[data-organizar]')) { organizando = !organizando; return render(); }
+  if ((el = c('[data-mover-caderno]'))) { const l = cadernos(); mover(l, el.dataset.moverCaderno, +el.dataset.dir); persist(); return render(); }
+  if ((el = c('[data-mover-materia]'))) { const a = materiaById(el.dataset.moverMateria), l = materiasDe(a.fieldId); mover(l, a.id, +el.dataset.dir); persist(); return render(); }
+  if ((el = c('[data-mover-conteudo]'))) {
+    const a = materiaById(route.aid), l = conteudosDe(a), i = l.indexOf(el.dataset.moverConteudo), j = i + +el.dataset.dir;
+    if (i >= 0 && j >= 0 && j < l.length) { [l[i], l[j]] = [l[j], l[i]]; a.conteudos = l; persist(); render(); } return;
+  }
+  if (c('[data-buscar]')) return folhaBusca();
+  if (c('[data-menu]')) return folhaMenu();
+
+  // cadernos
+  if (c('[data-novo-caderno]')) return folhaCaderno(null);
+  if ((el = c('[data-editar-caderno]'))) return folhaCaderno(cadernoById(el.dataset.editarCaderno));
+  if ((el = c('[data-emo]'))) { $$('.emo', dlg()).forEach(b => b.classList.toggle('on', b === el)); return; }
+  if ((el = c('[data-salvar-caderno]'))) {
+    const title = $('#fTit').value.trim(); if (!title) return toast('Dê um nome ao caderno.');
+    const icon = ($('.emo.on', dlg()) || {}).dataset?.emo || '📚', description = $('#fDesc').value.trim();
+    let f = cadernoById(el.dataset.salvarCaderno);
+    if (f) Object.assign(f, { title, icon, description }); else { f = { id: uid(), title, icon, description, posture: 'hobby', ordem: state.fields.length }; state.fields.push(f); }
+    persist(); fecharFolha(); return el.dataset.salvarCaderno ? render() : go({ v: 'caderno', id: f.id });
+  }
+  if ((el = c('[data-apagar-caderno]'))) {
+    const f = cadernoById(el.dataset.apagarCaderno), ms = materiasDe(f.id);
+    if (ms.length) return toast('Mova ou exclua as matérias deste caderno antes.');
+    if (!confirm(`Excluir o caderno “${f.title}”?`)) return;
+    state.fields = state.fields.filter(x => x !== f); persist(); fecharFolha(); return go({ v: 'home' }, true);
+  }
+  if ((el = c('[data-exportar-caderno]'))) return exportarCaderno(el.dataset.exportarCaderno);
+
+  // matérias
+  if ((el = c('[data-nova-materia]'))) return folhaMateria(el.dataset.novaMateria, null);
+  if ((el = c('[data-editar-materia]'))) { const a = materiaById(el.dataset.editarMateria); return folhaMateria(a.fieldId, a); }
+  if ((el = c('[data-salvar-materia]'))) {
+    const title = $('#mTit').value.trim(); if (!title) return toast('Dê um nome à matéria.');
+    const semestre = $('#mSem').value.trim(), description = $('#mDesc').value.trim();
+    let a = materiaById(el.dataset.salvarMateria);
+    if (a) { Object.assign(a, { title, semestre, description }); if ($('#mCad')) { a.fieldId = $('#mCad').value; state.decks.forEach(k => { if (k.areaId === a.id) k.fieldId = a.fieldId; }); } }
+    else { a = { id: uid(), fieldId: el.dataset.fid, title, semestre, description, status: 1, conteudos: [], createdAt: agora(), ordem: materiasDe(el.dataset.fid).length }; state.areas.push(a); }
+    persist(); fecharFolha(); return el.dataset.salvarMateria ? render() : go({ v: 'materia', aid: a.id });
+  }
+  if ((el = c('[data-apagar-materia]'))) {
+    const a = materiaById(el.dataset.apagarMateria), its = itensDe(a.id);
+    if (!confirm(its.length ? `Excluir “${a.title}” e ${resumoContagem(its)}? Isso não pode ser desfeito.` : `Excluir “${a.title}”?`)) return;
+    its.forEach(n => apagarNota(n.id)); state.areas = state.areas.filter(x => x !== a); persist(); fecharFolha(); return go({ v: 'caderno', id: a.fieldId }, true);
+  }
+
+  // conteúdos
+  if ((el = c('[data-novo-conteudo]'))) return folhaConteudo(el.dataset.novoConteudo);
+  if (c('[data-editar-conteudo]')) return folhaConteudo(route.aid, route.tema);
+  if ((el = c('[data-salvar-conteudo]'))) {
+    const a = materiaById(el.dataset.salvarConteudo), nome = $('#tTit').value.trim().slice(0, 80), antigo = dlg().dataset.temaAntigo;
+    if (!nome) return toast('Dê um nome ao conteúdo.');
+    const lista = conteudosDe(a);
+    if (antigo === '\u0000') { if (lista.includes(nome)) return toast('Já existe um conteúdo com esse nome.'); a.conteudos = [...lista, nome]; persist(); fecharFolha(); return go({ v: 'conteudo', aid: a.id, tema: nome }); }
+    if (nome !== antigo && lista.includes(nome) && !confirm(`Já existe “${nome}”. Juntar os dois?`)) return;
+    a.conteudos = [...new Set(lista.map(x => x === antigo ? nome : x))];
+    itensDoConteudo(a.id, antigo).forEach(n => { n.tema = nome; });
+    persist(); fecharFolha(); return go({ v: 'conteudo', aid: a.id, tema: nome }, true);
+  }
+  if (c('[data-apagar-conteudo]')) {
+    const a = materiaById(route.aid), antigo = dlg().dataset.temaAntigo;
+    if (!confirm(`Excluir o conteúdo “${antigo}”? Os itens vão para “Geral”.`)) return;
+    a.conteudos = conteudosDe(a).filter(x => x !== antigo); itensDoConteudo(a.id, antigo).forEach(n => { n.tema = ''; });
+    persist(); fecharFolha(); return go({ v: 'materia', aid: a.id }, true);
+  }
+
+  // anotações
+  if ((el = c('[data-tipo]'))) {
+    tipoAtual = el.dataset.tipo; $$('[data-tipo]').forEach(b => b.classList.toggle('on', b === el));
+    $('#cpTexto').placeholder = placeholderDe(tipoAtual); $('#cpResumo').hidden = tipoAtual !== 'ia'; $('#cpTexto').focus(); return;
+  }
+  if ((el = c('[data-tipo-ed]'))) { dlg().dataset.tipoSel = el.dataset.tipoEd; $$('[data-tipo-ed]', dlg()).forEach(b => b.classList.toggle('on', b === el)); return; }
+  if ((el = c('[data-editar-nota]'))) return folhaNota(notaById(el.dataset.editarNota));
+  if ((el = c('[data-salvar-nota]'))) {
+    const body = $('#nTexto').value.trim(), title = $('#nResumo').value.trim().slice(0, 140), fonte = $('#nFonte').value.trim();
+    if (!body && !title) return toast('Escreva alguma coisa.');
+    const { aid, tema } = lerDestino(), tipo = dlg().dataset.tipoSel || 'nota';
+    let n = notaById(el.dataset.salvarNota);
+    if (n) Object.assign(n, { body, title, tipo, refs: fonte ? [fonte] : [], areaId: aid, tema, updatedAt: agora() });
+    else { n = { id: uid(), kind: 'anotacao', tipo, areaId: aid, tema, title, body, tags: [], refs: fonte ? [fonte] : [], files: [], cover: '', createdAt: agora() }; state.notes.push(n); }
+    persist(); fecharFolha();
+    if (!el.dataset.salvarNota) return go({ v: 'conteudo', aid, tema, foco: n.id });
+    return render();
+  }
+  if ((el = c('[data-apagar-nota]'))) { if (!confirm('Excluir esta anotação?')) return; apagarNota(el.dataset.apagarNota); fecharFolha(); return render(); }
+  if ((el = c('[data-virar-ficha]'))) {
+    const n = notaById(el.dataset.virarFicha); delete n.kind;
+    n.body = $('#nTexto').value; n.title = $('#nResumo').value.trim() || plainText(n.body).slice(0, 60); n.updatedAt = agora();
+    if (n.refs.length === 0 && $('#nFonte').value.trim()) n.refs = [$('#nFonte').value.trim()];
+    persist(); fecharFolha(); return go({ v: 'ficha', id: n.id });
+  }
+  if (c('[data-organizar-ia]')) {
+    const a = materiaById(route.aid), its = itensDoConteudo(a.id, route.tema || '');
+    const ok = await copiar(pedidoOrganizar(a.title, route.tema, its));
+    abrirFolha('Organizar com IA', `<p class="dica">${ok ? 'Pedido copiado' : 'Não consegui copiar'} com ${plural(its.length, 'item', 'itens')} deste conteúdo. Cole no Gemini, copie a resposta e cole aqui. Ela vira uma ficha nova; as anotações continuam onde estão.</p>
+      ${ok ? '' : `<textarea class="in" rows="4" readonly>${esc(pedidoOrganizar(a.title, route.tema, its))}</textarea>`}
+      <textarea class="in grande" id="orgResp" rows="9" placeholder="Cole aqui a resposta da IA"></textarea>
+      <div class="sh-acts"><button class="btn pri" data-salvar-organizado>Criar ficha-resumo</button></div>`, true);
+    return;
+  }
+  if (c('[data-salvar-organizado]')) {
+    const txt = $('#orgResp').value.trim(); if (!txt) return toast('Cole a resposta da IA.');
+    const n = { id: uid(), areaId: route.aid, tema: route.tema || '', title: `Resumo: ${route.tema || materiaById(route.aid).title}`, body: txt.replace(/^```\w*\n?|```$/g, '').trim(), tags: ['resumo-ia'], refs: [], files: [], cover: '', createdAt: agora() };
+    state.notes.push(n); persist(); fecharFolha(); return go({ v: 'ficha', id: n.id });
+  }
+
+  // fichas
+  if (c('[data-nova-ficha]')) return abrirEditor(null, route.aid, route.tema || '');
+  if ((el = c('[data-editar-ficha]'))) return abrirEditor(notaById(el.dataset.editarFicha));
+  if ((el = c('[data-fmt]'))) return aplicarFmt(el.dataset.fmt);
+  if ((el = c('[data-tirar-arq]'))) { rascunho.files.splice(+el.dataset.tirarArq, 1); return desenharArquivos(); }
+  if (c('[data-salvar-ficha]')) return salvarFicha();
+  if ((el = c('[data-apagar-ficha]'))) { if (!confirm('Excluir esta ficha e as suas questões?')) return; const n = notaById(el.dataset.apagarFicha), dest = { v: 'conteudo', aid: n.areaId, tema: n.tema }; apagarNota(n.id); fecharFolha(); return go(dest, true); }
+  if ((el = c('[data-abrir-arq]'))) return abrirArquivo(el.dataset.abrirArq);
+  if ((el = c('[data-refletir]'))) return folhaReflexao(el.dataset.refletir);
+  if ((el = c('[data-salvar-reflexao]'))) {
+    const txt = $('#rTexto').value.trim(); if (!txt) return toast('Escreva a reflexão.');
+    const n = notaById(el.dataset.salvarReflexao); n.body = juntarReflexao(n.body, txt); n.updatedAt = agora();
+    persist(); fecharFolha(); render(); const r = [...$$('.sec.s1')].pop(); if (r) r.scrollIntoView({ behavior: 'smooth' }); return toast('Reflexão guardada na ficha');
+  }
+
+  // questões
+  if ((el = c('[data-questoes]'))) return folhaQuestoes(el.dataset.questoes);
+  if ((el = c('[data-qaba]'))) return folhaQuestoes(el.dataset.nid, el.dataset.qaba);
+  if ((el = c('[data-qformato]'))) { qFormato = el.dataset.qformato; return folhaQuestoes(route.id, 'gerar'); }
+  if ((el = c('[data-add-props]'))) {
+    const marc = $$('[data-prop]', dlg()).filter(x => x.checked).map(x => qLido[+x.dataset.prop]);
+    if (!marc.length) return toast('Marque pelo menos uma.');
+    const n = adicionarQuestoes(notaById(el.dataset.addProps), marc); toast(`${plural(n, 'questão adicionada', 'questões adicionadas')}`); render(); return folhaQuestoes(el.dataset.addProps, 'lista');
+  }
+  if ((el = c('[data-copiar-pedido]'))) {
+    const n = notaById(el.dataset.copiarPedido), ob = Math.max(0, +$('#iaObj').value || 0), di = Math.max(0, +$('#iaDis').value || 0);
+    if (!ob && !di) return toast('Peça pelo menos uma questão.');
+    return toast(await copiar(pedidoIA([n], ob, di)) ? 'Pedido copiado. Cole na IA.' : 'Não consegui copiar.');
+  }
+  if ((el = c('[data-add-ia]'))) {
+    const { items, warns } = parseBlock($('#iaResp').value);
+    if (!items.length) return toast('Não encontrei questões no texto colado.');
+    const n = adicionarQuestoes(notaById(el.dataset.addIa), items);
+    toast(`${plural(n, 'questão adicionada', 'questões adicionadas')}${warns.length ? ' · ' + plural(warns.length, 'aviso', 'avisos') : ''}`); render(); return folhaQuestoes(el.dataset.addIa, 'lista');
+  }
+  if ((el = c('[data-tirar-q]'))) { const k = deckDe(notaById(route.id)); if (k) { k.items = k.items.filter(i => i.id !== el.dataset.tirarQ); persist(); render(); folhaQuestoes(route.id, 'lista'); } return; }
+  if ((el = c('[data-quiz]'))) return iniciarQuiz(el.dataset.quiz);
+  if ((el = c('[data-op]')) && quiz && !quiz.resp) { const { i } = quiz.lista[quiz.pos]; quiz.resp = { esc: el.dataset.op }; registrar(el.dataset.op === i.correct); return desenharQuiz(); }
+  if (c('[data-ver-resp]') && quiz) { quiz.resp = { minha: ($('#qMinha') || {}).value || '' }; return desenharQuiz(); }
+  if ((el = c('[data-auto]')) && quiz) { registrar(el.dataset.auto === '1'); quiz.pos++; quiz.resp = null; return desenharQuiz(); }
+  if (c('[data-prox]') && quiz) { quiz.pos++; quiz.resp = null; return desenharQuiz(); }
+  if (c('[data-refazer]') && quiz) return iniciarQuiz(quiz.alvo, quiz.erradas);
+
+  // menu
+  if (c('[data-exportar]')) { baixar(`cognitio-backup-${hojeArq()}.json`, JSON.stringify(state, null, 1), 'application/json'); return toast('Backup exportado'); }
+  if (c('[data-importar]')) return $('#impIn').click();
+  if (c('[data-tema-cor]')) { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('cognitio.theme', t); } catch (x) {} return fecharFolha(); }
+  if (c('[data-recopiar]')) { if (!confirm('Substituir os dados desta versão de teste por uma cópia nova do Cognitio atual?')) return; await CogStore.recopiar(); state = load(); fecharFolha(); go({ v: 'home' }, true); return toast('Dados copiados de novo'); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'compor') return;
+  e.preventDefault();
+  const body = $('#cpTexto').value.trim(), title = tipoAtual === 'ia' ? $('#cpResumo').value.trim().slice(0, 140) : '', fonte = $('#cpFonte').value.trim();
+  if (!body) return toast('Escreva alguma coisa.');
+  const a = materiaById(route.aid), tema = route.tema || '';
+  if (tema && !a.conteudos.includes(tema)) a.conteudos = conteudosDe(a);
+  const n = { id: uid(), kind: 'anotacao', tipo: tipoAtual, areaId: a.id, tema, title, body, tags: [], refs: fonte ? [fonte] : [], files: [], cover: '', createdAt: agora() };
+  state.notes.push(n); persist(); render(); toast(`${tipoNome(tipoAtual)} · guardado`);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'bQ') buscar(e.target.value);
+  if (e.target.id === 'iaResp') { const { items } = parseBlock(e.target.value); const l = $('#iaLido'); if (l) l.textContent = items.length ? `${plural(items.length, 'questão encontrada', 'questões encontradas')}` : ''; }
+  if (e.target.id === 'dMat') { const a = materiaById(e.target.value); const dl = $('#dTemaL'); if (a && dl) dl.innerHTML = conteudosDe(a).map(t => `<option value="${esc(t)}">`).join(''); }
+});
+document.addEventListener('change', async e => {
+  if (e.target.id === 'dMat') { const a = materiaById(e.target.value); const dl = $('#dTemaL'); if (a && dl) dl.innerHTML = conteudosDe(a).map(t => `<option value="${esc(t)}">`).join(''); $('#dTema').value = ''; }
+  if (e.target.id === 'eFileIn') {
+    for (const file of e.target.files) {
+      if (file.size > MAX_FILE) { toast(`${file.name} passa de 100 MB.`); continue; }
+      const meta = { id: uid(), name: file.name, type: file.type || '', size: file.size, addedAt: agora() };
+      rascunho.files.push(meta); rascunho.novos.push({ meta, file });
+    }
+    e.target.value = ''; desenharArquivos();
+  }
+  if (e.target.id === 'impIn') {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text()); if (!isValid(d)) throw new Error('inválido');
+      if (!confirm(`Substituir tudo pelos dados do backup (${plural(d.notes.length, 'item', 'itens')})?`)) return;
+      state = normalize(d); persist(); fecharFolha(); go({ v: 'home' }, true); toast('Backup importado');
+    } catch (x) { toast('Este arquivo não é um backup do Cognitio.'); }
+  }
+});
+dlg().addEventListener('close', () => { if (dlg().classList.contains('quiz')) quiz = null; dlg().innerHTML = ''; });
+dlg().addEventListener('click', e => { if (e.target === dlg()) fecharFolha(); });
+
+route = lerRota();
+if (!new URLSearchParams(location.search).has('compartilhar')) history.replaceState({ r: route }, '', urlDe(route));
+render();
+compartilhado();
+if (!TESTE) publicarResumo();
+})();
+
+</script>
+<script>
+(function () {
+  const TESTE = /cognitio-novo/.test(location.pathname);
+  const KEY = TESTE ? 'cognitio-novo.v2' : 'cognitio.v2', DBN = TESTE ? 'cognitio-novo' : 'cognitio';
+  /* versão de teste: na primeira abertura, copia os dados do Cognitio atual (só lê, nunca escreve lá) */
+  function lerOriginal() {
+    return new Promise(res => {
+      let r; try { r = indexedDB.open('cognitio'); } catch (e) { return res(null); }
+      r.onupgradeneeded = () => { try { r.transaction.abort(); } catch (e) {} };
+      r.onsuccess = () => { const db = r.result; try { const q = db.transaction('kv', 'readonly').objectStore('kv').get('state'); q.onsuccess = () => { db.close(); res(typeof q.result === 'string' ? q.result : null); }; q.onerror = () => { db.close(); res(null); }; } catch (e) { db.close(); res(null); } };
+      r.onerror = () => res(null);
+    }).then(v => v || (() => { try { return localStorage.getItem('cognitio.v2'); } catch (e) { return null; } })());
+  }
+  const S = { backend: 'ls', db: null, cache: null, pending: false, writing: Promise.resolve(), lastError: null, migrated: false };
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const req = r => new Promise((ok, no) => { r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+  const txDone = tx => new Promise((ok, no) => { tx.oncomplete = () => ok(); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error || new Error('abortada')); });
+  function open() {
+    return new Promise(res => {
+      if (!('indexedDB' in window)) return res(null);
+      let r; try { r = indexedDB.open(DBN, 1); } catch (e) { return res(null); }
+      const t = setTimeout(() => res(null), 4000);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+      r.onsuccess = () => { clearTimeout(t); const db = r.result; db.onversionchange = () => { db.close(); if (S.db === db) S.db = null; }; res(db); };
+      r.onerror = r.onblocked = () => { clearTimeout(t); res(null); };
+    });
+  }
+  async function works(db) {                                  // teste real: alguns modos de abrir arquivos bloqueiam o IndexedDB
+    try {
+      const a = db.transaction('kv', 'readwrite'); a.objectStore('kv').put(1, '__probe'); await txDone(a);
+      const b = db.transaction('kv', 'readwrite'); const v = await req(b.objectStore('kv').get('__probe')); b.objectStore('kv').delete('__probe'); await txDone(b);
+      return v === 1;
+    } catch (e) { return false; }
+  }
+  const get = k => req(S.db.transaction('kv', 'readonly').objectStore('kv').get(k));
+  async function put(k, v) { const tx = S.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); await txDone(tx); }
+  async function init() {
+    const db = await open();
+    if (!db || !(await works(db))) return;                    // segue no localStorage
+    S.db = db;
+    const st = await get('state'), meta = await get('__meta'), ls = lsGet(KEY);
+    if (typeof st === 'string' && st) {                       // já está no IndexedDB
+      S.backend = 'idb'; S.cache = st;
+      if (ls && meta && meta.migrated) { try { localStorage.removeItem(KEY); } catch (e) {} }   // sobra de uma migração interrompida
+      return;
+    }
+    if (ls) {                                                 // migração: copia, confere e só então apaga
+      await put('state', ls);
+      const back = await get('state');
+      if (back !== ls) return;                                // não conferiu: continua no localStorage
+      await put('__meta', { migrated: true, at: new Date().toISOString(), bytes: ls.length });
+      S.backend = 'idb'; S.cache = ls; S.migrated = true;
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      return;
+    }
+    S.backend = 'idb'; S.cache = null;                        // primeira abertura: os dados já nascem no IndexedDB
+    if (TESTE) { const o = await lerOriginal(); if (o) { S.cache = o; await put('state', o); } }
+    await put('__meta', { migrated: true, at: new Date().toISOString(), bytes: 0 });
+  }
+  let canal = null; try { canal = new BroadcastChannel(TESTE ? 'cognitio-novo-sync' : 'cognitio-sync'); } catch (e) {}
+  function flush() {
+    if (S.backend !== 'idb' || !S.pending || !S.db) return S.writing;
+    S.pending = false; const v = S.cache;
+    S.writing = S.writing.then(() => put('state', v)).then(() => {
+      if (S.lastError) { S.lastError = null; api.onRecover && api.onRecover(); }
+      try { canal && canal.postMessage({ t: Date.now() }); } catch (e) {}
+    }).catch(e => { console.error(e); S.pending = true; if (!S.lastError) { S.lastError = e; api.onError && api.onError(e); } });
+    return S.writing;
+  }
+  let timer = null;
+  const api = {
+    status: S,
+    get() { return S.backend === 'idb' ? S.cache : lsGet(KEY); },
+    set(v) {                                                  // no localStorage, erro de espaço continua subindo para o app
+      if (S.backend === 'idb') { S.cache = v; S.pending = true; clearTimeout(timer); timer = setTimeout(flush, 0); return; }
+      localStorage.setItem(KEY, v);
+    },
+    flush, onError: null, onRecover: null, onExternal: null,
+    async recopiar() { const o = await lerOriginal(); if (o) { S.cache = o; S.pending = true; await flush(); } },
+    guardarCopia(nome, v) {                                   // cópia de segurança antes de uma reorganização
+      try { if (S.backend === 'idb' && S.db) { get(nome).then(x => { if (!x) put(nome, v); }).catch(() => {}); } else if (!lsGet(KEY + '.' + nome)) localStorage.setItem(KEY + '.' + nome, v); } catch (e) {}
+    }
+  };
+  addEventListener('pagehide', () => flush());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  if (canal) canal.addEventListener('message', async () => {   // outra aba do Cognitio salvou
+    if (S.backend !== 'idb' || !S.db || S.pending) return;
+    try { const v = await get('state'); if (typeof v === 'string' && v !== S.cache) { S.cache = v; api.onExternal && api.onExternal(); } } catch (e) {}
+  });
+  window.CogStore = api;
+  (async function boot() {
+    try { await init(); } catch (e) { console.error(e); }
+    const s = document.createElement('script');
+    s.textContent = document.getElementById('cogApp').textContent;
+    document.body.appendChild(s);
+  })();
+})();
+
+</script>
+</body>
+</html>
